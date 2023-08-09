@@ -1,0 +1,1 @@
+Just turn the Gameboard into a binary file

@@ -1,0 +1,1 @@
+This folder should contain all pictures in the game, like settings icon, characters, and walls.
