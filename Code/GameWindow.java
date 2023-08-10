@@ -44,10 +44,50 @@ public class GameWindow extends JFrame {
 
   private User currentUser;
 
-  private int levelGroup;
-  private JPanel jpnl_menuLevels;
+  private class LevelPanel extends JPanel {
+    private int groupNum;
+    private final int MAX_GROUP_NUM = (Data.Utilities.numOfLevels - 1) / 10;
+    private Rectangle bounds;
+
+    public LevelPanel(int xPos, int yPos) {
+      this.bounds = new Rectangle(xPos, yPos, 150 * 4, 150 * 3);
+      
+      super.setLayout(null);
+      super.setBounds(this.bounds);
+      super.setBackground(Color.WHITE);
+    }
+    
+    public int getGroupNum() {
+      return this.groupNum;
+    }
+
+    public void incrememntGroupNum() {
+      groupNum++;
+      if (this.groupNum > this.MAX_GROUP_NUM)
+        this.groupNum = 0;
+      this.updateLevelGrid();
+    }
+
+    public void decrementGroupNum() {
+      groupNum--;
+      if (this.groupNum < 0)
+        this.groupNum = this.MAX_GROUP_NUM;
+      this.updateLevelGrid();
+    }
+
+    public void updateLevelGrid() {
+      super.removeAll();
+      for (int row = 0; row < 3; row++) {
+        int selector = row / 2;
+        for (int column = selector, int levelID = levelGroup * 10 + 4 * row; column < 4 - selector && levelID <= Data.Utilities.numOfLevels; column++, levelID++)
+          super.add(new JDataButton(levelID, currentUser.getLevels() >= levelID, currentUser.getPerfectLevels().contains(levelID), column, row));
+      }
+      super.revalidate();
+    }
+  }
+  
+  private LevelPanel jpnl_menuLevels;
   private int customPage;
-  private JPanel levelList;
   private GameBoard gameBoard;
   
 
@@ -224,6 +264,8 @@ public class GameWindow extends JFrame {
 
 
   public JPanel createMenu() { // Creates menu page showing all unlocked levels, with custom level options and account settings
+    
+    // Base Panel
     JPanel root = new JPanel();
     root.setLayout(null);
     root.setBackground(Color.WHITE);
@@ -246,33 +288,42 @@ public class GameWindow extends JFrame {
     // root.add(theTitle);
     // root.add(labTitle);
 
+    {
+    // ETL logo
     JLabel jlbl_logo = new JLabel(Data.Images.Other.logo);
     jlbl_logo.setBounds(20, 20, 65 + 155, 75 + 80);
 
+    // Label for name
     JLabel jlbl_nameLabel = new JLabel("Name:");
     jlbl_nameLabel.setBounds(640, 20, 60, 45);
     jlbl_nameLabel.setFont(Data.Fonts.dataLabel);
 
+    // Label for completed levels
     JLabel jlbl_completedLabel = new JLabel("Levels Completed:");
     jlbl_completedLabel.setBounds(640, 65, 205, 45);
     jlbl_completedLabel.setFont(Data.Fonts.dataLabel);
 
+    // Label for perfect levels
     JLabel jlbl_perfectLabel = new JLabel("Perfect Levels:");
     jlbl_perfectLabel.setBounds(640, 110, 185, 45);
     jlbl_perfectLabel.setFont(Data.Fonts.dataLabel);
 
+    // Value for name
     JLabel jlbl_nameField = new JLabel(currentUser.getRealName());
     jlbl_nameField.setBounds(860, 20, 120, 45);
     jlbl_nameField.setFont(Data.Fonts.dataLabel);
 
-    JLabel jlbl_completedField = new JLabel((currentUser.getLevels() - 1) + "/" + Data.MAX_LEVELS);
+    // Value for completed levels
+    JLabel jlbl_completedField = new JLabel((currentUser.getLevels() - 1) + "/" + Data.Utilites.numOfLevels);
     jlbl_completedField.setBounds(860, 65, 100, 45);
     jlbl_completedField.setFont(Data.Fonts.dataLabel);
 
-    JLabel jlbl_perfectField = new JLabel(currentUser.getPerfectLevels().size() + "/" + Data.MAX_LEVELS);
+    // Value for perfect levels
+    JLabel jlbl_perfectField = new JLabel(currentUser.getPerfectLevels().size() + "/" + Data.Utilites.numOfLevels);
     jlbl_perfectField.setBounds(860, 110, 100, 45);
     jlbl_perfectField.setFont(Data.Fonts.dataLabel);
-    
+
+    // Add all elements to base panel
     root.add(jlbl_logo);
     root.add(jlbl_nameLabel);
     root.add(jlbl_completedLabel);
@@ -280,38 +331,6 @@ public class GameWindow extends JFrame {
     root.add(jlbl_nameField);
     root.add(jlbl_completedField);
     root.add(jlbl_perfectField);
-
-    jpnl_menuLevels = levelGrid(0);
-    root.add(jpnl_menuLevels);
-
-    JButton jbtn_leftArrow = new JButton(new ImageIcon(Data.Images.Other.leftNavArrow.getImage().getScaledInstance(100, 180, Image.SCALE_FAST)));
-    jbtn_leftArrow.setBounds(50, 335, 100, 180);
-    jbtn_leftArrow.setBorderPainted(false);
-    jbtn_leftArrow.addActionListener(e -> {
-      if (levelGroup > 0) {
-        root.remove(jpnl_menuLevels);
-        jpnl_menuLevels = levelGrid(levelGroup - 1);
-        root.add(jpnl_menuLevels);
-        root.repaint();
-        root.revalidate();
-      }
-    });
-
-    JButton jbtn_rightArrow = new JButton(new ImageIcon(Data.Images.Other.rightNavArrow.getImage().getScaledInstance(100, 180, Image.SCALE_FAST)));
-    jbtn_rightArrow.setBounds(840, 335, 100, 180);
-    jbtn_rightArrow.setBorderPainted(false);
-    jbtn_rightArrow.addActionListener(e -> {
-      if (levelGroup < Data.MAX_LEVELS / 10 - 1) {
-        root.remove(jpnl_menuLevels);
-        jpnl_menuLevels = levelGrid(levelGroup + 1);
-        root.add(jpnl_menuLevels);
-        root.repaint();
-        root.revalidate();
-      }
-    });
-
-    root.add(jbtn_leftArrow);
-    root.add(jbtn_rightArrow);
 
     JButton jbtn_create = new JButton("Create New");
     jbtn_create.setBounds(40, 670, 200, 80);
@@ -340,94 +359,36 @@ public class GameWindow extends JFrame {
     root.add(jbtn_create);
     root.add(jbtn_load);
     root.add(jbtn_settings);
+    } // Menu stuff
+
+    {
+    // Level panel
+    jpnl_menuLevels = new LevelPanel();
+    root.add(jpnl_menuLevels);
+
+    // Button for level navigation 
+    JButton jbtn_leftArrow = new JButton(new ImageIcon(Data.Images.Other.leftNavArrow.getImage().getScaledInstance(100, 180, Image.SCALE_FAST)));
+    jbtn_leftArrow.setBounds(50, 335, 100, 180);
+    jbtn_leftArrow.setBorderPainted(false);
+    jbtn_leftArrow.addActionListener(e -> {
+      jpnl_menuLevels.decrementGroupNum();
+    });
+
+    // Button for level navigation
+    JButton jbtn_rightArrow = new JButton(new ImageIcon(Data.Images.Other.rightNavArrow.getImage().getScaledInstance(100, 180, Image.SCALE_FAST)));
+    jbtn_rightArrow.setBounds(840, 335, 100, 180);
+    jbtn_rightArrow.setBorderPainted(false);
+    jbtn_rightArrow.addActionListener(e -> {
+      jpnl_menuLevels.incrementGroupNum();
+    });
+
+    root.add(jbtn_leftArrow);
+    root.add(jbtn_rightArrow);
+    } // Level stuff
 
     // currentScreen = "menu";
     return root;
   } // Creates menu with level navigation and user info with custom levels
-
-
-  public JPanel levelGrid(int levelGroup) { // Creates levels in a grid shape in the menu, with locked ones have lock icons
-    JPanel grid = new JPanel();
-    grid.setLayout(null);
-    grid.setBounds(200, 200, 150 * 4, 150 * 3);
-    grid.setBackground(Color.WHITE);
-
-    // int[] levels = new int[10];
-    // for (int i = 0; i < 10;) {
-    //   levels[i] = levelGroup * 10 + ++i;
-    // }
-
-    // for (int i = 0; i < 3; i++) {
-    //   for (int j = 0; j < ((levels.length - i * 4 > 4)? 4 : levels.length - i * 4); j++) {
-    //     JComponent b;
-    //     if (currentUser.getLevels() >= levels[i * 4 + j]) {
-    //       b = new JDataButton(levels[i * 4 + j]);
-    //       b.setBounds(j * 150 + (i / 2) * 150, i * 150, 150, 150);
-    //       b.setFont(new Font("Monospaced", Font.PLAIN, 60));
-    //       if (currentUser.getPerfectLevels().contains(((JDataButton) b).getId())) {
-    //         b.setBackground(Data.Colors.perfectLevel);
-    //         b.setBorder(BorderFactory.createLineBorder(Data.Colors.perfectBorder, 7));
-    //       } else {
-    //         b.setBackground(Data.Colors.standardLevel);
-    //         b.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-    //       }
-    //       ((JDataButton) b).addActionListener(e -> {
-    //         File f = new File("Levels/level" + ((JDataButton) b).getId() + ".txt");
-    //         /////////////
-    //         f = new File("Levels/default.txt");/////////
-    //         /////////////
-    //         if (f.exists())
-    //           replace(createLevel(f));
-    //       });
-    //     } else {
-    //       b = new JLabel(new ImageIcon((new ImageIcon("Images/Lock.png")).getImage().getScaledInstance(120, 120, Image.SCALE_FAST))); // Add icon of lock
-    //       b.setBounds(j * 150 + (i / 2) * 150, i * 150, 150, 150);
-    //       b.setBackground(Data.Colors.standardLevel);
-    //       b.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-    //       b.setOpaque(true);
-    //     }
-        
-    //     grid.add(b);
-    //   }
-    // }
-
-    for (int row = 0; row < 3; row++) {
-      int selector = row / 2;
-      for (int column = selector; column < 4 - selector; column++) {
-        int levelID = levelGroup * 10 + column + 4 * row - selector;
-        JDataButton newButton = new JDataButton(levelID);
-        newButton.setBounds(column * 150, row * 150, 150, 150);
-        if (currentUser.getPerfectLevels().contains(levelID)) {
-          newButton.setBackground(Data.Colors.perfectLevel);
-          newButton.setBorder(BorderFactory.createLineBorder(Data.Colors.perfectBorder, 7));
-        } else {
-          newButton.setBackground(Data.Colors.standardLevel);
-          newButton.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-        }
-        if (currentUser.getLevels() >= levelID) {
-          // newButton.setText(levelID);
-          newButton.setFont(Data.Fonts.menuLevelButton);
-          newButton.addActionListener(e -> {
-            File f = new File("../GameAssets/Levels/MainLevels/level" + levelID);
-            /////////////
-            // f = new File("Levels/default.txt");/////////
-            /////////////
-            if (f.exists())
-              replace(createLevel(f));
-            else
-              replace(createLevel(new File("../GameAssets/Levels/MainLevels/default.txt")))
-          });
-        } else {
-          newButton.setText(null);
-          newButton.setIcon(Data.Images.Other.lock);
-          newButton.setEnabled(false);
-        }
-        grid.add(newButton);
-      }
-    }
-    
-    return grid;
-  } // Makes grid shape of levels in menu with level navigation
 
 
   public JPanel createSettings() { // Ability to log out or delete account along with change user characteristics

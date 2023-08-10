@@ -4,8 +4,6 @@ import javax.swing.ImageIcon;
 
 public class Data {
 
-  public static final int MAX_LEVELS = 50;
-
   public static class Animation {
     public static final int humanTravelTime = 1000;
     public static final int zombieTravelTime = 800;
@@ -89,8 +87,11 @@ public class Data {
 
   public static class Utilities {
 
+    public static final String userFileDirectory = "../User/";
+    public static final int numOfLevels = new File(Utilities.userFileDirectory).list().length
+
     public static string getUserFilePath(String username) {
-      return "../User/" + username + ".txt";
+      return Utilities.userFileDirectory + username + ".txt";
     }
   }
   
