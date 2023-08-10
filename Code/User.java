@@ -9,7 +9,7 @@ import java.util.InputMismatchException;
 public class User {
 
   private File userFile;
-  private String userName;
+  private String username;
   private String realName;
   private String password;
   private int unlockedLevels;
@@ -23,13 +23,11 @@ public class User {
       Scanner fileIn = new Scanner(userFile);
 
       /*
-      userName
       password
       realName
       unlockedLevels
       perfectLevels
       ---------------------
-      coderColby
       P@55W0RD
       Colby
       23
@@ -37,7 +35,6 @@ public class User {
       */
       
       this.userFile = userFile;
-      this.userName = fileIn.nextLine().trim();
       this.password = fileIn.nextLine().trim();
       this.realName = fileIn.nextLine().trim();
       this.unlockedLevels = Integer.parseInt(fileIn.nextLine().trim());
@@ -53,9 +50,9 @@ public class User {
     }
   }
 
-  public User(String userName, String password, String realName, String path) { // New user
+  public User(String username, String password, String realName, String path) { // New user
     this.userFile = new File(path);
-    this.userName = userName;
+    this.username = username;
     this.password = password;
     this.realName = realName;
     this.unlockedLevels = 1;
@@ -73,7 +70,7 @@ public class User {
       System.out.println("Error: userFile no longer exists");
       return;
     }
-    fileOut.println(this.userName);
+    fileOut.println(this.username);
     fileOut.println(this.password);
     fileOut.println(this.realName);
     fileOut.println(this.unlockedLevels);
@@ -91,18 +88,18 @@ public class User {
     updateFile();
   }
 
-  public void setUserName(String newName) {
-    this.userName = newName;
+  public void setUsername(String username) {
+    this.username = username;
     updateFile();
   }
 
-  public void setPassword(String newPassword) {
-    this.password = newPassword;
+  public void setPassword(String password) {
+    this.password = password;
     updateFile();
   }
 
-  public void setRealName(String newName) {
-    this.realName = newName;
+  public void setRealName(String realName) {
+    this.realName = realName;
     updateFile();
   }
 
@@ -122,10 +119,6 @@ public class User {
     return this.userName;
   }
 
-  public boolean passwordIsValid(String passwordInQuestion) {
-    return this.password.equals(passwordInQuestion);
-  }
-
   public String passwordDots() {
     String dots = "";
     for (int i = 0; i < password.length(); i++)
@@ -139,6 +132,36 @@ public class User {
 
   public ArrayList<Integer> getPerfectLevels() {
     return this.perfectLevels;
+  }
+
+  // Utilities
+
+  public static String isValidUsername(String username) {
+    if (username.isEmpty())
+      return "Please provide a username\n";
+    else if (username.contains(' '))
+      return "Please ensure username does not contain spaces\n";
+    return "";
+  }
+
+  public static String isValidPassword(String password) {
+    if (password.isEmpty())
+      return "Please provide a password\n";
+    else if (password.contains(' '))
+      return "Please ensure password does not contain spaces\n";
+    return "";
+  }
+
+  public static boolean isUserExist(String username) {
+    return (new File(Data.getUserFilePath(username))).exists()
+  }
+
+  public static boolean isCorrectPassword(String username, String password) {
+    File userFile = new File(Data.getUserFilePath(username));
+    Scanner fileIn = new Scanner(userFile);
+    String filePassword = fileIn.nextLine().trim();
+    fileIn.close();
+    return filePassword.equals(password);
   }
   
 }

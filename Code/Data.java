@@ -86,5 +86,12 @@ public class Data {
     }
   
   }
+
+  public static class Utilities {
+
+    public static string getUserFilePath(String username) {
+      return "../User/" + username + ".txt";
+    }
+  }
   
 }

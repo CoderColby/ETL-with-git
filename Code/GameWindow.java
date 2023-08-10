@@ -63,57 +63,66 @@ public class GameWindow extends JFrame {
 
   
   public JPanel createLogin() { // Creates login page for new and old users
+
+    // Base panel
     JPanel root = new JPanel();
     root.setLayout(null);
     root.setBackground(Color.WHITE);
 
-    JLabel jlbl_loginTitle = new JLabel("Log in", SwingConstants.CENTER);
+    /////////////////////////////////////////////////////////// LOG IN PORTION
+
+    // Title "Log In"
+    JLabel jlbl_loginTitle = new JLabel("Log In", SwingConstants.CENTER);
     jlbl_loginTitle.setBounds(180, 80, 140, 40);
     jlbl_loginTitle.setFont(Data.Fonts.header2);
 
+    // Instruction "Username:"
     JLabel jlbl_loginUsername = new JLabel("Username:");
     jlbl_loginUsername.setBounds(100, 150, 100, 25);
     jlbl_loginUsername.setFont(Data.Fonts.textLabel);
 
+    // Instruction "Password:"
     JLabel jlbl_loginPassword = new JLabel("Password:");
     jlbl_loginPassword.setBounds(100, 230, 100, 25);
     jlbl_loginPassword.setFont(Data.Fonts.textLabel);
-    
+
+    // Field for username
     JTextField jtxf_loginUsername = new JTextField();
     jtxf_loginUsername.setBounds(100, 175, 300, 25);
     jtxf_loginUsername.setFont(Data.Fonts.textField);
-    
+
+    // Field for password
     JTextField jtxf_loginPassword = new JTextField();
     jtxf_loginPassword.setBounds(100, 255, 300, 25);
     jtxf_loginPassword.setFont(Data.Fonts.textField);
 
+    // Button to log in
     JButton jbtn_loginButton = new JButton("Log in");
     jbtn_loginButton.setBounds(170, 650, 160, 40);
     jbtn_loginButton.setBackground(Data.Colors.buttonBackground);
     jbtn_loginButton.setFont(Data.Fonts.menuButton);
     jbtn_loginButton.addActionListener(l -> {
-      try {
-        String tempUsername = jtxf_loginUsername.getText().trim();
-        String tempPassword = jtxf_loginPassword.getText().trim();
-        if (tempUsername.isEmpty())
-          throw new UsernameEmptyException();
-        if (tempPassword.isEmpty())
-          throw new PasswordEmptyException();
-        currentUser = new User(new File("../Users/" + tempUsername + ".txt"));
-        if (!currentUser.passwordIsValid(tempPassword);
-          throw new PasswordMismatchException();
-        replace(createMenu());
-      } catch (UsernameEmptyException e) {
-        JOptionPane.showMessageDialog(this, "Please provide a username.");
-      } catch (PasswordEmptyException e) {
-        JOptionPane.showMessageDialog(this, "Please provide a password");
-      } catch (FileNotFoundException e) {
-        JOptionPane.showMessageDialog(this, "The username you entered does not exist! Try signing up if you don't have an account yet.");
-      } catch (PasswordMismatchException e) {
-        JOptionPane.showMessageDialog(this, "The password is incorrect, please try again.");
+      String username = jtxf_loginUsername.getText().trim();
+      String password = jtxf_loginPassword.getText();
+      String errorMessages = "";
+
+      // Validate input
+      errorMessages += User.isValidUsername(username);
+      errorMessages += User.isValidPassword(password);
+      if (errorMessages.isEmpty()) {
+        if (!User.isUserExist(username))
+          errorMessages = "The username you entered does not exist! Try signing up if you don't have an account yet.";
+        else if (!User.isCorrectPassword(username, password))
+          errorMessage = "This user has a password different than the one provided, please try again.";
       }
+      if (errorMessages.isEmpty()) {
+        currentUser = newUser(new File(Data.getUserPath(username)));
+        replace(createMenu());
+      } else
+        JOptionPane.showMessageDialog(this, errorMessages.trim());
     });
 
+    // Add all elements to base panel
     root.add(jlbl_loginTitle);
     root.add(jlbl_loginUsername);
     root.add(jlbl_loginPassword);
@@ -121,79 +130,83 @@ public class GameWindow extends JFrame {
     root.add(jtxf_loginPassword);
     root.add(jbtn_loginButton);
 
+    /////////////////////////////////////////////////////////// SIGN UP PORTION
+
+    // Title "Sign Up"
     JLabel jlbl_signupTitle = new JLabel("Sign Up", SwingConstants.CENTER);
     jlbl_signupTitle.setBounds(650, 80, 200, 40);
     jlbl_signupTitle.setFont(Data.Fonts.header2);
 
+    // Instruction "Username:"
     JLabel jlbl_signupUsername = new JLabel("Username:");
     jlbl_signupUsername.setBounds(600, 150, 100, 25);
     jlbl_signupUsername.setFont(Data.Fonts.textLabel);
 
+    // Instruction "Password:"
     JLabel jlbl_signupPassword = new JLabel("Password:");
     jlbl_signupPassword.setBounds(600, 230, 100, 25);
     jlbl_signupPassword.setFont(Data.Fonts.textLabel);
 
+    // Instruction "Confirm Password:"
     JLabel jlbl_signupConfirmPassword = new JLabel("Confirm Password:");
     jlbl_signupConfirmPassword.setBounds(600, 310, 200, 25);
     jlbl_signupConfirmPassword.setFont(Data.Fonts.textLabel);
 
+    // Instruction "Name:"
     JLabel jlbl_signupName = new JLabel("Name:");
     jlbl_signupName.setBounds(600, 390, 100, 25);
     jlbl_signupName.setFont(Data.Fonts.textLabel);
-    
+
+    // Field for username
     JTextField jtxf_signupUsername = new JTextField();
     jtxf_signupUsername.setBounds(600, 175, 300, 25);
     jtxf_signupUsername.setFont(Data.Fonts.textField);
-    
+
+    // Field for password
     JTextField jtxf_signupPassword = new JTextField();
     jtxf_signupPassword.setBounds(600, 255, 300, 25);
     jtxf_signupPassword.setFont(Data.Fonts.textField);
-    
+
+    // Field for password confirmation
     JTextField jtxf_signupConfirmPassword = new JTextField();
     jtxf_signupConfirmPassword.setBounds(600, 335, 300, 25);
     jtxf_signupConfirmPassword.setFont(Data.Fonts.textField);
 
+    // Field for name
     JTextField jtxf_signupName = new JTextField();
     jtxf_signupName.setBounds(600, 415, 300, 25);
     jtxf_signupName.setFont(Data.Fonts.textField);
 
+    // Button to sign up
     JButton jbtn_signupButton = new JButton("Sign up");
     jbtn_signupButton.setBounds(670, 650, 160, 40);
     jbtn_signupButton.setBackground(Data.Colors.buttonBackground);
     jbtn_signupButton.setFont(Data.Fonts.menuButton);
     jbtn_signupButton.addActionListener(l -> {
-      try {
-        String tempUsername = jtxf_signupUsername.getText().trim();
-        String tempPassword = jtxf_signupPassword.getText().trim();
-        if (tempUsername.contains(" ") || tempPassword.contains(" "))
-          throw new SpacesIllegalException();
-        if (tempUsername.isEmpty())
-          throw new UsernameEmptyException();
-        if (tempPassword.isEmpty())
-          throw new PasswordEmptyException();
-        if (jtxf_signupName.getText().isEmpty())
-          throw new NameEmptyException();
-        if ((new File("../Users/" + tempUsername + ".txt")).exists())
-          throw new ExistingUserException();
-        if (!tempPassword.equals(jtxf_signupConfirmPassword.getText().trim()))
-          throw new PasswordMismatchException();
-        currentUser = new User(tempUsername, tempPassword, jtxf_signupName.getText().trim(), "../Users/" + tempUsername + ".txt");
-        replace(createMenu());
-      } catch (SpacesIllegalException e) {
-        JOptionPane.showMessageDialog(this, "Your username and password cannot include spaces.");
-      } catch (UsernameEmptyException e) {
-        JOptionPane.showMessageDialog(this, "Please provide a username.");
-      } catch (PasswordEmptyException e) {
-        JOptionPane.showMessageDialog(this, "Please provide a password.");
-      } catch (NameEmptyException e) {
-        JOptionPane.showMessageDialog(this, "Please provide your name.");
-      } catch (ExistingUserException e) {
-        JOptionPane.showMessageDialog(this, "This username already exists! Please try a different one or log in.");
-      } catch (PasswordMismatchException e) {
-        JOptionPane.showMessageDialog(this, "Please ensure that both passwords are identical with no spaces.");
+      String username = jtxf_signupUsername.getText().trim();
+      String password = jtxf_signupPassword.getText();
+      String realName = jtxf_signupName.getText();
+      String errorMessages = "";
+
+      // Validate input
+      errorMessages += User.isValidUsername(username);
+      if (errorMessages.isEmpty() && User.isUserExist(username))
+          errorMessages = "This username already exists! Please try a different one or log in.\n";
+      else {
+        errorMessages += User.isValidPassword(password);
+        if (realName.isEmpty())
+          errorMessages += "Please provide your name.\n";
+        if (!password.equals(jtxf_signupConfirmPassword.getText()))
+          errorMessages += "Please ensure that both passwords are identical.\n";
       }
+      if (errorMessages.isEmpty()) {
+        currentUser = new User(username, password, realName, Data.getUserFilePath(username));
+        replace(createMenu());
+      } else
+        JOptionPane.showMessageDialog(this, errorMessages);
     });
 
+    // Add all elements to base panel
     root.add(jlbl_signupTitle);
     root.add(jlbl_signupUsername);
     root.add(jlbl_signupPassword);
