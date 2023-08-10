@@ -157,7 +157,7 @@ public class GameWindow extends JFrame {
       }
       if (errorMessages.isEmpty()) {
         currentUser = newUser(new File(Data.getUserPath(username)));
-        replace(createMenu());
+        replace(createMenu(0));
       } else
         JOptionPane.showMessageDialog(this, errorMessages.trim());
     });
@@ -241,7 +241,7 @@ public class GameWindow extends JFrame {
       }
       if (errorMessages.isEmpty()) {
         currentUser = new User(username, password, realName, Data.getUserFilePath(username));
-        replace(createMenu());
+        replace(createMenu(0));
       } else
         JOptionPane.showMessageDialog(this, errorMessages);
     });
@@ -263,7 +263,7 @@ public class GameWindow extends JFrame {
   } // Login page for new and existing users, creates new user object
 
 
-  public JPanel createMenu() { // Creates menu page showing all unlocked levels, with custom level options and account settings
+  public JPanel createMenu(int levelGroup) { // Creates menu page showing all unlocked levels, with custom level options and account settings
     
     // Base Panel
     JPanel root = new JPanel();
@@ -363,7 +363,7 @@ public class GameWindow extends JFrame {
 
     {
     // Level panel
-    jpnl_menuLevels = new LevelPanel();
+    jpnl_menuLevels = new LevelPanel(levelGroup);
     root.add(jpnl_menuLevels);
 
     // Button for level navigation 
@@ -389,6 +389,140 @@ public class GameWindow extends JFrame {
     // currentScreen = "menu";
     return root;
   } // Creates menu with level navigation and user info with custom levels
+
+
+  public void startLevelSequence(int startingLevel) {
+    int level;
+    boolean statusGood = true;
+    for (level = startingLevel; level <= Data.numOfLevels && statusGood; level++)
+      statusGood = displayLevel(new File(Data.Utilities.getLevelFilePath(level)));
+
+    createMenu((level - 1) / 10)
+  }
+
+
+  public boolean displayLevel (File levelFile) {
+    Scanner fileIn = new Scanner(levelFile);
+    String levelTitle = fileIn.nextLine().trim();
+    int startEnergy = fileIn.nextInt(); fileIn.nextLine();
+    int perfectMoves = fileIn.nextInt(); fileIn.nextLine();
+    GameBoard levelBoard = new GameBoard(fileIn);
+
+    JPanel root = new JPanel();
+    root.setLayout(null);
+    root.setBackground(Color.WHITE);
+
+    /////////////////////////////////////////// i fukin dunno wutz aftur dis
+    String[] fileContents = null;
+    try {
+      fileContents = fileReader(levelFile);
+      root.repaint(gameGrid(Arrays.copyOfRange(fileContents, fileStart, 100 + fileStart), 350, 130));
+    } catch (FileNotFoundException e) {
+      System.out.println("ERROR: file not found");
+    }
+
+    JLabel title = new JLabel(fileContents[1], SwingConstants.CENTER);
+    title.setBounds(0, 0, 1000, 60);
+    title.setFont(new Font("Monospace", Font.PLAIN, 30));
+
+    JLabel name = new JLabel(fileContents[2], SwingConstants.CENTER);
+    name.setBounds(0, 130, 350, 50);
+    name.setFont(Data.Fonts.dataLabel);
+
+    JLabel energyLabel = new JLabel("Remaining Energy:", SwingConstants.CENTER);
+    energyLabel.setBounds(0, 200, 350, 30);
+    energyLabel.setFont(Data.Fonts.dataLabel);
+
+    JLabel perfectEnergy = new JLabel(fileContents[4]);
+    perfectEnergy.setBounds(230, 235, 100, 20);
+    perfectEnergy.setForeground(Data.Colors.perfectLevel);
+    perfectEnergy.setFont(new Font("Monospace", Font.PLAIN, 12));
+
+    JLabel energyAmt = new JLabel(fileContents[3], SwingConstants.CENTER);
+    energyAmt.setBounds(0, 230, 350, 30);
+    energyAmt.setFont(Data.Fonts.dataLabel);
+
+    JLabel genLabel = new JLabel("Generators Active:", SwingConstants.CENTER);
+    genLabel.setBounds(0, 300, 350, 30);
+    genLabel.setFont(Data.Fonts.dataLabel);
+
+    int activeGen = 0;
+    JLabel genAmt = new JLabel(activeGen + "/" + numOfGen, SwingConstants.CENTER);
+    genAmt.setBounds(0, 330, 350, 30);
+    genAmt.setFont(Data.Fonts.dataLabel);
+
+    JButton restart = new JButton("Restart");
+    restart.setBounds(20, 430, 310, 50);
+    restart.setBackground(Data.Colors.buttonBackground);
+    restart.setFont(Data.Fonts.menuButton);
+    restart.addActionListener(e -> {
+      replace(createLevel(levelFile));
+    });
+
+    JButton menu = new JButton("Menu");
+    menu.setBounds(20, 500, 310, 50);
+    menu.setBackground(Data.Colors.buttonBackground);
+    menu.setFont(Data.Fonts.menuButton);
+    menu.addActionListener(e -> {
+      replace(createMenu());
+    });
+
+    JLabel note = new JLabel("<html>" + fileContents[0] + "</html>", SwingConstants.CENTER);
+    note.setBounds(10, 580, 330, 150);
+    note.setFont(new Font("Monospace", Font.ITALIC, 20));
+
+    root.add(title);
+    root.add(name);
+    root.add(energyLabel);
+    root.add(perfectEnergy);
+    root.add(energyAmt);
+    root.add(genLabel);
+    root.add(genAmt);
+    root.add(restart);
+    root.add(menu);
+    root.add(note);
+
+    Human human = new Human(floorGrid);
+    // KeyListener kl = new KeyAdapter() {
+    //   public void keyPressed(KeyEvent event) {
+    //     System.out.println(event.getKeyChar());
+    //   }
+    // };
+
+    // root.addKeyListener(kl);
+
+    class keyAction extends AbstractAction {
+
+      private int keyPressed;
+      
+      public keyAction(int keyPressed) {
+        this.keyPressed = keyPressed;
+      }
+
+      public void actionPerformed(ActionEvent e) {
+        human.move(floorGrid, keyPressed);
+      }
+    }
+
+    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("UP"), MOVE_UP);
+    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("DOWN"), MOVE_DOWN);
+    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("LEFT"), MOVE_LEFT);
+    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("RIGHT"), MOVE_RIGHT);
+    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("SPACE"), ACTIVATE_GEN);
+    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("NUMPAD0"), ACTIVATE_GEN);
+
+    root.getActionMap().put(MOVE_UP, new keyAction(3));
+    root.getActionMap().put(MOVE_DOWN, new keyAction(1));
+    root.getActionMap().put(MOVE_LEFT, new keyAction(2));
+    root.getActionMap().put(MOVE_RIGHT, new keyAction(0));
+    root.getActionMap().put(ACTIVATE_GEN, new keyAction(4));
+    
+
+    currentScreen = "Level";
+    return root;
+  }
+
+  
 
 
   public JPanel createSettings() { // Ability to log out or delete account along with change user characteristics
@@ -1212,7 +1346,7 @@ public class GameWindow extends JFrame {
         gameBoard.movePlayer(GameBoard.MOVE_UP);
     }
   }
-
+  
 }
 
 

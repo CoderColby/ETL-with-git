@@ -25,8 +25,9 @@ public class GameBoard {
   public static final int BOARD_DIMENSION = 10 * ROOM_HEIGHT + 11 * WALL_THICKNESS;
   public static final byte FLOOR_LEVEL = 0;
   public static final byte ROOMOBJECT_LEVEL = 1;
-  public static final byte ENTITY_LEVEL = 2;
-  public static final byte WALL_LEVEL = 3;
+  public static final byte ITEM_LEVEL = 2;
+  public static final byte ENTITY_LEVEL = 3;
+  public static final byte WALL_LEVEL = 4;
 
   private static GridCell[][] board;
   private static GridCell playerLocation;
