@@ -14,36 +14,40 @@ import java.util.Comparator;
 import java.util.Scanner;
 import java.lang.Thread;
 
-public class GameBoard {
+public class GameBoard extends JLayeredPane {
   
   public static final byte MOVE_RIGHT = 0;
   public static final byte MOVE_DOWN = 1;
   public static final byte MOVE_LEFT = 2;
   public static final byte MOVE_UP = 3;
-  public static final int ROOM_HEIGHT = 49;
-  public static final int WALL_THICKNESS = 10;
-  public static final int BOARD_DIMENSION = 10 * ROOM_HEIGHT + 11 * WALL_THICKNESS;
-  public static final byte FLOOR_LEVEL = 0;
-  public static final byte ROOMOBJECT_LEVEL = 1;
-  public static final byte ITEM_LEVEL = 2;
-  public static final byte ENTITY_LEVEL = 3;
-  public static final byte WALL_LEVEL = 4;
+  private static final int ROOM_HEIGHT = 49;
+  private static final int WALL_THICKNESS = 10;
+  private static final int BOARD_DIMENSION = 10 * ROOM_HEIGHT + 11 * WALL_THICKNESS;
+  private static final byte FLOOR_LEVEL = 0;
+  private static final byte ROOMOBJECT_LEVEL = 1;
+  private static final byte ITEM_LEVEL = 2;
+  private static final byte ENTITY_LEVEL = 3;
+  private static final byte WALL_LEVEL = 4;
 
-  private static GridCell[][] board;
-  private static GridCell playerLocation;
-  private static GridCell[] zombieLocations;
-  private static int startEnergy;
-  private static int remainingEnergy;
-  private static int leastMoves;
-  private static boolean hasDied;
-  private static JLayeredPane display;
+  private String[][] fileContents;
+  private GridCell[][] board;
+  private GridCell playerLocation;
+  private GridCell[] zombieLocations;
+  private int startEnergy;
+  private int remainingEnergy;
+  private boolean hasDied;
 
 
   ////////////////////////////////////////////////////////////////////////////////////////// Constructors
 
+  public GameBoard(String[][] fileContents) {
+    
+  }
+
   public static void initializeBoard() {
     display = new JLayeredPane();
     display.setSize(BOARD_DIMENSION, BOARD_DIMENSION);
+    display.setPreferredSize(new Dimension(BOARD_DIMENSION, BOARD_DIMENSION));
     display.setBackground(Data.Colors.levelBackground);
   }
   
