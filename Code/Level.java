@@ -142,6 +142,7 @@ public class Level extends JPanel {
 
       public void actionPerformed(ActionEvent e) {
         levelBoard.move(floorGrid, direction - 4 * (direction / 2));
+        if ()
       }
     }
 

@@ -9,6 +9,7 @@ import java.lang.IndexOutOfBoundsException;
 import java.awt.Rectangle;
 import java.awt.Point;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.PriorityQueue;
 import java.util.Comparator;
 import java.util.Scanner;
@@ -23,127 +24,196 @@ public class GameBoard extends JLayeredPane {
   private static final int ROOM_HEIGHT = 49;
   private static final int WALL_THICKNESS = 10;
   private static final int BOARD_DIMENSION = 10 * ROOM_HEIGHT + 11 * WALL_THICKNESS;
-  private static final byte FLOOR_LEVEL = 0;
-  private static final byte ROOMOBJECT_LEVEL = 1;
-  private static final byte ITEM_LEVEL = 2;
-  private static final byte ENTITY_LEVEL = 3;
-  private static final byte WALL_LEVEL = 4;
+  private static final byte FLOOR_LAYER = 0;
+  private static final byte ROOMTYPE_LAYER = 1;
+  private static final byte ITEM_LAYER = 2;
+  private static final byte ENTITY_LAYER = 3;
+  private static final byte WALL_LAYER = 4;
 
   private String[][] fileContents;
   private GridCell[][] board;
-  private GridCell playerLocation;
-  private GridCell[] zombieLocations;
+  private Human player;
+  private Zombie[] zombies;
+  private SecuritySystem[] securitySystems;
+  private KeyDoor[] keyDoors;
   private int startEnergy;
   private int remainingEnergy;
-  private boolean hasDied;
+  private boolean hasLost;
+  private boolean hasWon;
 
 
-  ////////////////////////////////////////////////////////////////////////////////////////// Constructors
 
-  public GameBoard(String[][] fileContents) {
-    
-  }
-
-  public static void initializeBoard() {
-    display = new JLayeredPane();
-    display.setSize(BOARD_DIMENSION, BOARD_DIMENSION);
-    display.setPreferredSize(new Dimension(BOARD_DIMENSION, BOARD_DIMENSION));
-    display.setBackground(Data.Colors.levelBackground);
-  }
-  
-
-  public static JLayeredPane makeLevel(File levelFile) throws FileNotFoundException {
-    /* levelFile Contents
-      title
-      details
-      initial energy
-      least moves
-      wallID wallID ; RoomObjectID RoomObjectID RoomObjectID
-      wallID wallID ; 
-      filled
-      ---------------------------------------------------------
-      Default Level
-      This is a default level
-      100
-      2
-      filled
-      filled
-      wall hallway ; zombie key1 generator
-      wall hallway ; - key1 -
-  
-    */
-
+  public GameBoard(String[][] fileContents, int startEnergy) {
+    this.startEnergy = startEnergy;
+    this.fileContents = fileContents;
     board = new GridCell[10][10];
-    
-    Scanner fileIn = new Scanner(levelFile);
-    String title = fileIn.nextLine().trim();
-    String details = fileIn.nextLine().trim();
-    startEnergy = fileIn.nextInt(); fileIn.nextLine();
-    leastMoves = fileIn.nextInt(); fileIn.nextLine();
-    
-    // String[][] mockBoard = new String[10][10];
-    
-    for (int i = 99; i > -1; i--) {
-      
-      int row = i / 10;
-      int column = i % 10;
-      String line = fileIn.nextLine().trim();
+    super.setSize(BOARD_DIMENSION, BOARD_DIMENSION);
+    super.setPreferredSize(new Dimension(BOARD_DIMENSION, BOARD_DIMENSION));
+    super.setBackground(Data.Colors.levelBackground);
+    super.setFocusable(false);
+  }
 
-      if (line.isEmpty()) {
-        board[row][column] = new GridCell(new int[] {row, column});
-        continue;
+  public void reset() {
+    ArrayList<Zombie> zombieTracker = new ArrayList<>();
+    ArrayList<SecuritySystem> securityTracker = new ArrayList<>();
+    ArrayList<KeyDoor> keyDoorTracker = new Arraylist<>();
+    
+    for (int i = 0; i < 100; i++) {
+      GridCell temp = new GridCell(fileContents[i], i, this);
+      
+      if (temp.hasEntity(Zombie.TAG))
+        zombieTracker.add((Zombie) temp.getEntity());
+      else if (temp.hasEntity(Human.TAG))
+        player = (Human) temp.getEntity();
+
+      if (temp.hasRoomType(SecuritySystem.TAG))
+        securityTracker.add((SecuritySystem) temp.getRoomType());
+
+      for (byte wallNum = 0; wallNum < 2; wallNum++) {
+        if (temp.hasWall(wallNum, KeyDoor.TAG))
+          keyDoorTracker.add((KeyDoor) temp.getWall(wallNum));
       }
-
-      String[] temp = line.split(";")[0].split(" ");
-      Wall[] walls = new Wall[2];
-
-      if (column == 9 || board[row][column + 1].isFilled())
-        walls[0] = Wall.makeNewWall("regularWall");
-      else
-        walls[0] = Wall.makeNewWall(temp[0]);
       
-      if (row == 9 || board[row + 1][column].isFilled())
-        walls[1] = Wall.makeNewWall("regularWall");
-      else
-        walls[1] = Wall.makeNewWall(temp[1]);
-
-      temp = line.split(";")[1].split(" ");
-      for (int j = 0; j < 3; j++) {
-        if (temp[j].equals("-"))
-          temp[j] = null;
-      }
-
-      board[row][column] = new GridCell(new int[] {row, column}, walls, Entity.makeNewEntity(temp[0]), Item.makeNewItem(temp[1]), RoomObject.makeNewRoomObject(temp[2]));
-
-      board[row][column].draw(display);
-      
+      board[i/10][i%10] = temp;
     }
 
+    zombies = zombieTracker.toArray();
+    securitySystems = securityTracker.toArray();
+    keyDoors = keyDoorTracker.toArray();
+    remainingEnergy = startEnergy;
+    hasDied = false;
+
+    for (int i = 0; i < 100; i++) {
+      super.add(board[i/10][i%10].getJLabelImageOfRoomType(), ROOMTYPE_LAYER);
+      super.add(board[i/10][i%10].getJLabelImageOfItem(), ITEM_LAYER);
+      super.add(board[i/10][i%10].getJLabelImageOfEntity(), ENTITY_LAYER);
+      if (i % 10 < 9)
+        super.add(board[i/10][i%10].getJLabelImageOfWall(0), WALL_LAYER);
+      if (i / 10 < 9)
+        super.add(board[i/10][i%10].getJLabelImageOfWall(1), WALL_LAYER);
+    }
     
   }
+
+
+  public void move(byte direction) {
+    PriorityQueue<Animation> animations = new PriorityQueue(moveAndAnimate(direction));
+
+    
+  }
+
+  public ArrayList<Animation> moveAndAnimate(byte direction) { // direction represents the direction of the arrow key that was pressed
+
+    ArrayList<Animation> animations = new ArrayList<>();
+
+    if (!player.canMove(direction))
+      return animations;
+
+    animations.addAll(player.move(direction));
+    // if (player.getGridCell().hasRoomType(Elevator.TAG)) {
+    //   hasWon = true;
+    //   return animations;
+    // }
+    // if (player.getGridCell().hasItem(Key.TAG)) {
+    //   for (KeyDoor kd : keyDoors) {
+    //     if (kd.goesWithKey((Key) player.getGridCell().getItem()))
+    //       animations.addAll(kd.unlock());
+    //   }
+    // }
+
+    for (int i = 0; i < 2; i++) {
+      Arrays.sort(zombies);
+      for (Zombie z : zombies)
+        animations.addAll(z.move(getPlayerLocation()));
+  
+        // if (z.willOverlapPlayer(zombieDirection)) {
+        //   animations.addAll(player.becomeInfected());
+        //   hasLost = true;
+        //   return animations;
+        // }
+    }
+      
+  }
+
+
+
+  public void playAnimations(PriorityQueue<AnimationEvent> queue) {
+    long baseTime = SystemcurrentTimeMillis();
+    AnimationEvent animation;
+    long animationStartTime;
+    long timeUntilAnimationStart;
+
+    while (!queue.isEmpty()) {
+      animation = queue.poll();
+      animationStartTime = baseTime + animationEvent.getStartTime();
+
+      timeUntilAnimationStart = animationStartTime - System.currentTimeMillis();
+
+      if (timeUntilAnimationStart > 0) {
+          try {
+              Thread.sleep(timeUntilAnimationStart); // Sleep until animation start time
+          } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+              break;
+          }
+      }
+
+      Thread animationThread = new Thread(animationEvent::run);
+      animationThread.start();
+    }
+  }
+
+
+
+  public int[] getPlayerLocation() {
+    return player.getGridCell().getCoords();
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+  
 
   ////////////////////////////////////////////////////////////////////////////////////////// Setters and Getters
   
 
-  public static GridCell getCell(int row, int column) {
+  public GridCell getCell(int row, int column) {
     return board[row][column];
   }
 
-  public static GridCell getCell(int row, int column, byte direction) {
+  public GridCell getCell(int row, int column, byte direction) {
     return board[row + getRowShift(direction)][column + getColumnShift(direction)];
   }
 
-  public static int getRowShift(byte direction) {
+  public int getRowShift(byte direction) {
     return direction - 2 + 2 * ((3 - direction) / 3); // 0:0; 1:-1; 2:0; 3:1
   }
 
-  public static int getColumnShift(byte direction) {
+  public int getColumnShift(byte direction) {
     return 1 - direction + 2 * (direction / 3); // 0:1; 1:0; 2:-1; 3:0
   }
 
-  public static void setScreenCoordinates(Point r) {
+  public int getRemainingEnergy() {
+    return remainingEnergy;
+  }
+
+  public void decrementEnergy() {
+    remainingEnergy--;
+  }
+
+  public void setScreenCoordinates(Point r) {
     display.setLocation(r);
   }
+
+  public void isPlayerInfected
 
   ////////////////////////////////////////////////////////////////////////////////////////// Core Functionality
   
@@ -232,7 +302,7 @@ public class GameBoard extends JLayeredPane {
 
 
 
-
+/*
 class GridCell {
 
   private int[] row_column;
@@ -326,3 +396,4 @@ class GridCell {
     
   }
 }
+*/
