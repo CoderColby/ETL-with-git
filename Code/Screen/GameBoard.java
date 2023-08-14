@@ -106,6 +106,8 @@ public class GameBoard extends JLayeredPane {
 
     ArrayList<Animation> animations = new ArrayList<>();
 
+    player.turn(direction);
+
     if (!player.canMove(direction))
       return animations;
 
@@ -121,7 +123,12 @@ public class GameBoard extends JLayeredPane {
     //   }
     // }
 
-    for (int i = 0; i < 2; i++) {
+    if (hasWon) {
+      Level.goToNextLevel = true;
+      return animations;
+    }
+
+    for (int i = 0; i < 2 && !hasLost; i++) {
       Arrays.sort(zombies);
       for (Zombie z : zombies)
         animations.addAll(z.move(getPlayerLocation()));
@@ -185,12 +192,12 @@ public class GameBoard extends JLayeredPane {
   ////////////////////////////////////////////////////////////////////////////////////////// Setters and Getters
   
 
-  public GridCell getCell(int row, int column) {
-    return board[row][column];
+  public GridCell getGridCell(int[] rowColumn) {
+    return board[rowColumn[0]][rowColumn[1]];
   }
 
-  public GridCell getCell(int row, int column, byte direction) {
-    return board[row + getRowShift(direction)][column + getColumnShift(direction)];
+  public GridCell getGridCell(int[] rowColumn, byte direction) throws IndexOutOfBoundsException {
+    return board[rowColumn[0] + getRowShift(direction)][rowColumn[1] + getColumnShift(direction)];
   }
 
   public int getRowShift(byte direction) {
@@ -302,98 +309,52 @@ public class GameBoard extends JLayeredPane {
 
 
 
-/*
-class GridCell {
+public class GridCell {
 
-  private int[] row_column;
-  private Wall[] walls;
-  private Entity entity;
+  public static final byte RIGHT_WALL = 0;
+  public static final byte BOTTOM_WALL = 1;
+  public static final byte LEFT_WALL = 2;
+  public static final byte TOP_WALL = 4;
+
+  private RoomType roomType;
   private Item item;
-  private RoomObject roomObject;
-  private boolean isFilled;
+  private Entity entity;
+  private Wall[] walls;
+  private int[] rowColumn;
+  private GameBoard board;
 
-
-  public GridCell(int[] row_column) {
-    this.isFilled = true;
-    this.row_column = row_column;
-    this.walls = new Wall[] {new RegularWall(), new RegularWall()};
+  public GridCell(String[] fileContents, int coordinates, GameBoard board) {
+    rowColumn = int[2] {coordinates / 10, coordinates % 10};
+    this.board = board;
+    walls = new Wall[2];
+    walls[0] = Wall.getWallByTag(fileContents[0]);
+    walls[1] = Wall.getWallByTag(fileContents[1]);
+    roomType = RoomType.getRoomTypeByTag(fileContents[2]);
+    item = Item.getItemByTag(fileContents[3]);
+    entity = Entity.getEntityByTag(fileContents[4]);
   }
 
-  public GridCell(int[] row_column, Wall[] walls, Entity entity, Item item, RoomObject roomObject) {
-    this.isFilled = false;
-    this.row_column = row_column;
-    this.walls = walls;
-    this.entity = entity;
-    this.item = item;
-    this.roomObject = roomObject;
+  public char getRoomType() {
+    return interior;
   }
 
-  public void setEntity(Entity newEntity) {
-    entity = newEntity;
-    if (entity.getClass() == Human.class && item.getClass() == key.class) {
-      
-    }
+  public char getItem() {
+    return item;
   }
 
-  public void setWall(byte i, Wall newWall) {
-    walls[i] = newWall;
-  }
-
-  public Entity removeEntity() {
-    Entity oldEntity = entity;
-    entity = null;
-    return oldEntity;
-  }
-
-  public void removeItem() {
-    item = null;
-  }
-
-  public int getRow() {
-    return row_column[0];
-  }
-
-  public int getColumn() {
-    return row_column[1];
+  public Entity getEntity() {
+    return occupant;
   }
 
   public Wall getWall(byte direction) {
     if (direction < 2)
       return walls[direction];
-    else if ((direction == 2 && row_column[1] == 0) || (direction == 3 && row_column[0] == 0))
-      return GameBoard.getCell(row_column[0], row_column[1], direction).getWall(direction % 2);
+    else if ((direction == 2 && rowColumn[1] == 0) || (direction == 3 && row_column[0] == 0))
+      return board.getCell(row_column[0], row_column[1], direction).getWall(direction % 2);
     return new RegularWall();
   }
 
-  public Entity getEntity() {
-    return entity;
-  }
-
-  public boolean hasEntity() {
-    return entity != null;
-  }
-
-  public Item getItem() {
-    return item;
-  }
-  
-  public RoomObject getRoomObject() {
-    return roomObject;
-  }
-
-  public boolean isFilled() {
-    return isFilled;
-  }
-
-  public boolean isLegalMove(byte direction) {
-    Entity neighbor = GameBoard.getCell(this.row_column[0], this.row_column[1], direction).getEntity();
-    if (isFilled || neighbor.getClass() == Zombie.class)
-      return false;
-    return this.getWall(direction).canPass(entity, board.getRemainingEnergy());
-  }
-
-  public void draw(JLayeredPane display) {
-    
+  public int[] getCoordinates() {
+    return rowColumn;
   }
 }
-*/

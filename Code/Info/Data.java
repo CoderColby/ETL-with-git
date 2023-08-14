@@ -52,10 +52,10 @@ public class Data {
 
     public static class Entity {
 
-      public static ImageIcon human (byte direction) {
+      public static ImageIcon human(byte direction) {
         return new ImageIcon("../GameAssets/Images/Entity/Human" + direction + ".png");
       }
-      public static ImageIcon zombie (byte direction) {
+      public static ImageIcon zombie(byte direction) {
         return new ImageIcon("../GameAssets/Images/Entity/Zombie" + direction + ".png");
       }
       
@@ -69,7 +69,7 @@ public class Data {
       
     }
 
-    public static class RoomObject {
+    public static class RoomType {
       public static final ImageIcon generator = new ImageIcon("../GameAssets/Images/RoomObjects/Generator.png");
       public static final ImageIcon elevator = new ImageIcon("../GameAssets/Images/RoomObjects/Elevator.png");
       public static final ImageIcon generatorActive = new ImageIcon("../GameAssets/Images/RoomObjects/Generator_Active.png");
