@@ -1,5 +1,5 @@
 
-public abstract class AbstractWall {
+public abstract class AbstractWall extends AbstractGameObject {
 
   protected AbstractWall() {
     

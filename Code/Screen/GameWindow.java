@@ -2,10 +2,14 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Arrays;
 import java.util.InputMismatchException;
+import java.util.Collections;
 
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.FileNotFoundException;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import java.lang.Character;
 import java.lang.Object;
@@ -44,6 +48,63 @@ public class GameWindow extends JFrame {
 
   private User currentUser;
 
+  private class JDataButton extends JButton {
+  
+    private int ID;
+    private File file;
+    private AbstractGameObject object;
+    
+    public JDataButton(int ID, boolean levelUnlocked, boolean levelPerfect, int column, int row) { // This constructor is for buttons shown in the main menu
+  
+      this.ID = ID;
+      super.setBounds(column * 150, row * 150, 150, 150);
+      
+      if (levelUnlocked) {
+        super.setText(Integer.tostring(ID));
+        super.setFont(Data.Fonts.menuLevelButton);
+        super.addActionListener(e -> {
+          Main.mainWindow.startLevelSequence(this.ID);
+        });
+      } else {
+        super.setText(null);
+        super.setIcon(Data.Images.Other.lock);
+        super.setEnabled(false);
+      }
+  
+      if (levelPerfect) {
+        super.setBackground(Data.Colors.perfectLevel);
+        super.setBorder(BorderFactory.createLineBorder(Data.Colors.perfectBorder, 7));
+      } else {
+        super.setBackground(Data.Colors.standardLevel);
+        super.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+      }
+    }
+  
+    public JDataButton(File file) { // This constructor takes in a file for choosing custom levels
+      super(file.getName().substring(0, file.getName().length() - ".txt".length()));
+      this.file = file;
+    }
+  
+    public JDataButton(AbstractGameObject object) { // For buttons on level creator
+      super(object.getImage());
+      this.object = object;
+    }
+  
+    public int getID() {
+      return ID;
+    }
+  
+    public File getFile() {
+      return file;
+    }
+  
+    public AbstractGameObject getObject() {
+      return object;
+    }
+  }
+
+  // Menu level panel
+
   private class LevelPanel extends JPanel {
     private int groupNum;
     private final int MAX_GROUP_NUM = (Data.Utilities.numOfLevels - 1) / 10;
@@ -54,7 +115,8 @@ public class GameWindow extends JFrame {
       
       super.setLayout(null);
       super.setBounds(this.bounds);
-      super.setBackground(Color.WHITE);
+      super.setOpaque(false);
+      updateLevelGrid();
     }
     
     public int getGroupNum() {
@@ -79,17 +141,268 @@ public class GameWindow extends JFrame {
       super.removeAll();
       for (int row = 0; row < 3; row++) {
         int selector = row / 2;
-        for (int column = selector, int levelID = levelGroup * 10 + 4 * row; column < 4 - selector && levelID <= Data.Utilities.numOfLevels; column++, levelID++)
-          super.add(new JDataButton(levelID, currentUser.getLevels() >= levelID, currentUser.getPerfectLevels().contains(levelID), column, row));
+        for (int column = selector, int levelID = levelGroup * 10 + 4 * row; column < 4 - selector && levelID <= Data.Utilities.numOfLevels; column++, levelID++) {
+          JDataButton button = new JDataButton(levelID, currentUser.getLevels() >= levelID, currentUser.getPerfectLevels().contains(levelID), column, row);
+          button.addActionListener(e -> {
+            startLevelSequence(button.getID());
+          });
+          super.add(button);
+        }
       }
       super.revalidate();
     }
   }
   
   private LevelPanel jpnl_menuLevels;
-  private int customPage;
-  
 
+  private JPanel customLevelList;
+  private JPanel jlbl_pageNum;
+  private int customPageNum;
+
+  // Level creator
+
+  private class LevelDesigner extends JPanel {
+
+    private GameBoard levelBoard;
+    private AbstractGameObject currentItem;
+
+    private class DesignerButton extends JButton {
+      ImageIcon[] images;
+      String type;
+
+      public DesignerButton(String type, ImageIcon[] images) {
+        this.type = type;
+        this.images = images;
+      }
+
+      public boolean isType(String other) {
+        return type.equals(other);
+      }
+
+      public void setImage(ImageIcon newImage, int position) {
+        if (position < 0)
+          images = new ImageIcon[3];
+        else
+          images[position] = newImage;
+        repaint();
+      }
+
+      @Override
+      protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        for (ImageIcon image : images) {
+          if (image != null)
+            g.drawImage(image.getImage(), 0, 0, null);
+        }
+      }
+    }
+    
+    public LevelDesigner(File loadFile) {
+      
+      // Base panel
+      super.setLayout(null);
+      super.setBackground(Color.WHITE);
+  
+      // Title "Level Creator"
+      JLabel jlbl_title = new JLabel("Level Creator");
+      jlbl_title.setBounds(20, 20, 300, 50);
+      jlbl_title.setFont(Data.Fonts.header1);
+  
+      // Label for currently selected item
+      JLabel jlbl_selectedItem = new JLabel();
+      jlbl_selectedItem.setBounds(780, 30, 90, 90);
+      jlbl_selectedItem.setBackground(new Color(150, 150, 150));
+      jlbl_selectedItem.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+  
+      // Panel for selecting items
+      JPanel jpnl_gameItems = new JPanel();
+      jpnl_gameItems.setBounds(710, 160, 230, 200);
+      jpnl_gameItems.setBackground(new Color(150, 150, 150));
+      jpnl_gameItems.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+  
+      // For displaying game objects to select
+      AbstractWall[] walls = new AbstractWall[] {new Wall(), new Door(), new PowerDoor(), new OnceDoor(), new AirlockDoor(), new DetectionDoor(), new LockedDoor()};
+      AbstractRoomType[] roomTypes = new AbstractRoomType[] {new Elevator(), new Target(), new Filled()};
+      AbstractItem[] items = new AbstractItem[] {new Key(), new Battery()};
+      AbstractEntity[] entities = new AbstractEntity[] {new Zombie(), new SmartZombie()};
+  
+      // Draw wall types
+      for (int i = 0; i < walls.length; i++) {
+        JDataButton newWall = new JDataButton(walls[i]);
+        newWall.setBounds(10 + (210 / walls.length) * i - GameBoard.WALL_THICKNESS / 2, 15, GameBoard.WALL_THICKNESS, GameBoard.ROOM_HEIGHT);
+        newWall.addActionListener(e -> {
+          currentItem = newWall.getObject();
+          super.repaint();
+        });
+        jpnl_gameItems.add(newWall);
+      }
+  
+      // Draw room types
+      for (int i = 0; i < roomTypes.length; i++) {
+        JDataButton newRoomType = new JDataButton(roomTypes[i]);
+        newRoomType.setBounds(25 + (180 / roomTypes.length) * i - GameBoard.ROOM_HEIGHT / 2, 80, GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
+        newRoomType.addActionListener(e -> {
+          currentItem = newRoomType.getObject();
+          super.repaint();
+        });
+        jpnl_gameItems.add(newRoomType);
+      }
+
+      // Draw item types
+      //////////////////////// FINISH
+      //////////////////////// Also add eraser
+  
+      // Draw entity types
+      for (int i = 0; i < entities.length; i++) {
+        JDataButton newEntity = new JDataButton(entities[i]);
+        newEntity.setBounds(25 + (180 / entities.length) * i - GameBoard.ROOM_HEIGHT / 2, 140, GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
+        newEntity.addActionListener(e -> {
+          currentItem = newEntity.getObject();
+          super.repaint();
+        });
+        jpnl_gameItems.add(newEntity);
+      }
+
+      // Read load-in file
+      Scanner fileIn = new Scanner(loadFile);
+      String levelTitle = fileIn.nextLine().trim();
+      String startEnergy = fileIn.nextLine().trim();
+  
+      String[][] boardData = new String[100][5];
+  
+      for (int i = 0; i < 100; i++)
+        boardData[i] = fileIn.nextLine().split();
+      fileIn.close();
+
+      // Label level name
+      JLabel jlbl_levelName = new JLabel("Level name:", SwingConstants.CENTER);
+      jlbl_levelName.setBounds(700, 465, 250, 25);
+      jlbl_levelName.setFont(Data.Fonts.textLabel);
+
+      // Field level name
+      JTextField jtxf_levelName = new JTextField(levelTitle);
+      jtxf_levelName.setBounds(700, 490, 250, 30);
+      jtxf_levelName.setFont(Data.Fonts.textField);
+
+      // Label energy
+      JLabel jlbl_levelEnergy = new JLabel("Energy:");
+      jlbl_levelEnergy.setBounds(765, 540, 80, 25);
+      jlbl_levelEnergy.setFont(Data.Fonts.textLabel);
+
+      // Field energy
+      JTextField jtxf_levelEnergy = new JTextField(startEnergy);
+      jtxf_levelEnergy.setBounds(845, 538, 40, 29);
+      jtxf_levelEnergy.setFont(Data.Fonts.textField);
+
+      // Button to load a different level
+      JButton jbtn_load = new JButton("Build Level");
+      jbtn_load.setBounds(725, 590, 200, 40);
+      jbtn_load.setBackground(Data.Colors.buttonBackground);
+      jbtn_load.setFont(Data.Fonts.menuButton);
+      jbtn_load.addActionListener(e -> {
+        System.out.println("load");
+      });
+
+      // Button to demo level
+      JButton jbtn_demo = new JButton("Demo");
+      jbtn_demo.setBounds(725, 640, 200, 40);
+      jbtn_demo.setBackground(Data.Colors.buttonBackground);
+      jbtn_demo.setFont(Data.Fonts.menuButton);
+      jbtn_demo.addActionListener(e -> {
+        System.out.println("demo");
+      });
+
+      // Button to save construction
+      JButton jbtn_save = new JButton("Save As...");
+      jbtn_save.setBounds(725, 690, 200, 40);
+      jbtn_save.setBackground(Data.Colors.buttonBackground);
+      jbtn_save.setFont(Data.Fonts.menuButton);
+      jbtn_save.addActionListener(e -> {
+        /*
+        // boolean done = false;
+        // while (!done) {
+        //   String filename = JOptionPane.showInputDialog(this, "Filename:");
+        //   File file = new File(filename);
+        //   if (file.exists()) {
+        //     Scanner fileIn = null;
+        //     try {
+        //       fileIn = new Scanner(file);
+        //     } catch (FileNotFoundException f) {}
+        //     if (fileIn.nextLine().equals(currentUser.getUsername())) {
+        //       int option = JOptionPane.showConfirmDialog(this, "One of your custom levels already has this file name, would you like to overwrite it?");
+        //       switch (option) {
+        //         case JOptionPane.YES_OPTION:
+        //           // overwrite w/ no "break;"
+        //         case JOptionPane.CANCEL_OPTION:
+        //           done = true;
+        //           break;
+        //       }
+        //     }
+        //     fileIn.close();
+        //   } else {
+            
+        //   }
+        // }
+        */
+        System.out.println("save");
+      });
+
+      // Button to return home
+      JButton jbtn_exit = new JButton("Exit");
+      jbtn_exit.setBounds(725, 740, 200, 40);
+      jbtn_exit.setBackground(Data.Colors.buttonBackground);
+      jbtn_exit.setFont(Data.Fonts.menuButton);
+      jbtn_exit.addActionListener(e -> {
+        System.out.println("exit");
+      });
+  
+      super.add(jlbl_title);
+      super.add(jlbl_selectedItem);
+      super.add(jpnl_gameItems);
+      super.add(jlbl_levelName);
+      super.add(jtxf_levelName);
+      super.add(jlbl_levelEnergy);
+      super.add(jtxf_levelEnergy);
+      super.add(jbtn_load);
+      super.add(jbtn_demo);
+      super.add(jbtn_save);
+      super.add(jbtn_exit);
+      
+      levelBoard = new GameBoard(boardData, 0);
+
+      for (int i = 0; i < 100; i++) {
+        GridCell cell = levelBoard.getGridCell(int [] {i % 10, i / 10});
+        DesignerButton db = new DesignerButton("Room", new ImageIcon[] {cell.getRoomType(), cell.getItem(), cell.getEntity()});
+        db.setBounds((i % 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), (i / 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
+        db.addActionListener(e -> {
+          db.setImage(currentItem.getImage(), currentItem.getLayer());
+        });
+      }
+
+      for (int i = 0; i < 90; i++) {
+        Wall cellWall = levelBoard.getGridCell(int [] {i % 9, i / 9}).getWall(0);
+        DesignerButton db = new DesignerButton("Wall", new ImageIcon[] {cellWall, null, null});
+        db.setBounds(GameBoard.ROOM_HEIGHT + (i % 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), (i / 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.WALL_THICKNESS, GameBoard.ROOM_HEIGHT);
+        db.addActionListener(e -> {
+          db.setImage(currentItem.getImage(), currentItem.getLayer());
+        });
+      }
+
+      for (int i = 0; i < 90; i++) {
+        Wall cellWall = levelBoard.getGridCell(int [] {i / 9, i % 9}).getWall(1);
+        DesignerButton db = new DesignerButton("Wall", new ImageIcon[] {cellWall, null, null});
+        db.setBounds(GameBoard.ROOM_HEIGHT + (i / 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), (i % 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.WALL_THICKNESS, GameBoard.ROOM_HEIGHT);
+        db.addActionListener(e -> {
+          db.setImage(Data.Images.rotateIcon(currentItem.getImage(), 90), currentItem.getLayer());
+        });
+      }
+    }
+  }
+
+  private LevelDesigner levelDesigner;
+  
+  
+  /* √ */
   public GameWindow() {
     super("ESCAPE THE LAB 2");
     super.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -100,7 +413,7 @@ public class GameWindow extends JFrame {
     super.setVisible(true);
   }
 
-  
+  /* √ */
   public JPanel createLogin() { // Creates login page for new and old users
 
     // Base panel
@@ -148,14 +461,14 @@ public class GameWindow extends JFrame {
       // Validate input
       errorMessages += User.isValidUsername(username);
       errorMessages += User.isValidPassword(password);
-      if (errorMessages.isEmpty()) {
-        if (!User.isUserExist(username))
+      if (errorMessages.isEmpty()) { // If no invalid input yet
+        if (!User.isUserExist(username)) // If user does not exist
           errorMessages = "The username you entered does not exist! Try signing up if you don't have an account yet.";
-        else if (!User.isCorrectPassword(username, password))
+        else if (!User.isCorrectPassword(username, password)) // If password is incorrect
           errorMessage = "This user has a password different than the one provided, please try again.";
       }
-      if (errorMessages.isEmpty()) {
-        currentUser = newUser(new File(Data.getUserPath(username)));
+      if (errorMessages.isEmpty()) { // If no invalid input yet
+        currentUser = new User(new File(Data.getUserPath(username))); // Make new user
         replace(createMenu(0));
       } else
         JOptionPane.showMessageDialog(this, errorMessages.trim());
@@ -229,17 +542,17 @@ public class GameWindow extends JFrame {
 
       // Validate input
       errorMessages += User.isValidUsername(username);
-      if (errorMessages.isEmpty() && User.isUserExist(username))
+      if (errorMessages.isEmpty() && User.isUserExist(username)) // If no invalid input but user exists
           errorMessages = "This username already exists! Please try a different one or log in.\n";
       else {
         errorMessages += User.isValidPassword(password);
-        if (realName.isEmpty())
+        if (realName.isEmpty()) // If no name is provided
           errorMessages += "Please provide your name.\n";
-        if (!password.equals(jtxf_signupConfirmPassword.getText()))
+        if (!password.equals(jtxf_signupConfirmPassword.getText())) // If confirmation password is different
           errorMessages += "Please ensure that both passwords are identical.\n";
       }
-      if (errorMessages.isEmpty()) {
-        currentUser = new User(username, password, realName, Data.getUserFilePath(username));
+      if (errorMessages.isEmpty()) { // If no invalid input
+        currentUser = new User(username, password, realName, Data.getUserFilePath(username)); // Make brand new user
         replace(createMenu(0));
       } else
         JOptionPane.showMessageDialog(this, errorMessages);
@@ -261,33 +574,14 @@ public class GameWindow extends JFrame {
     
   } // Login page for new and existing users, creates new user object
 
-
+  /* √ */
   public JPanel createMenu(int levelGroup) { // Creates menu page showing all unlocked levels, with custom level options and account settings
     
     // Base Panel
     JPanel root = new JPanel();
     root.setLayout(null);
     root.setBackground(Color.WHITE);
-    
-    // JLabel escapeTitle = new JLabel("ESCAPE");
-    // escapeTitle.setBounds(20, 20, 200, 55);
-    // escapeTitle.setFont(new Font("Monospaced", Font.PLAIN, 55));
-    // escapeTitle.setForeground(new Color(100, 100, 100));
 
-    // JLabel theTitle = new JLabel("the");
-    // theTitle.setBounds(20, 75, 45, 25);
-    // theTitle.setFont(new Font("Monospaced", Font.BOLD, 24));
-
-    // JLabel labTitle = new JLabel("LAB");
-    // labTitle.setBounds(65, 75, 155, 80);
-    // labTitle.setFont(new Font("Monospaced", Font.PLAIN, 85));
-    // labTitle.setForeground(new Color(200, 60, 60));
-
-    // root.add(escapeTitle);
-    // root.add(theTitle);
-    // root.add(labTitle);
-
-    {
     // ETL logo
     JLabel jlbl_logo = new JLabel(Data.Images.Other.logo);
     jlbl_logo.setBounds(20, 20, 65 + 155, 75 + 80);
@@ -331,6 +625,7 @@ public class GameWindow extends JFrame {
     root.add(jlbl_completedField);
     root.add(jlbl_perfectField);
 
+    // Button to create new level
     JButton jbtn_create = new JButton("Create New");
     jbtn_create.setBounds(40, 670, 200, 80);
     jbtn_create.setBackground(Data.Colors.buttonBackground);
@@ -339,6 +634,7 @@ public class GameWindow extends JFrame {
       replace(createLevelDesigner());
     });
 
+    // Button to load a custom level
     JButton jbtn_load = new JButton("Load Custom");
     jbtn_load.setBounds(760, 670, 200, 80);
     jbtn_load.setBackground(Data.Colors.buttonBackground);
@@ -347,7 +643,8 @@ public class GameWindow extends JFrame {
       replace(createLevelBrowser());
     });
 
-    JButton jbtn_settings = new JButton("Settings");
+    // Button to access settings
+    JButton jbtn_settings = new JButton("Options");
     jbtn_settings.setBounds(420, 690, 160, 40);
     jbtn_settings.setBackground(Data.Colors.buttonBackground);
     jbtn_settings.setFont(Data.Fonts.menuButton);
@@ -355,12 +652,11 @@ public class GameWindow extends JFrame {
       replace(createSettings());
     });
 
+    // Add buttons
     root.add(jbtn_create);
     root.add(jbtn_load);
     root.add(jbtn_settings);
-    } // Menu stuff
 
-    {
     // Level panel
     jpnl_menuLevels = new LevelPanel(levelGroup);
     root.add(jpnl_menuLevels);
@@ -381,15 +677,14 @@ public class GameWindow extends JFrame {
       jpnl_menuLevels.incrementGroupNum();
     });
 
+    // Add navigation arrows
     root.add(jbtn_leftArrow);
     root.add(jbtn_rightArrow);
-    } // Level stuff
 
-    // currentScreen = "menu";
     return root;
   } // Creates menu with level navigation and user info with custom levels
 
-
+  /* √ */
   public void startLevelSequence(int startingLevel) {
     int level;
     boolean statusGood = true;
@@ -403,166 +698,50 @@ public class GameWindow extends JFrame {
   }
 
 
-  // public boolean displayLevel (File levelFile, boolean isCustom) {
-  //   Scanner fileIn = new Scanner(levelFile);
-  //   String levelTitle = fileIn.nextLine().trim();
-  //   int startEnergy = fileIn.nextInt(); fileIn.nextLine();
-  //   int perfectEnergy = fileIn.nextInt(); fileIn.nextLine();
-    
-  //   GameBoard levelBoard = new GameBoard(fileIn);
-
-  //   // Base panel
-  //   JPanel root = new JPanel();
-  //   root.setLayout(null);
-  //   root.setBackground(Color.WHITE);
-
-  //   /////////////////////////////////////////// i fukin dunno wutz aftur dis
-
-  //   // Label for level title
-  //   JLabel jlbl_levelTitle = new JLabel(levelTitle, SwingConstants.CENTER);
-  //   title.setBounds(0, 0, 1000, 60);
-  //   title.setFont(Data.Fonts.header2);
-
-  //   // Label for level name
-  //   String levelDesc = (isCustom) ? "made by " + levelFile.getParent().getName() : levelFile.getName().substring("level".length(), levelFile.getName().indexOf('.'));
-  //   JLabel jlbl_name = new JLabel("Level " + levelDesc, SwingConstants.CENTER);
-  //   name.setBounds(0, 130, 350, 50);
-  //   name.setFont(Data.Fonts.dataLabel);
-
-  //   // Label for energy level
-  //   JLabel jlbl_energyLabel = new JLabel("Remaining Energy:", SwingConstants.CENTER);
-  //   energyLabel.setBounds(0, 200, 350, 30);
-  //   energyLabel.setFont(Data.Fonts.dataLabel);
-
-  //   // Label for perfect energy level
-  //   JLabel jlbl_perfectEnergy = new JLabel("Perfect Energy: " + Integer.toString(perfectEnergy));
-  //   perfectEnergy.setBounds(230, 235, 100, 20);
-  //   perfectEnergy.setForeground(Data.Colors.perfectLevel);
-  //   perfectEnergy.setFont(new Font("Monospace", Font.PLAIN, 12));
-
-  //   // Value for energy level
-  //   JLabel jlbl_energyAmt = new JLabel(startEnergy, SwingConstants.CENTER);
-  //   energyAmt.setBounds(0, 230, 350, 30);
-  //   energyAmt.setFont(Data.Fonts.dataLabel);
-
-  //   JLabel genLabel = new JLabel("Generators Active:", SwingConstants.CENTER);
-  //   genLabel.setBounds(0, 300, 350, 30);
-  //   genLabel.setFont(Data.Fonts.dataLabel);
-
-  //   int activeGen = 0;
-  //   JLabel genAmt = new JLabel(activeGen + "/" + numOfGen, SwingConstants.CENTER);
-  //   genAmt.setBounds(0, 330, 350, 30);
-  //   genAmt.setFont(Data.Fonts.dataLabel);
-
-  //   JButton restart = new JButton("Restart");
-  //   restart.setBounds(20, 430, 310, 50);
-  //   restart.setBackground(Data.Colors.buttonBackground);
-  //   restart.setFont(Data.Fonts.menuButton);
-  //   restart.addActionListener(e -> {
-  //     replace(createLevel(levelFile));
-  //   });
-
-  //   JButton menu = new JButton("Menu");
-  //   menu.setBounds(20, 500, 310, 50);
-  //   menu.setBackground(Data.Colors.buttonBackground);
-  //   menu.setFont(Data.Fonts.menuButton);
-  //   menu.addActionListener(e -> {
-  //     replace(createMenu());
-  //   });
-
-  //   JLabel note = new JLabel("<html>" + fileContents[0] + "</html>", SwingConstants.CENTER);
-  //   note.setBounds(10, 580, 330, 150);
-  //   note.setFont(new Font("Monospace", Font.ITALIC, 20));
-
-  //   root.add(title);
-  //   root.add(name);
-  //   root.add(energyLabel);
-  //   root.add(perfectEnergy);
-  //   root.add(energyAmt);
-  //   root.add(genLabel);
-  //   root.add(genAmt);
-  //   root.add(restart);
-  //   root.add(menu);
-  //   root.add(note);
-
-  //   Human human = new Human(floorGrid);
-  //   // KeyListener kl = new KeyAdapter() {
-  //   //   public void keyPressed(KeyEvent event) {
-  //   //     System.out.println(event.getKeyChar());
-  //   //   }
-  //   // };
-
-  //   // root.addKeyListener(kl);
-
-  //   class keyAction extends AbstractAction {
-
-  //     private int keyPressed;
-      
-  //     public keyAction(int keyPressed) {
-  //       this.keyPressed = keyPressed;
-  //     }
-
-  //     public void actionPerformed(ActionEvent e) {
-  //       human.move(floorGrid, keyPressed);
-  //     }
-  //   }
-
-  //   root.getInputMap(IFW).put(KeyStroke.getKeyStroke("UP"), MOVE_UP);
-  //   root.getInputMap(IFW).put(KeyStroke.getKeyStroke("DOWN"), MOVE_DOWN);
-  //   root.getInputMap(IFW).put(KeyStroke.getKeyStroke("LEFT"), MOVE_LEFT);
-  //   root.getInputMap(IFW).put(KeyStroke.getKeyStroke("RIGHT"), MOVE_RIGHT);
-  //   root.getInputMap(IFW).put(KeyStroke.getKeyStroke("SPACE"), ACTIVATE_GEN);
-  //   root.getInputMap(IFW).put(KeyStroke.getKeyStroke("NUMPAD0"), ACTIVATE_GEN);
-
-  //   root.getActionMap().put(MOVE_UP, new keyAction(3));
-  //   root.getActionMap().put(MOVE_DOWN, new keyAction(1));
-  //   root.getActionMap().put(MOVE_LEFT, new keyAction(2));
-  //   root.getActionMap().put(MOVE_RIGHT, new keyAction(0));
-  //   root.getActionMap().put(ACTIVATE_GEN, new keyAction(4));
-    
-
-  //   currentScreen = "Level";
-  //   return root;
-  // }
-
-  
-
-
   public JPanel createSettings() { // Ability to log out or delete account along with change user characteristics
+    
+    // Base panel
     JPanel root = new JPanel();
     root.setLayout(null);
     root.setBackground(Color.WHITE);
 
+    // Title
     JLabel jlbl_title = new JLabel("SETTINGS", SwingConstants.CENTER);
     jlbl_title.setBounds(350, 30, 300, 50);
     jlbl_title.setFont(Data.Fonts.header1);
 
-    root.add(jlbl_title);
-
+    // Label for username
     JLabel jlbl_usernameLabel = new JLabel("Userame:");
     jlbl_usernameLabel.setBounds(350, 120, 120, 25);
     jlbl_usernameLabel.setFont(Data.Fonts.textLabel);
 
+    // Label for password
     JLabel jlbl_passwordLabel = new JLabel("Password:");
     jlbl_passwordLabel.setBounds(350, 200, 120, 25);
     jlbl_passwordLabel.setFont(Data.Fonts.textLabel);
 
+    // Label for name
     JLabel jlbl_nameLabel = new JLabel("Name:");
     jlbl_nameLabel.setBounds(350, 280, 100, 25);
     jlbl_nameLabel.setFont(Data.Fonts.textLabel);
 
+    // Value for username
     JTextField jtxf_usernameField = new JTextField(currentUser.getUserName());
     jtxf_usernameField.setBounds(350, 145, 300, 25);
     jtxf_usernameField.setFont(Data.Fonts.textField);
 
+    // Value for password
     JTextField jtxf_passwordField = new JTextField(currentUser.passwordDots()); // Don't show password, check password when applying settings instead
     jtxf_passwordField.setBounds(350, 225, 300, 25);
     jtxf_passwordField.setFont(Data.Fonts.textField);
 
+    // Value for name
     JTextField jtxf_nameField = new JTextField(currentUser.getRealName());
     jtxf_nameField.setBounds(350, 305, 300, 25);
     jtxf_nameField.setFont(Data.Fonts.textField);
 
+    // Add all elements to base panel
+    root.add(jlbl_title);
     root.add(jlbl_usernameLabel);
     root.add(jlbl_passwordLabel);
     root.add(jlbl_nameLabel);
@@ -570,27 +749,34 @@ public class GameWindow extends JFrame {
     root.add(jtxf_passwordField);
     root.add(jtxf_nameField);
 
+    // Button to apply settings
     JButton jbtn_apply = new JButton("Apply Settings");
     jbtn_apply.setBounds(380, 385, 240, 55);
     jbtn_apply.setBackground(Data.Colors.buttonBackground);
     jbtn_apply.setFont(Data.Fonts.menuButton);
     jbtn_apply.addActionListener(e -> {
-      if (jtxf_usernameField.getText().contains(" ") || jtxf_passwordField.getText().contains(" ") || jtxf_usernameField.getText().isEmpty() || jtxf_passwordField.getText().isEmpty() || jtxf_nameField.getText().isEmpty())
-        JOptionPane.showMessageDialog(this, "Please make sure the username and password fields are filled WITHOUT spaces.");
-      else {
-        File userFile = new File("Users/" + currentUser.getUserName() + ".txt");
-        userFile.delete();
-        String oldUsername = currentUser.getUserName();
-        currentUser = new User(jtxf_usernameField.getText(), jtxf_passwordField.getText(), jtxf_nameField.getText(), currentUser.getLevels(), currentUser.getPerfectLevels());
-        try {
-          replaceUsername(oldUsername, currentUser.getUserName());
-        } catch (Exception exc) {
-          System.out.println("Unkown error");
-        }
-        replace(createMenu());
-      }
+      String username = jtxf_usernameField.getText();
+      String password = jtxf_passwordField.getText();
+      String realName = jtxf_nameField.getText();
+      String errorMessages = "";
+      
+      // Validate input
+      errorMessages += User.isValidUsername(username);
+      errorMessages += User.isValidPassword(password);
+      if (realName.isEmpty()) // If no name is provided
+        errorMessages += "Please provide your name.\n";
+      
+      if (errorMessages.isEmpty()) { // If no invalid input
+        if (!currentUser.getUsername().equals(username))
+          updateCustomLevels(username);
+        currentUser.setUsername(username);
+        currentUser.setPassword(password);
+        currentUser.setRealName(realName);
+      } else
+        JOptionPane.showMessageDialog(this, errorMessages);
     });
-    
+
+    // Button to cancel and return to menu
     JButton jbtn_cancel = new JButton("Cancel");
     jbtn_cancel.setBounds(380, 475, 240, 55);
     jbtn_cancel.setBackground(Data.Colors.buttonBackground);
@@ -598,7 +784,8 @@ public class GameWindow extends JFrame {
     jbtn_cancel.addActionListener(e -> {
       replace(createMenu());
     });
-    
+
+    // Button to log out
     JButton jbtn_logout = new JButton("Log Out");
     jbtn_logout.setBounds(380, 565, 240, 55);
     jbtn_logout.setBackground(Data.Colors.buttonBackground);
@@ -608,7 +795,8 @@ public class GameWindow extends JFrame {
       currentUser = null;
       replace(createLogin());
     });
-    
+
+    // Button to delete account
     JButton jbtn_delete = new JButton("DELETE ACCOUNT");
     jbtn_delete.setBounds(380, 655, 240, 55);
     jbtn_delete.setBackground(Data.Colors.buttonBackground);
@@ -617,15 +805,10 @@ public class GameWindow extends JFrame {
     jbtn_delete.addActionListener(e -> {
       int option = JOptionPane.showConfirmDialog(this, "All player data will be irretrievably lost and ownership over public custom levels will be forfeited.\nPress yes to permanently delete your account, press no to cancel.", "WARNING", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
       if (option == JOptionPane.YES_OPTION) {
-        File userFile = new File("../Users/" + currentUser.getUserName() + ".txt");
+        File userFile = new File(Data.Utilities.getUserFilePath(currentUser.getUsername()));
         userFile.delete();
-        String oldUsername = currentUser.getUserName();
+        updateCustomLevels("[deleted]");
         currentUser = null;
-        try {
-          replaceUsername(oldUsername, "[deleted]");
-        } catch (Exception exc) {
-          System.out.println("Unkown error");
-        }
         replace(createLogin());
       }
     });
@@ -639,44 +822,53 @@ public class GameWindow extends JFrame {
     return root;
   } // Sets up settings page for editing and reviewing limited player data
 
+  /* √ */
+  public void publicizeCustomLevels() {
+    File ownerDirectory = new File(Data.Utilities.customLevelDirectory + currentUser.getUsername());
+    File destinationDirectory = new File(Data.Utilities.customUnownedDirectory);
+    File[] levelFiles = ownerDirectory.listFiles();
 
-  public void replaceUsername(String original, String current) throws FileNotFoundException {
-    File directory = new File("../GameAssets/Levels/CustomLevels/");
-    File[] files = directory.listFiles();
-    for (File f : files) {
-      Scanner fileIn = new Scanner(f);
-      if (fileIn.nextLine().equals(original)) {
-        ArrayList<String> fileContents = new ArrayList<String>();
-        fileContents.add(current);
-        while (fileIn.hasNextLine())
-          fileContents.add(fileIn.nextLine());
-        String last = fileContents.remove(fileContents.size() - 1);
-        fileIn.close();
-        PrintWriter fileOut = new PrintWriter(f);
-        for (String s : fileContents) {
-          fileOut.println(s);
+    if (levelFiles != null) {
+      for (File f : levelFiles) {
+
+        try {
+            Files.move(f.toPath(), destinationDirectory.toPath().resolve(f.getName()), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        fileOut.print(last);
-        fileOut.close();
       }
     }
+
+    ownerDirectory.delete();
   } // Replaces username in custom levels so data is up to date and accurate
 
+  /* √ */
+  public boolean customLevelExists(String levelName) {
+    ArrayList<String> filenames = new ArrayList<>();
+    File[] userDirectories = (new File(Data.Utilities.customLevelDirectory)).listFiles();
+    for (File dir : userDirectories)
+      Collections.addAll(filenames, dir.list());
+    return filenames.contains(levelName);
+  }
 
+  /* √ */
   public JPanel createLevelBrowser() {
+    
+    // Base panel
     JPanel root = new JPanel();
     root.setLayout(null);
     root.setBackground(Color.WHITE);
 
+    // Title
     JLabel jlbl_title = new JLabel("Select a Level:", SwingConstants.CENTER);
     jlbl_title.setBounds(300, 20, 400, 50);
     jlbl_title.setFont(Data.Fonts.header1);
 
-    root.add(jlbl_title);
-    customPage = 0;
-    levelList = levelList(customPage, false);
-    root.add(levelList);
+    // Level selection page
+    customPageNum = 0;
+    customLevelList = levelList(customPageNum, false);
 
+    // Button to cancel and return to menu
     JButton jbtn_cancel = new JButton("Cancel");
     jbtn_cancel.setBounds(40, 700, 150, 60);
     jbtn_cancel.setBackground(Data.Colors.buttonBackground);
@@ -685,67 +877,61 @@ public class GameWindow extends JFrame {
       replace(createMenu());
     });
 
-    JLabel jlbl_page = new JLabel(Integer.toString(customPage + 1), SwingConstants.CENTER);
-    jlbl_page.setBounds(460, 710, 80, 40);
-    jlbl_page.setBackground(Data.Colors.buttonBackground);
-    jlbl_page.setOpaque(true);
-    jlbl_page.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
-    jlbl_page.setFont(Data.Fonts.header2);
+    // Value for page number
+    jlbl_pageNum = new JLabel("1", SwingConstants.CENTER);
+    jlbl_pageNum.setBounds(460, 710, 80, 40);
+    jlbl_pageNum.setBackground(Data.Colors.buttonBackground);
+    jlbl_pageNum.setOpaque(true);
+    jlbl_pageNum.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
+    jlbl_pageNum.setFont(Data.Fonts.header2);
 
+    // Check box for private level visibility setting
     JCheckBox jchk_privateOnly = new JCheckBox("My levels only", false);
     jchk_privateOnly.setBounds(770, 720, 150, 25);
     jchk_privateOnly.setOpaque(false);
     jchk_privateOnly.setFont(Data.Fonts.checkboxLabel);
     jchk_privateOnly.addActionListener(e -> {
-      root.remove(levelList);
-      levelList = levelList(0, privateOnly.isSelected());
-      jlbl_page.setText("1");
-      root.add(levelList);
+      root.remove(customLevelList);
+      customLevelList = levelList(0, privateOnly.isSelected());
+      jlbl_pageNum.setText("1");
+      root.add(customLevelList);
       root.repaint();
-      root.revalidate();
     });
 
-    JButton jbtn_leftArrow = new JButton(new ImageIcon((new ImageIcon("Images/ArrowLeft.png")).getImage().getScaledInstance(30, 60, Image.SCALE_FAST)));
+    // Button to decrement page number
+    JButton jbtn_leftArrow = new JButton(new ImageIcon((new ImageIcon(Data.Images.Other.leftNavArrow)).getImage().getScaledInstance(30, 60, Image.SCALE_FAST)));
     jbtn_leftArrow.setBounds(400, 700, 30, 60);
     jbtn_leftArrow.setBorderPainted(false);
     jbtn_leftArrow.addActionListener(e -> {
-      if (customPage > 0) {
-        root.remove(levelList);
-        levelList = levelList(customPage - 1, jchk_privateOnly.isSelected());
-        jlbl_page.setText(Integer.toString(Integer.parseInt(page.getText()) - 1));
-        root.add(levelList);
-        root.repaint();
-        root.revalidate();
-      }
+      customPageNum--;
+      if (customPageNum < 0)
+        customPageNum = (Data.Utilities.getAllRegFilesInDirectory(new File(Data.Utilities.customLevelDirectory + (privateOnly)? currentUser.getUsername() : "")).length - 1) / 8;
+      
+      root.remove(customLevelList);
+      customLevelList = levelList(customPageNum, jchk_privateOnly.isSelected());
+      jlbl_pageNum.setText(Integer.toString(customPageNum + 1));
+      root.add(customLevelList);
+      root.repaint();
     });
 
+    // Button to increment page number
     JButton jbtn_rightArrow = new JButton(new ImageIcon((new ImageIcon("Images/ArrowRight.png")).getImage().getScaledInstance(30, 60, Image.SCALE_FAST)));
     jbtn_rightArrow.setBounds(570, 700, 30, 60);
     jbtn_rightArrow.setBorderPainted(false);
     jbtn_rightArrow.addActionListener(e -> {
-      File directory = new File("Custom/");
-      File[] fileList = directory.listFiles();
-      int levelCount = 0;
-      for (int i = 0; i < fileList.length; i++) {
-        try {
-          Scanner fileIn = new Scanner(fileList[i]);
-          if (!jchk_privateOnly.isSelected() || currentUser.getUserName().equals(fileIn.nextLine()))
-            levelCount++;
-          fileIn.close();
-        } catch (FileNotFoundException f) {
-          System.out.println("Unkown error");
-        }
-      }
-      if (customPage < (levelCount - 1) / 8) {
-        root.remove(levelList);
-        levelList = levelList(customPage + 1, jchk_privateOnly.isSelected());
-        jlbl_page.setText(Integer.toString(Integer.parseInt(page.getText()) + 1));
-        root.add(levelList);
-        root.repaint();
-        root.revalidate();
-      }
+      customPageNum++;
+      if (customPageNum > ((Data.Utilities.getAllRegFilesInDirectory(new File(Data.Utilities.customLevelDirectory + (privateOnly)? currentUser.getUsername() : "")).length - 1) / 8)
+        customPageNum = 0;
+      
+      root.remove(customLevelList);
+      customLevelList = levelList(customPageNum, jchk_privateOnly.isSelected());
+      jlbl_pageNum.setText(Integer.toString(customPageNum + 1));
+      root.add(customLevelList);
+      root.repaint();
     });
 
+    root.add(jlbl_title);
+    root.add(customLevelList);
     root.add(jbtn_cancel);
     root.add(jlbl_page);
     root.add(jbtn_leftArrow);
@@ -756,559 +942,41 @@ public class GameWindow extends JFrame {
     return root;
   }
 
+  /* √ */
+  public JPanel levelList(boolean privateOnly) {
+    JPanel jpnl_list = new JPanel();
+    jpnl_list.setLayout(null);
+    jpnl_list.setBounds(80, 80, 840, 600);
+    jpnl_list.setBackground(Color.WHITE);
 
-  public JPanel levelList(int customPage, boolean privateOnly) {
-    this.customPage = customPage;
-    JPanel list = new JPanel();
-    list.setLayout(null);
-    list.setBounds(80, 80, 840, 600);
-    list.setBackground(Color.WHITE);
+    String path = Data.Utilities.customLevelDirectory + (privateOnly)? currentUser.getUsername() : "";
+    File[] levels = Data.Utilities.getAllRegFilesInDirectory(new File(path));
+    Arrays.sort(files, Comparator.comparingLong(File::lastModified).reversed());
+    for (int i = customPageNum * 8, position = 0; i < levels.length; i++, position++) {
+      
+      JDataButton button = new JDataButton(levels[i]);
+      button.setBounds(200, 0 + position * 75, 640, 75);
+      button.setBackground(Data.Colors.buttonBackground);
+      button.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+      button.setFont(Data.Fonts.customButton);
+      button.addActionListener(e -> {
+        replace(new Level(button.getFile());
+        while (!(Level.goToNextLevel || Level.returnToMenu));
+          wait();
+        replace(createLevelBrowser);
+      });
 
-    File directory = new File("Custom/");
-    File[] levelNames = directory.listFiles();
-    int skips = 0;
-    for (int i = 0; i + customPage * 8 + skips < levelNames.length && i - skips < 8; i++) {
-      String username = "";
-      try {
-        Scanner fileInput = new Scanner(levelNames[i + customPage * 8 + skips]);
-        username = fileInput.nextLine();
-        fileInput.close();
-      } catch (FileNotFoundException e) {
-        System.out.println("Unkown Error");
-        return null;
-      }
-      if (!privateOnly || username.equals(currentUser.getUserName())) {
-        JDataButton b = new JDataButton(levelNames[i + customPage * 8 + skips]);
-        b.setBounds(200, 0 + i * 75, 640, 75);
-        b.setBackground(Data.Colors.buttonBackground);
-        b.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-        b.setFont(Data.Fonts.customButton);
-        b.addActionListener(e -> {
-          replace(createLevel(b.getFile()));
-        });
+      JLabel jlbl_creatorName = new JLabel(levels[i].getParentFile().getName(), SwingConstants.RIGHT);
+      jlbl_creatorName.setBounds(0, 0 + i * 75, 185, 75);
+      jlbl_creatorName.setFont(Data.Fonts.dataLabel);
 
-        JLabel l = new JLabel(username, SwingConstants.RIGHT);
-        l.setBounds(0, 0 + i * 75, 185, 75);
-        l.setFont(Data.Fonts.dataLabel);
-
-        list.add(b);
-        list.add(l);
-      } else {
-        skips++;
-        i--;
-      }
+      jpnl_list.add(button);
+      jpnl_list.add(jlbl_creatorName);
     }
 
-    return list;
+    return jpnl_list;
   }
 
-
-  public JPanel createLevelDesigner() {
-    JPaintTool root = new JPaintTool();
-    root.setLayout(null);
-    root.setBackground(Color.WHITE);
-
-    JLabel title = new JLabel("Level Creator");
-    title.setBounds(20, 20, 300, 50);
-    title.setFont(Data.Fonts.header1);
-
-    root.add(title);
-
-    ArrayList<Block> blocks = new ArrayList<Block>();
-
-    blocks.add(new Block(770, 20, 110, 110, new Color(120, 120, 120), ""));
-    blocks.add(new Block(780, 30, 90, 90, new Color(150, 150, 150), ""));
-    blocks.add(new Block(700, 150, 250, 100, new Color(120, 120, 120), ""));
-    blocks.add(new Block(710, 160, 230, 80, new Color(150, 150, 150), ""));
-    blocks.add(new Block(700, 270, 250, 165, new Color(120, 120, 120), ""));
-    blocks.add(new Block(710, 280, 230, 145, new Color(150, 150, 150), ""));
-    // int fileStart = 5;
-    try {
-      blocks.addAll(gameGrid(Arrays.copyOfRange(fileReader(new File("Levels/default.txt")), fileStart, 100 + fileStart), 50, 150));
-    } catch (FileNotFoundException e) {
-      System.out.println("ERROR: file not found");
-    }
-
-    char[] wallType = new char[] {'w', 'h', 'd', 'p', 'a', 'o', '0'};
-    for (int i = 0; i < 7; i++)
-      blocks.addAll(drawObject('w', 0, wallType[i], 730 + i * 30, 175, Integer.toString(i)));
-
-    for (int i = 1; i < 4; i++)
-      blocks.add(new Block(798 + (i / 2) * 75, 293 + (i / 3) * 65, 54, 54, Color.BLACK, ""));
-    String[] roomType = new String[] {"e0", "g0", "n0", "f0", "z2", "b1"};
-    for (int i = 0; i < 6; i++)
-      blocks.addAll(drawObject('r', Character.getNumericValue(roomType[i].charAt(1)), roomType[i].charAt(0), 725 + (i / 2) * 75, 295 + (i % 2) * 65, ""));
-    
-    root.repaint(blocks);
-    root.addMouseListener(new MouseAdapter() {
-      public void mousePressed(MouseEvent e) {
-        // ArrayList<Block> oldBlocks = (ArrayList<Block>) blocks.clone();
-        int mx = e.getX();
-        int my = e.getY();
-        if (mx > 55 && mx < 645 && my > 155 && my < 745 && currentItem != null) { ////////////////////////////////////////////// Clicked on board
-          // mx = mx - 50;
-          // my = my - 150;
-          // System.out.println("Click on board");
-          int coordinate;
-          char clickLocation = ' ';
-          for (coordinate = 0; coordinate < 100 && clickLocation == ' '; coordinate++) // {
-            clickLocation = floorGrid[coordinate % 10][coordinate / 10].wasClicked(new int[] {mx, my});
-            // System.out.println(clickLocation);
-          // }
-          coordinate--;
-          int first = coordinate % 10;
-          int second = coordinate / 10;
-          
-          if (currentItem.charAt(0) == 'w' && Character.isDigit(clickLocation)) { // Click on wall
-            if (!Character.isDigit(currentItem.charAt(1)) || doorsPlaced < 10) {
-              while (blocks.remove(new Block(0, 0, 0, 0, null, "w" + Character.getNumericValue(clickLocation) + "" + first + "" + second))) {}
-              if (Character.isDigit(floorGrid[first][second].getWall(Character.getNumericValue(clickLocation))))
-                doorsPlaced--;
-              floorGrid[first][second].setWall(currentItem.charAt(1), Character.getNumericValue(clickLocation));
-              // System.out.println("add blocks");
-              blocks.addAll(floorGrid[first][second].getWallBlocks(Character.getNumericValue(clickLocation)));
-              if (Character.isDigit(currentItem.charAt(1)))
-                doorsPlaced++;
-            } else
-              JOptionPane.showMessageDialog(root, "You can only have up to 10 locked doors!");
-          } else if (currentItem.charAt(0) == 'r' && clickLocation == 'r') { // Click on room
-            if (currentItem.charAt(1) == 'n' || currentItem.charAt(1) == 'f') {
-              if (floorGrid[first][second].getInterior() == 'e')
-                elevatorPlaced = false;
-              floorGrid[first][second].setInterior(currentItem.charAt(1));
-              floorGrid[first][second].setItem(' ');
-              floorGrid[first][second].setOccupant(' ');
-            } else if (currentItem.charAt(1) == 'e' || currentItem.charAt(1) == 'g') {
-              if (currentItem.charAt(1) == 'e' && elevatorPlaced)
-                JOptionPane.showMessageDialog(root, "You can only have one elevator!");
-              else {
-                if (floorGrid[first][second].getInterior() == 'e')
-                  elevatorPlaced = false;
-                floorGrid[first][second].setInterior(currentItem.charAt(1));
-                if (currentItem.charAt(1) == 'e')
-                  elevatorPlaced = true;
-              }
-            } else if (currentItem.charAt(1) == 'z') {
-              floorGrid[first][second].setOccupant(currentItem.charAt(1));
-            } else if (Character.isDigit(currentItem.charAt(1)) || currentItem.charAt(1) == 'b') {
-              floorGrid[first][second].setItem(currentItem.charAt(1));
-            }
-            for (int i = 0; i < 3; i++)
-              while (blocks.remove(new Block(0, 0, 0, 0, null, "r" + i + "" + first + "" + second))) {}
-            // System.out.println("add blocks");
-            blocks.addAll(floorGrid[first][second].getContentBlocks(false));
-          }
-        } else if (currentItem == null || currentItem.charAt(0) == 'w' || !Character.isDigit(currentItem.charAt(1))) { /////////////////////////////////////////////////////////////////////////////////////////////////////////////// Clicked on items
-          for (int i = 0; i < 7; i++) {
-            if (mx > 730 + i * 30 && mx < 740 + i * 30 && my > 175 && my < 225) {
-              // System.out.println("Click wall");
-              currentItem = "w" + ((i == 6) ? Integer.toString(doorsPlaced) : Character.toString(wallType[i]));
-              while (blocks.remove(new Block(0, 0, 0, 0, null, "currentItem"))) {}
-              blocks.addAll(drawObject('w', 0, currentItem.charAt(1), 820, 50, "currentItem"));
-            }
-          }
-          for (int i = 0; i < 6; i++) {
-            if (mx > 725 + (i / 2) * 75 && mx < 775 + (i / 2) * 75 && my > 295 + (i % 2) * 65 && my < 345 + (i % 2) * 65) {
-              // System.out.println("Click object");
-              currentItem = "r" + roomType[i].charAt(0);
-              while (blocks.remove(new Block(0, 0, 0, 0, null, "currentItem"))) {}
-              blocks.addAll(drawObject('r', Character.getNumericValue(roomType[i].charAt(1)), roomType[i].charAt(0), 800, 50, "currentItem"));
-            }
-          }
-        } else
-          JOptionPane.showMessageDialog(root, "You must place the key first!");
-        // root.invalidate();
-        root.repaint(blocks);
-        // System.out.println("repaint");
-        // int i;
-        // for (i = 0; i < oldBlocks.size(); i++) {
-        //   if (oldBlocks.get(i) != blocks.get(i))
-        //     i = 1000000;
-        // }
-        // if (i > oldBlocks.size())
-        //   System.out.println("different");
-      } 
-    });
-
-    JLabel nameLabel = new JLabel("Level name:", SwingConstants.CENTER);
-    nameLabel.setBounds(700, 465, 250, 25);
-    nameLabel.setFont(Data.Fonts.textLabel);
-
-    JTextField nameField = new JTextField();
-    nameField.setBounds(700, 490, 250, 30);
-    nameField.setFont(Data.Fonts.textField);
-
-    JLabel energyLabel = new JLabel("Energy:");
-    energyLabel.setBounds(765, 540, 80, 25);
-    energyLabel.setFont(Data.Fonts.textLabel);
-
-    JTextField energyField = new JTextField();
-    energyField.setBounds(845, 538, 40, 29);
-    energyField.setFont(Data.Fonts.textField);
-
-    JButton demo = new JButton("Demo");
-    demo.setBounds(725, 590, 200, 40);
-    demo.setBackground(Data.Colors.buttonBackground);
-    demo.setFont(Data.Fonts.menuButton);
-    demo.addActionListener(e -> {
-      System.out.println("demo");
-    });
-
-    JButton save = new JButton("Save As...");
-    save.setBounds(725, 650, 200, 40);
-    save.setBackground(Data.Colors.buttonBackground);
-    save.setFont(Data.Fonts.menuButton);
-    save.addActionListener(e -> {
-      boolean done = false;
-      while (!done) {
-        String filename = JOptionPane.showInputDialog(this, "Filename:");
-        File file = new File(filename);
-        if (file.exists()) {
-          Scanner fileIn = null;
-          try {
-            fileIn = new Scanner(file);
-          } catch (FileNotFoundException f) {}
-          if (fileIn.nextLine().equals(currentUser.getUsername())) {
-            int option = JOptionPane.showConfirmDialog(this, "One of your custom levels already has this file name, would you like to overwrite it?");
-            switch (option) {
-              case JOptionPane.YES_OPTION:
-                // overwrite w/ no "break;"
-              case JOptionPane.CANCEL_OPTION:
-                done = true;
-                break;
-            }
-          }
-          fileIn.close();
-        } else {
-          
-        }
-      }
-    });
-
-    JButton exit = new JButton("Exit");
-    exit.setBounds(725, 710, 200, 40);
-    exit.setBackground(Data.Colors.buttonBackground);
-    exit.setFont(Data.Fonts.menuButton);
-    exit.addActionListener(e -> {
-      replace(createMenu());
-    });
-
-    root.add(nameLabel);
-    root.add(nameField);
-    root.add(energyLabel);
-    root.add(energyField);
-    root.add(demo);
-    root.add(save);
-    root.add(exit);
-    
-    
-    
-    currentScreen = "create";
-    return root;
-  } // FIX
-
-
-  public ArrayList<Block> gameGrid(String[] fileContents, int startx, int starty) {
-    floorGrid = new GridCell[10][10];
-    // String[] fileContents = null;
-    ArrayList<Block> blocks = new ArrayList<Block>();
-    elevatorPlaced = false;
-    numOfGen = 0;
-    doorsPlaced = 0;
-
-    // try {
-    //   fileContents = Arrays.copyOfRange(fileReader(file), fileStart, fileStart + 100);
-    // } catch (FileNotFoundException e) {
-    //   System.out.println("ERROR: File not found");
-    // }
-    // System.out.println(fileContents.length); /////
-
-    blocks.add(new Block(startx, starty, 600, 600, new Color(80, 80, 80), ""));
-
-    for (int i = 0; i < 100; i++) {
-      String[] line = fileContents[i].split("-");
-      floorGrid[i % 10][i / 10] = new GridCell(line[0].toCharArray(), line[1].toCharArray(), new int[] {i % 10, i / 10}, new int[] {startx + 5 + (i % 10) * 60, starty + 5 + (i / 10) * 60});
-      if (line[0].charAt(0) == 'e')
-        elevatorPlaced = true;
-      if (line[0].charAt(0) == 'g')
-        numOfGen++;
-      if (Character.isDigit(line[1].charAt(0)))
-        doorsPlaced++;
-      if (Character.isDigit(line[1].charAt(1)))
-        doorsPlaced++;
-      blocks.addAll(floorGrid[i % 10][i / 10].getAllBlocks());
-    }
-
-    return blocks;
-  } // DELETE
-
-
-  public ArrayList<Block> drawObject(char type, int position, char object, int startx, int starty, String id) {
-    ArrayList<Block> blocks = new ArrayList<Block>();
-    if (object == ' ') {
-      return blocks;
-    }
-    if (type == 'r') {
-      if (position == 0) {
-        switch (object) {
-          case 'e':
-            blocks.add(new Block(startx, starty, 50, 50, new Color(50, 50, 50), id));
-            blocks.add(new Block(startx + 10, starty + 10, 30, 30, Color.BLACK, id));
-            blocks.add(new Block(startx + 15, starty + 15, 20, 20, new Color(50, 50, 50), id));
-            break;
-          case 'g':
-            blocks.add(new Block(startx, starty, 50, 50, new Color(150, 0, 0), id));
-            blocks.add(new Block(startx + 10, starty + 10, 30, 30, Color.BLACK, id));
-            blocks.add(new Block(startx + 15, starty + 15, 20, 20, new Color(150, 0, 0), id));
-            break;
-          case 'x':
-            blocks.add(new Block(startx, starty, 50, 50, new Color(0, 190, 0), id));
-            blocks.add(new Block(startx + 10, starty + 10, 30, 30, Color.BLACK, id));
-            blocks.add(new Block(startx + 15, starty + 15, 20, 20, new Color(0, 190, 0), id));
-            break;
-          case 'f':
-            blocks.add(new Block(startx, starty, 50, 50, new Color(80, 80, 80), id));
-            break;
-          case 'n':
-            blocks.add(new Block(startx, starty, 50, 50, new Color(220, 220, 220), id));
-            break;
-        }
-      } else if (position == 1) {
-        switch (object) {
-          case 'b':
-            blocks.add(new Block(startx, starty, 50, 50, new Color(220, 220, 220), id));
-            blocks.add(new Block(startx + 3, starty + 10, 41, 30, Color.BLACK, id));
-            blocks.add(new Block(startx + 6, starty + 13, 35, 24, new Color(220, 220, 220), id));
-            blocks.add(new Block(startx + 44, starty + 20, 3, 10, Color.BLACK, id));
-            break;
-          default:
-            blocks.add(new Block(startx + 10, starty + 20, 30, 10, new Color((50 + Character.getNumericValue(object) * 80) % 255, Math.abs(250 - Character.getNumericValue(object) * 170) % 255, (100 + Character.getNumericValue(object) * 230) % 255), id));
-            // Draw key
-        }
-      } else if (position == 2) {
-        switch (object) {
-          case 'z':
-            blocks.add(new Block(startx, starty, 50, 50, new Color(220, 220, 220), id));
-            blocks.add(new Block(startx + 8, starty + 8, 34, 34, new Color(0, 150, 30), id));
-            blocks.add(new Block(startx + 14, starty + 16, 6, 6, Color.BLACK, id));
-            blocks.add(new Block(startx + 30, starty + 16, 6, 6, Color.BLACK, id));
-            // blocks.add(new)
-            break;
-          case 'c':
-            blocks.add(new Block(startx, starty, 50, 50, new Color(220, 220, 220), id));
-            blocks.add(new Block(startx + 8, starty + 8, 34, 34, new Color(0, 150, 30), id));
-            blocks.add(new Block(startx + 14, starty + 16, 6, 6, Color.BLACK, id));
-            blocks.add(new Block(startx + 30, starty + 16, 6, 6, Color.BLACK, id));
-            break;
-        }
-      }
-    } else if (type == 'w') {
-      Color temp = new Color(180, 180, 180);
-      switch (object) {
-        case 'w':
-          temp = new Color(80, 80, 80);
-          break;
-        case 'h':
-          temp = new Color(220, 220, 220);
-          break;
-        case 'd':
-          blocks.add(new Block(startx + position * 15, starty + (1 - position) * 15, 10 + position * 10, 20 - position * 10, new Color(190, 0, 0), id));
-          break;
-        case 'p':
-          blocks.add(new Block(startx + position * 15, starty + (1 - position) * 15, 10 + position * 10, 20 - position * 10, Color.BLACK, id));
-          break;
-        case 'a':
-          for (int i = 0; i < 2; i++)
-            blocks.add(new Block(startx + position * 10 + i * 20 * position, starty + 10 - position * 10 + i * 20 * (1 - position), 10, 10, new Color(190, 0, 0), id));
-          break;
-        case 'o':
-          for (int i = 0; i < 2; i++)
-            blocks.add(new Block(startx + position * 10 + i * 20 * position, starty + 10 - position * 10 + i * 20 * (1 - position), 10, 10, new Color(130, 130, 130), id));
-          break;
-        case 'u':
-          blocks.add(new Block(startx + position * 15, starty + (1 - position) * 15, 10 + position * 10, 20 - position * 10, new Color(0, 190, 0), id));
-          break;
-        case 's':
-          for (int i = 0; i < 2; i++)
-            blocks.add(new Block(startx + position * 10 + i * 20 * position, starty + 10 - position * 10 + i * 20 * (1 - position), 10, 10, new Color(0, 190, 0), id));
-          break;
-        default:
-          blocks.add(new Block(startx + position * 8, starty + (1 - position) * 8, 10 + position * 24, 34 - position * 24, new Color((50 + Character.getNumericValue(object) * 80) % 255, Math.abs(250 - Character.getNumericValue(object) * 170) % 255, (100 + Character.getNumericValue(object) * 230) % 255), id));
-          // Draw key door
-      }
-      blocks.add(0, new Block(startx, starty, 10 + position * 40, 50 - position * 40, temp, id));
-    }
-
-    return blocks;
-  } // DELETE
-
-
-  // private final int IFW = JComponent.WHEN_IN_FOCUSED_WINDOW;
-  // private final Object MOVE_UP = new String("move up");
-  // private final Object MOVE_DOWN = new String("move down");
-  // private final Object MOVE_LEFT = new String("move left");
-  // private final Object MOVE_RIGHT = new String("move right");
-  // private final Object ACTIVATE_GEN = new String("activate gen");
-  // private final Object NUMPAD0 = new String("num 0");
-  
-
-  public JPanel createLevel(File levelFile) {
-    JPaintTool root = new JPaintTool();
-    root.setLayout(null);
-    root.setBackground(Color.WHITE);
-
-    String[] fileContents = null;
-    try {
-      fileContents = fileReader(levelFile);
-      root.repaint(gameGrid(Arrays.copyOfRange(fileContents, fileStart, 100 + fileStart), 350, 130));
-    } catch (FileNotFoundException e) {
-      System.out.println("ERROR: file not found");
-    }
-
-    JLabel title = new JLabel(fileContents[1], SwingConstants.CENTER);
-    title.setBounds(0, 0, 1000, 60);
-    title.setFont(new Font("Monospace", Font.PLAIN, 30));
-
-    JLabel name = new JLabel(fileContents[2], SwingConstants.CENTER);
-    name.setBounds(0, 130, 350, 50);
-    name.setFont(Data.Fonts.dataLabel);
-
-    JLabel energyLabel = new JLabel("Remaining Energy:", SwingConstants.CENTER);
-    energyLabel.setBounds(0, 200, 350, 30);
-    energyLabel.setFont(Data.Fonts.dataLabel);
-
-    JLabel perfectEnergy = new JLabel(fileContents[4]);
-    perfectEnergy.setBounds(230, 235, 100, 20);
-    perfectEnergy.setForeground(Data.Colors.perfectLevel);
-    perfectEnergy.setFont(new Font("Monospace", Font.PLAIN, 12));
-
-    JLabel energyAmt = new JLabel(fileContents[3], SwingConstants.CENTER);
-    energyAmt.setBounds(0, 230, 350, 30);
-    energyAmt.setFont(Data.Fonts.dataLabel);
-
-    JLabel genLabel = new JLabel("Generators Active:", SwingConstants.CENTER);
-    genLabel.setBounds(0, 300, 350, 30);
-    genLabel.setFont(Data.Fonts.dataLabel);
-
-    int activeGen = 0;
-    JLabel genAmt = new JLabel(activeGen + "/" + numOfGen, SwingConstants.CENTER);
-    genAmt.setBounds(0, 330, 350, 30);
-    genAmt.setFont(Data.Fonts.dataLabel);
-
-    JButton restart = new JButton("Restart");
-    restart.setBounds(20, 430, 310, 50);
-    restart.setBackground(Data.Colors.buttonBackground);
-    restart.setFont(Data.Fonts.menuButton);
-    restart.addActionListener(e -> {
-      replace(createLevel(levelFile));
-    });
-
-    JButton menu = new JButton("Menu");
-    menu.setBounds(20, 500, 310, 50);
-    menu.setBackground(Data.Colors.buttonBackground);
-    menu.setFont(Data.Fonts.menuButton);
-    menu.addActionListener(e -> {
-      replace(createMenu());
-    });
-
-    JLabel note = new JLabel("<html>" + fileContents[0] + "</html>", SwingConstants.CENTER);
-    note.setBounds(10, 580, 330, 150);
-    note.setFont(new Font("Monospace", Font.ITALIC, 20));
-
-    root.add(title);
-    root.add(name);
-    root.add(energyLabel);
-    root.add(perfectEnergy);
-    root.add(energyAmt);
-    root.add(genLabel);
-    root.add(genAmt);
-    root.add(restart);
-    root.add(menu);
-    root.add(note);
-
-    Human human = new Human(floorGrid);
-    // KeyListener kl = new KeyAdapter() {
-    //   public void keyPressed(KeyEvent event) {
-    //     System.out.println(event.getKeyChar());
-    //   }
-    // };
-
-    // root.addKeyListener(kl);
-
-    class keyAction extends AbstractAction {
-
-      private int keyPressed;
-      
-      public keyAction(int keyPressed) {
-        this.keyPressed = keyPressed;
-      }
-
-      public void actionPerformed(ActionEvent e) {
-        human.move(floorGrid, keyPressed);
-      }
-    }
-
-    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("UP"), MOVE_UP);
-    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("DOWN"), MOVE_DOWN);
-    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("LEFT"), MOVE_LEFT);
-    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("RIGHT"), MOVE_RIGHT);
-    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("SPACE"), ACTIVATE_GEN);
-    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("NUMPAD0"), ACTIVATE_GEN);
-
-    root.getActionMap().put(MOVE_UP, new keyAction(3));
-    root.getActionMap().put(MOVE_DOWN, new keyAction(1));
-    root.getActionMap().put(MOVE_LEFT, new keyAction(2));
-    root.getActionMap().put(MOVE_RIGHT, new keyAction(0));
-    root.getActionMap().put(ACTIVATE_GEN, new keyAction(4));
-    
-
-    currentScreen = "Level";
-    return root;
-  } // DELETE
-
-
-  public void animate(JPaintTool panel, JLabel energy, GridCell[][] currentState, int i, int direction) {
-    char Occupant = GridCell[i % 10][i / 10].getOccupant().getChar();
-    char wallType = GridCell[(i % 10) - keyPressed / 2 + keyPressed / 3][(i / 10) - keyPressed / 3].getWall(keyPressed % 2);
-    try {
-      boolean moved = false;
-      boolean flashEnergy = false;
-      
-      switch (GridCell[(i % 10) - keyPressed / 2 + keyPressed / 3][(i / 10) - keyPressed / 3].getWall(keyPressed % 2)) {
-        case 'w':
-          // Animate wall flashing
-        case 'd':
-          if (energy > 0) {
-            // Move character, animate door open, decrease energy
-            moved = true;
-          } else
-            flashEnergy = true;
-        case 'p':
-          // Animate door flashing
-        case 'a':
-          if (energy > 0) {
-            // Move character, animate door open, decrease energy
-            moved = true;
-          } else
-            flashEnergy = true;
-          moved = true
-        case 'o':
-          // Move character, create wall
-        case 'h':
-          // Move character
-      }
-
-      if (flashEnergy) {
-        // Make energy flash
-      }
-    } catch (IndexOutOfBoundsException e) {
-      return currentState;
-    }
-    
-    System.out.println(keyPressed);
-    return currentState;
-    
-  } // DELETE
 
 
   public void replace(JPanel newPanel) {
@@ -1316,62 +984,3 @@ public class GameWindow extends JFrame {
     super.getContentPane().add(newPanel);
     super.revalidate();
   }
-
-
-  public String[] fileReader(File file) throws FileNotFoundException {
-    ArrayList<String> fileContents = new ArrayList<String>();
-
-    // file = new File("Levels/default.txt");
-    Scanner fileIn = new Scanner(file);
-    while (fileIn.hasNextLine())
-      fileContents.add(fileIn.nextLine());
-    fileIn.close();
-    
-    return fileContents.toArray(new String[fileContents.size()]);
-  } // DELETE ??
-
-
-  public void pressKey(int keyCode) {
-    switch(keyCode) {
-      case 32:
-        gameBoard.deactivateSecurity();
-        return;
-      case 39:
-        gameBoard.movePlayer(GameBoard.MOVE_RIGHT);
-        return;
-      case 40:
-        gameBoard.movePlayer(GameBoard.MOVE_DOWN);
-        return;
-      case 37:
-        gameBoard.movePlayer(GameBoard.MOVE_LEFT);
-        return;
-      case 38:
-        gameBoard.movePlayer(GameBoard.MOVE_UP);
-    }
-  }
-  
-}
-
-
-
-
-class KeyEvents implements KeyListener {
-
-  public void KeyEvents() {}
-  
-  @Override
-  public void keyPressed(KeyEvent e) {
-    if ((e.getKeyCode() => 37 && e.getKeyCode() =< 40) || e.getKeyCode() == 32)
-      Main.pressKey(e.getKeyCode);
-  }
-
-  @Override
-  public void keyReleased(KeyEvent e) {
-    // bleh
-  }
-
-  @Override
-  public void keyTyped(KeyEvent e) {
-    // bleh
-  }
-}

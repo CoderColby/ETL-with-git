@@ -1,6 +1,11 @@
 import java.awt.Font;
 import java.awt.Color;
+import java.awt.geom.AffineTransform;
+import java.util.Arrays;
 import javax.swing.ImageIcon;
+import javax.swing.Image;
+import javax.swing.Graphics2D;
+import javax.swing.BufferedImage;
 
 public class Data {
 
@@ -82,17 +87,55 @@ public class Data {
       public static final ImageIcon logo = new ImageIcon("../GameAssets/Images/Other/ETLogo.png");
       public static final ImageIcon lock = new ImageIcon("../GameAssets/Images/Other/Lock.png");
     }
+
+    public static ImageIcon rotateIcon(ImageIcon icon, double angle) { // Courtesy of ChatGPT
+        int width = icon.getIconWidth();
+        int height = icon.getIconHeight();
+
+        Image image = icon.getImage();
+        BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+        Graphics2D g2d = bufferedImage.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        AffineTransform transform = new AffineTransform();
+        transform.setToTranslation(height, 0);
+        transform.rotate(Math.toRadians(angle));
+        g2d.drawImage(image, transform, null);
+
+        g2d.dispose();
+
+        return new ImageIcon(bufferedImage);
+    }
   
   }
 
   public static class Utilities {
 
     public static final String userFileDirectory = "../User/";
-    public static final int numOfLevels = new File(Utilities.userFileDirectory).list().length
+    public static final int numOfLevels = new File(Utilities.standardLevelDirectory).list().length
+
+    public static String getLevelFilePath
+
+    public static File[] getAllRegFilesInDirectory(File directory) {
+      ArrayList<File> allFiles = new ArrayList<>();
+      for (File f : new File(path).listFiles()) {
+        if (f.isDirectory())
+          allFiles.addAll(Arrays.asList(getAllRegFiles(f)));
+        else
+          allFiles.add(f);
+      }
+      return allFiles.toArray();
+    }
 
     public static string getUserFilePath(String username) {
-      return Utilities.userFileDirectory + username + ".txt";
+      return Utilities.userFileDirectory + username;
     }
+
+    public static final String standardLevelDirectory = "../GameAssets/Levels/StandardLevels/";
+    public static final String customLevelDirectory = "../GameAssets/Levels/CustomLevels/";
+    public static final String customUnownedDirectory = customLevelDirectory + "Unowned Levels/";
+    public static final String defaultLevelFile = "../GameAssets/Levels/StandardLevels/default.txt";
   }
   
 }

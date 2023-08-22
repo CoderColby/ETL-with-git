@@ -1,3 +1,6 @@
 
 
-public abstract
+public abstract class AbstractRoomType extends AbstractGameObject {
+
+  
+}

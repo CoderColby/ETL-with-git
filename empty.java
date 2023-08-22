@@ -1,65 +1,108 @@
-    // Base panel
+    public JPanel createMenu(int levelGroup) { // Creates menu page showing all unlocked levels, with custom level options and account settings
+    
+    // Base Panel
     JPanel root = new JPanel();
     root.setLayout(null);
     root.setBackground(Color.WHITE);
 
-    /////////////////////////////////////////////////////////// LOG IN PORTION
+    // ETL logo
+    JLabel jlbl_logo = new JLabel(Data.Images.Other.logo);
+    jlbl_logo.setBounds(20, 20, 65 + 155, 75 + 80);
 
-    // Title "Log In"
-    JLabel jlbl_loginTitle = new JLabel("Log In", SwingConstants.CENTER);
-    jlbl_loginTitle.setBounds(180, 80, 140, 40);
-    jlbl_loginTitle.setFont(Data.Fonts.header2);
+    // Label for name
+    JLabel jlbl_nameLabel = new JLabel("Name:");
+    jlbl_nameLabel.setBounds(640, 20, 60, 45);
+    jlbl_nameLabel.setFont(Data.Fonts.dataLabel);
 
-    // Instruction "Username:"
-    JLabel jlbl_loginUsername = new JLabel("Username:");
-    jlbl_loginUsername.setBounds(100, 150, 100, 25);
-    jlbl_loginUsername.setFont(Data.Fonts.textLabel);
+    // Label for completed levels
+    JLabel jlbl_completedLabel = new JLabel("Levels Completed:");
+    jlbl_completedLabel.setBounds(640, 65, 205, 45);
+    jlbl_completedLabel.setFont(Data.Fonts.dataLabel);
 
-    // Instruction "Password:"
-    JLabel jlbl_loginPassword = new JLabel("Password:");
-    jlbl_loginPassword.setBounds(100, 230, 100, 25);
-    jlbl_loginPassword.setFont(Data.Fonts.textLabel);
+    // Label for perfect levels
+    JLabel jlbl_perfectLabel = new JLabel("Perfect Levels:");
+    jlbl_perfectLabel.setBounds(640, 110, 185, 45);
+    jlbl_perfectLabel.setFont(Data.Fonts.dataLabel);
 
-    // Field for username
-    JTextField jtxf_loginUsername = new JTextField();
-    jtxf_loginUsername.setBounds(100, 175, 300, 25);
-    jtxf_loginUsername.setFont(Data.Fonts.textField);
+    // Value for name
+    JLabel jlbl_nameField = new JLabel(currentUser.getRealName());
+    jlbl_nameField.setBounds(860, 20, 120, 45);
+    jlbl_nameField.setFont(Data.Fonts.dataLabel);
 
-    // Field for password
-    JTextField jtxf_loginPassword = new JTextField();
-    jtxf_loginPassword.setBounds(100, 255, 300, 25);
-    jtxf_loginPassword.setFont(Data.Fonts.textField);
+    // Value for completed levels
+    JLabel jlbl_completedField = new JLabel((currentUser.getLevels() - 1) + "/" + Data.Utilites.numOfLevels);
+    jlbl_completedField.setBounds(860, 65, 100, 45);
+    jlbl_completedField.setFont(Data.Fonts.dataLabel);
 
-    // Button to log in
-    JButton jbtn_loginButton = new JButton("Log in");
-    jbtn_loginButton.setBounds(170, 650, 160, 40);
-    jbtn_loginButton.setBackground(Data.Colors.buttonBackground);
-    jbtn_loginButton.setFont(Data.Fonts.menuButton);
-    jbtn_loginButton.addActionListener(l -> {
-      String username = jtxf_loginUsername.getText().trim();
-      String password = jtxf_loginPassword.getText();
-      String errorMessages = "";
-
-      // Validate input
-      errorMessages += User.isValidUsername(username);
-      errorMessages += User.isValidPassword(password);
-      if (errorMessages.isEmpty()) {
-        if (!User.isUserExist(username))
-          errorMessages = "The username you entered does not exist! Try signing up if you don't have an account yet.";
-        else if (!User.isCorrectPassword(username, password))
-          errorMessage = "This user has a password different than the one provided, please try again.";
-      }
-      if (errorMessages.isEmpty()) {
-        currentUser = newUser(new File(Data.getUserPath(username)));
-        replace(createMenu());
-      } else
-        JOptionPane.showMessageDialog(this, errorMessages.trim());
-    });
+    // Value for perfect levels
+    JLabel jlbl_perfectField = new JLabel(currentUser.getPerfectLevels().size() + "/" + Data.Utilites.numOfLevels);
+    jlbl_perfectField.setBounds(860, 110, 100, 45);
+    jlbl_perfectField.setFont(Data.Fonts.dataLabel);
 
     // Add all elements to base panel
-    root.add(jlbl_loginTitle);
-    root.add(jlbl_loginUsername);
-    root.add(jlbl_loginPassword);
-    root.add(jtxf_loginUsername);
-    root.add(jtxf_loginPassword);
-    root.add(jbtn_loginButton);
+    root.add(jlbl_logo);
+    root.add(jlbl_nameLabel);
+    root.add(jlbl_completedLabel);
+    root.add(jlbl_perfectLabel);
+    root.add(jlbl_nameField);
+    root.add(jlbl_completedField);
+    root.add(jlbl_perfectField);
+
+    // Button to create new level
+    JButton jbtn_create = new JButton("Create New");
+    jbtn_create.setBounds(40, 670, 200, 80);
+    jbtn_create.setBackground(Data.Colors.buttonBackground);
+    jbtn_create.setFont(Data.Fonts.menuButton);
+    jbtn_create.addActionListener(l -> {
+      replace(createLevelDesigner());
+    });
+
+    // Button to load a custom level
+    JButton jbtn_load = new JButton("Load Custom");
+    jbtn_load.setBounds(760, 670, 200, 80);
+    jbtn_load.setBackground(Data.Colors.buttonBackground);
+    jbtn_load.setFont(Data.Fonts.menuButton);
+    jbtn_load.addActionListener(l -> {
+      replace(createLevelBrowser());
+    });
+
+    // Button to access settings
+    JButton jbtn_settings = new JButton("Settings");
+    jbtn_settings.setBounds(420, 690, 160, 40);
+    jbtn_settings.setBackground(Data.Colors.buttonBackground);
+    jbtn_settings.setFont(Data.Fonts.menuButton);
+    jbtn_settings.addActionListener(l -> {
+      replace(createSettings());
+    });
+
+    // Add buttons
+    root.add(jbtn_create);
+    root.add(jbtn_load);
+    root.add(jbtn_settings);
+
+    // Level panel
+    jpnl_menuLevels = new LevelPanel(levelGroup);
+    root.add(jpnl_menuLevels);
+
+    // Button for level navigation 
+    JButton jbtn_leftArrow = new JButton(new ImageIcon(Data.Images.Other.leftNavArrow.getImage().getScaledInstance(100, 180, Image.SCALE_FAST)));
+    jbtn_leftArrow.setBounds(50, 335, 100, 180);
+    jbtn_leftArrow.setBorderPainted(false);
+    jbtn_leftArrow.addActionListener(e -> {
+      jpnl_menuLevels.decrementGroupNum();
+    });
+
+    // Button for level navigation
+    JButton jbtn_rightArrow = new JButton(new ImageIcon(Data.Images.Other.rightNavArrow.getImage().getScaledInstance(100, 180, Image.SCALE_FAST)));
+    jbtn_rightArrow.setBounds(840, 335, 100, 180);
+    jbtn_rightArrow.setBorderPainted(false);
+    jbtn_rightArrow.addActionListener(e -> {
+      jpnl_menuLevels.incrementGroupNum();
+    });
+
+    // Add navigation arrows
+    root.add(jbtn_leftArrow);
+    root.add(jbtn_rightArrow);
+
+    return root;
+  } // Creates menu with level navigation and user info with custom levels

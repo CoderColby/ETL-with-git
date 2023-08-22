@@ -28,15 +28,15 @@ public class Level extends JPanel {
     Scanner fileIn = new Scanner(levelFile);
     String levelTitle = fileIn.nextLine().trim();
     startEnergy = fileIn.nextLine().trim();
-    int perfectEnergy = fileIn.nextInt(); fileIn.nextLine();
 
     String[][] boardData = new String[100][5];
 
     for (int i = 0; i < 100; i++)
-      String[i] = fileIn.nextLine().split();
-    
-    levelBoard = new GameBoard(boardData, Integer.parseInt(startEnergy), );
+      boardData[i] = fileIn.nextLine().split();
     fileIn.close();
+    
+    levelBoard = new GameBoard(boardData, Integer.parseInt(startEnergy));
+    levelBoard.setBounds(/*???*/);
 
     // Base panel
     JPanel root = new JPanel();
@@ -176,8 +176,6 @@ public class Level extends JPanel {
     // Disable key press events and display message "YOU DIED" over floor with floor still visible
   }
 
-
-
   private void reset() {
     Level.returnToMenu = false;
     Level.goToNextLevel = false;
@@ -188,5 +186,9 @@ public class Level extends JPanel {
     jlbl_energyAmt.setText(startEnergy);
 
     jlbl_genNum.setText("0");
+  }
+
+  public GameBoard getGameBoard() {
+    return levelBoard;
   }
 }

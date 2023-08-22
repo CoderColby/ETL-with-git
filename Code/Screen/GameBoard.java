@@ -21,29 +21,28 @@ public class GameBoard extends JLayeredPane {
   public static final byte MOVE_DOWN = 1;
   public static final byte MOVE_LEFT = 2;
   public static final byte MOVE_UP = 3;
-  private static final int ROOM_HEIGHT = 49;
-  private static final int WALL_THICKNESS = 10;
-  private static final int BOARD_DIMENSION = 10 * ROOM_HEIGHT + 11 * WALL_THICKNESS;
-  private static final byte FLOOR_LAYER = 0;
-  private static final byte ROOMTYPE_LAYER = 1;
-  private static final byte ITEM_LAYER = 2;
-  private static final byte ENTITY_LAYER = 3;
-  private static final byte WALL_LAYER = 4;
+  public static final int ROOM_HEIGHT = 49;
+  public static final int WALL_THICKNESS = 10;
+  public static final int BOARD_DIMENSION = 10 * ROOM_HEIGHT + 11 * WALL_THICKNESS;
+  public static final byte ROOMTYPE_LAYER = 0;
+  public static final byte ITEM_LAYER = 1;
+  public static final byte ENTITY_LAYER = 2;
+  public static final byte WALL_LAYER = 3;
 
   private String[][] fileContents;
   private GridCell[][] board;
   private Human player;
   private Zombie[] zombies;
-  private SecuritySystem[] securitySystems;
+  private Target[] targets;
   private KeyDoor[] keyDoors;
+  private Star star;
   private int startEnergy;
   private int remainingEnergy;
   private boolean hasLost;
   private boolean hasWon;
+  
 
-
-
-  public GameBoard(String[][] fileContents, int startEnergy) {
+  public GameBoard(String[][] fileContents, int startEnergy) { // For reading level file
     this.startEnergy = startEnergy;
     this.fileContents = fileContents;
     board = new GridCell[10][10];
@@ -51,11 +50,12 @@ public class GameBoard extends JLayeredPane {
     super.setPreferredSize(new Dimension(BOARD_DIMENSION, BOARD_DIMENSION));
     super.setBackground(Data.Colors.levelBackground);
     super.setFocusable(false);
+    reset();
   }
 
   public void reset() {
     ArrayList<Zombie> zombieTracker = new ArrayList<>();
-    ArrayList<SecuritySystem> securityTracker = new ArrayList<>();
+    ArrayList<Target> targetTracker = new ArrayList<>();
     ArrayList<KeyDoor> keyDoorTracker = new Arraylist<>();
     
     for (int i = 0; i < 100; i++) {
@@ -66,8 +66,10 @@ public class GameBoard extends JLayeredPane {
       else if (temp.hasEntity(Human.TAG))
         player = (Human) temp.getEntity();
 
-      if (temp.hasRoomType(SecuritySystem.TAG))
-        securityTracker.add((SecuritySystem) temp.getRoomType());
+      if (temp.hasRoomType(Target.TAG))
+        targetTracker.add((Target) temp.getRoomType());
+      else if (temp.hasRoomType(Star.TAG))
+        star = (Star) temp.getRoomType();
 
       for (byte wallNum = 0; wallNum < 2; wallNum++) {
         if (temp.hasWall(wallNum, KeyDoor.TAG))
@@ -78,7 +80,7 @@ public class GameBoard extends JLayeredPane {
     }
 
     zombies = zombieTracker.toArray();
-    securitySystems = securityTracker.toArray();
+    targets = targetTracker.toArray();
     keyDoors = keyDoorTracker.toArray();
     remainingEnergy = startEnergy;
     hasDied = false;
@@ -132,7 +134,9 @@ public class GameBoard extends JLayeredPane {
       Arrays.sort(zombies);
       for (Zombie z : zombies)
         animations.addAll(z.move(getPlayerLocation()));
-  
+
+      // SMART ZOMBIES???
+      
         // if (z.willOverlapPlayer(zombieDirection)) {
         //   animations.addAll(player.becomeInfected());
         //   hasLost = true;
@@ -220,7 +224,15 @@ public class GameBoard extends JLayeredPane {
     display.setLocation(r);
   }
 
-  public void isPlayerInfected
+  public void infectPlayer() {
+    hasLost = true;
+  }
+
+  public void hasReturned() {
+    hasWon = true;
+    for (Target t : targets)
+      hasWon = hasWon && t.isGood();
+  }
 
   ////////////////////////////////////////////////////////////////////////////////////////// Core Functionality
   
@@ -309,12 +321,19 @@ public class GameBoard extends JLayeredPane {
 
 
 
-public class GridCell {
+class GridCell {
 
   public static final byte RIGHT_WALL = 0;
   public static final byte BOTTOM_WALL = 1;
   public static final byte LEFT_WALL = 2;
   public static final byte TOP_WALL = 4;
+
+  private static final int[] EntityXYPos = new int[] {}; /////////// What position is entity pic?
+  private static final int[] ItemXYPos = new int[] {}; /////////// What position is item pic?
+  private static final int[] RoomTypeXYPos = new int[] {}; /////////// What position is roomtype pic?
+  private static final int[] WallXYPos = new int[] {}; /////////// What position is wall pic? can swap index 0 with 1 for walls 0 and 1
+
+
 
   private RoomType roomType;
   private Item item;
@@ -327,11 +346,11 @@ public class GridCell {
     rowColumn = int[2] {coordinates / 10, coordinates % 10};
     this.board = board;
     walls = new Wall[2];
-    walls[0] = Wall.getWallByTag(fileContents[0]);
-    walls[1] = Wall.getWallByTag(fileContents[1]);
-    roomType = RoomType.getRoomTypeByTag(fileContents[2]);
-    item = Item.getItemByTag(fileContents[3]);
-    entity = Entity.getEntityByTag(fileContents[4]);
+    walls[0] = AbstractWall.getWallByTag(fileContents[0]);
+    walls[1] = AbstractWall.getWallByTag(fileContents[1]);
+    roomType = AbstractRoomType.getRoomTypeByTag(fileContents[2]);
+    item = AbstractItem.getItemByTag(fileContents[3]);
+    entity = AbstractEntity.getEntityByTag(fileContents[4]);
   }
 
   public char getRoomType() {

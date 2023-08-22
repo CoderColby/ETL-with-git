@@ -37,9 +37,8 @@ public class User {
       this.userFile = userFile;
       this.password = fileIn.nextLine().trim();
       this.realName = fileIn.nextLine().trim();
-      this.unlockedLevels = Integer.parseInt(fileIn.nextLine().trim());
+      this.unlockedLevels = fileIn.nextInt(); fileIn.nextLine();
       this.perfectLevels = new ArrayList<Integer>(Data.MAX_LEVELS);
-
       while (fileIn.hasNext())
         this.perfectLevels.add(Integer.parseInt(fileIn.next()));
       fileIn.close();
@@ -50,13 +49,15 @@ public class User {
     }
   }
 
-  public User(String username, String password, String realName, String path) { // New user
-    this.userFile = new File(path);
+  public User(String username, String password, String realName) { // New user
+    this.userFile = new File(Data.Utilities.getUserFilePath(username));
+    new File(Data.Utilities.customLevelDirectory + username).mkdir();
     this.username = username;
     this.password = password;
     this.realName = realName;
     this.unlockedLevels = 1;
     this.perfectLevels = new ArrayList<Integer>();
+    
     updateFile();
   }
 
@@ -70,13 +71,12 @@ public class User {
       System.out.println("Error: userFile no longer exists");
       return;
     }
-    fileOut.println(this.username);
     fileOut.println(this.password);
     fileOut.println(this.realName);
     fileOut.println(this.unlockedLevels);
 
     for (int level : this.perfectLevels)
-      fileOut.print(level + " ");
+      fileOut.print(" " + level);
     
     fileOut.close();
   }
@@ -89,8 +89,9 @@ public class User {
   }
 
   public void setUsername(String username) {
+    this.userFile.delete();
+    this.userFile = new File(Data.Utilities.getUserFilePath(username));
     this.username = username;
-    updateFile();
   }
 
   public void setPassword(String password) {
@@ -119,7 +120,7 @@ public class User {
     return this.userName;
   }
 
-  public String passwordDots() {
+  public String passwordDots() { // Not Necessary?
     String dots = "";
     for (int i = 0; i < password.length(); i++)
       dots += "•";

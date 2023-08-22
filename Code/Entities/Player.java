@@ -59,7 +59,7 @@ public class Player extends AbstractEntity {
     if (super.gridCell.hasItem(Key.TAG))
       thisGameBoard.unlockDoorsWithKey((Key) neighborCell.getItem());
     if (super.gridCell.hasRoomType(Elevator.TAG))
-      this.GameBoard.hasWon();
+      this.GameBoard.hasReturned();
     
     return animations;
   }
