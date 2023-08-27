@@ -2,22 +2,20 @@ import javax.swing.JLabel;
 import javax.swing.ImageIcon;
 import java.util.ArrayList;
 
-public abstract class AbstractEntity extends JLabel {
+public abstract class AbstractEntity extends AbstractGameObject {
 
-  private final String TAG;
   protected GridCell gridCell;
 
-  protected AbstractEntity(String TAG, GridCell gridCell, ImageIcon image) {
-    super(image);
-    this.TAG = TAG;
+  protected AbstractEntity(String tag, GridCell gridCell, ImageIcon image) {
+    super(tag, image);
     this.gridCell = gridCell;
   }
   
   public GridCell getGridCell() {
     return gridCell;
   }
-  
-  public String getTag() {
-    return TAG;
+
+  public String getType() {
+    return Data.Utilities.forRoom;
   }
 }

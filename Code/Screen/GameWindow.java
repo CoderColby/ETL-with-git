@@ -44,10 +44,13 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyListener;
 import java.awt.event.ActionEvent;
 
+
+
 public class GameWindow extends JFrame {
 
   private User currentUser;
 
+  // Holds data about what to execute when this button is pressed
   private class JDataButton extends JButton {
   
     private int ID;
@@ -103,8 +106,7 @@ public class GameWindow extends JFrame {
     }
   }
 
-  // Menu level panel
-
+  // Displays levels in menu
   private class LevelPanel extends JPanel {
     private int groupNum;
     private final int MAX_GROUP_NUM = (Data.Utilities.numOfLevels - 1) / 10;
@@ -223,7 +225,7 @@ public class GameWindow extends JFrame {
       // For displaying game objects to select
       AbstractWall[] walls = new AbstractWall[] {new Wall(), new Door(), new PowerDoor(), new OnceDoor(), new AirlockDoor(), new DetectionDoor(), new LockedDoor()};
       AbstractRoomType[] roomTypes = new AbstractRoomType[] {new Elevator(), new Target(), new Filled()};
-      AbstractItem[] items = new AbstractItem[] {new Key(), new Battery()};
+      AbstractItem[] items = new AbstractItem[] {new Key(), new Battery(), new Eraser()};
       AbstractEntity[] entities = new AbstractEntity[] {new Zombie(), new SmartZombie()};
   
       // Draw wall types
@@ -372,28 +374,31 @@ public class GameWindow extends JFrame {
 
       for (int i = 0; i < 100; i++) {
         GridCell cell = levelBoard.getGridCell(int [] {i % 10, i / 10});
-        DesignerButton db = new DesignerButton("Room", new ImageIcon[] {cell.getRoomType(), cell.getItem(), cell.getEntity()});
+        DesignerButton db = new DesignerButton(Data.Utilities.forRoom, new ImageIcon[] {cell.getRoomType(), cell.getItem(), cell.getEntity()});
         db.setBounds((i % 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), (i / 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
         db.addActionListener(e -> {
-          db.setImage(currentItem.getImage(), currentItem.getLayer());
+          if (db.isType(currentItem.getType()) || currentItem.TAG.equals(Eraser.TAG))
+            db.setImage(currentItem.getImage(), currentItem.getLayer());
         });
       }
 
       for (int i = 0; i < 90; i++) {
         Wall cellWall = levelBoard.getGridCell(int [] {i % 9, i / 9}).getWall(0);
-        DesignerButton db = new DesignerButton("Wall", new ImageIcon[] {cellWall, null, null});
+        DesignerButton db = new DesignerButton(Data.Utilities.forWall, new ImageIcon[] {cellWall, null, null});
         db.setBounds(GameBoard.ROOM_HEIGHT + (i % 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), (i / 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.WALL_THICKNESS, GameBoard.ROOM_HEIGHT);
         db.addActionListener(e -> {
-          db.setImage(currentItem.getImage(), currentItem.getLayer());
+          if (db.isType(currentItem.getType()) || currentItem.TAG.equals(Eraser.TAG))
+            db.setImage(currentItem.getImage(), currentItem.getLayer());
         });
       }
 
       for (int i = 0; i < 90; i++) {
         Wall cellWall = levelBoard.getGridCell(int [] {i / 9, i % 9}).getWall(1);
-        DesignerButton db = new DesignerButton("Wall", new ImageIcon[] {cellWall, null, null});
+        DesignerButton db = new DesignerButton(Data.Utilities.forWall, new ImageIcon[] {cellWall, null, null});
         db.setBounds(GameBoard.ROOM_HEIGHT + (i / 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), (i % 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.WALL_THICKNESS, GameBoard.ROOM_HEIGHT);
         db.addActionListener(e -> {
-          db.setImage(Data.Images.rotateIcon(currentItem.getImage(), 90), currentItem.getLayer());
+          if (db.isType(currentItem.getType()) || currentItem.getTag().equals(Eraser.TAG))
+            db.setImage(Data.Images.rotateIcon(currentItem.getImage(), 90), currentItem.getLayer());
         });
       }
     }
@@ -631,7 +636,7 @@ public class GameWindow extends JFrame {
     jbtn_create.setBackground(Data.Colors.buttonBackground);
     jbtn_create.setFont(Data.Fonts.menuButton);
     jbtn_create.addActionListener(l -> {
-      replace(createLevelDesigner());
+      replace(new LevelDesigner(new File(Data.Utilities.defaultLevelFile)));
     });
 
     // Button to load a custom level
@@ -977,10 +982,9 @@ public class GameWindow extends JFrame {
     return jpnl_list;
   }
 
-
-
+  /* √ */
   public void replace(JPanel newPanel) {
     super.getContentPane().removeAll();
     super.getContentPane().add(newPanel);
-    super.revalidate();
+    super.repaint();
   }

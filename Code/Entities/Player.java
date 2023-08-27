@@ -7,6 +7,8 @@ public class Player extends AbstractEntity {
 
   public static final String TAG = "Player";
 
+  private int movementDelayInMillis;
+
   public Player(GridCell gridCell) {
     super(TAG, gridCell, Data.Images.Entity.human(2));
   }
@@ -18,17 +20,18 @@ public class Player extends AbstractEntity {
 
   public boolean canMove(byte direction) {
     Wall passWall = super.gridCell.getWall(direction);
+
+    if (!passWall.canPass(TAG))
+      return false;
+    
     GameBoard thisGameBoard = super.gridCell.getGameBoard();
     GridCell neighborCell;
-    try {
+    try
       neighborCell = thisGameBoard.getGridCell(super.gridCell.getCoordinates(), direction);
-    } catch (IndexOutOfBoundsException e) {
+    catch (IndexOutOfBoundsException e)
       return false;
-    }
     
-    if (neighborCell.hasEntity(Zombie.TAG) || neighborCell.hasRoomType(Filled.TAG))
-      return false;
-    if (!passWall.canPass(TAG));
+    if (neighborCell.hasEntity(Zombie.TAG) || neighborCell.hasEntity(SmartZombie.TAG))
       return false;
     if (passWall.requiresEnergy() && thisGameBoard.getRemainingEnergy() < 1)
       return false;
@@ -49,11 +52,10 @@ public class Player extends AbstractEntity {
 
     ArrayList<AnimationEvent> animations = new ArrayList<>();
 
-    int startTimeInMillis = 0;
-    animations.addAll(passWall.getAnimations(startTimeInMillis, this));
-    startTimeInMillis += passWall.addDelayInMillis();
+    animations.addAll(passWall.getAnimations(0, this));
+    movementDelayInMillis = passWall.addDelayInMillis();
 
-    animations.add(new EntityAnimation(startTimeInMillis, this, super.gridCell.getXY(), neighborCell.getXY(), Data.Animation.humanTravelTime))
+    animations.add(new EntityAnimation(movementDelayInMillis, new JLabel(this), super.gridCell.getXY(), neighborCell.getXY(), Data.Animation.humanTravelTime));
     super.gridCell = neighborCell;
 
     if (super.gridCell.hasItem(Key.TAG))
@@ -62,5 +64,10 @@ public class Player extends AbstractEntity {
       this.GameBoard.hasReturned();
     
     return animations;
+  }
+
+
+  public int getTimeOfMovement() {
+    return movementDelayInMillis;
   }
 }

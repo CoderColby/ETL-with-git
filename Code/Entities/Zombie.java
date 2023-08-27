@@ -7,8 +7,11 @@ public class Zombie extends AbstractEntity {
 
   public static final String TAG = "Zombie";
 
+  private int repeatDelay;
+
   public Zombie(GridCell gridCell) {
     super(TAG, gridCell, Data.Images.Entity.zombie(2));
+    repeatDelay = -1;
   }
 
   public void turn(byte direction) {
@@ -18,27 +21,29 @@ public class Zombie extends AbstractEntity {
 
   public boolean canMove(byte direction) {
     Wall passWall = super.gridCell.getWall(direction);
+
+    if (!passWall.canPass(TAG))
+      return false;
+    
     GameBoard thisGameBoard = super.gridCell.getGameBoard();
     GridCell neighborCell;
-    try {
+    try
       neighborCell = thisGameBoard.getGridCell(super.gridCell.getCoordinates(), direction);
-    } catch (IndexOutOfBoundsException e) {
+    catch (IndexOutOfBoundsException e)
       return false;
-    }
     
-    if (neighborCell.hasEntity(Zombie.TAG) || neighborCell.hasRoomType(Filled.TAG))
-      return false;
-    if (!passWall.canPass(TAG));
+    if (neighborCell.hasEntity(Zombie.TAG) || neighborCell.hasEntity(SmartZombie.TAG))
       return false;
     return true;
   }
 
-  public ArrayList<AnimationEvent> move(int[] playerLocation) {
+  
+  public ArrayList<AnimationEvent> move(int[] playerLocation, int movementDelay) {
     ArrayList<AnimationEvent> animations = new ArrayList<>();
     
     byte direction;
     boolean viableDirection = false;
-    for (int i = 0; i < 2 && !viableDirection; i++) { // Unnecessarily complicated line here
+    for (int i = 0; i < 2 && !viableDirection; i++) { // Unnecessarily complicated line here; compares difference in row distance vs column distance from player
       direction = (byte) (Math.abs(playerLocation[0] - super.gridCell.getCoordinates()[0]) > Math.abs(playerLocation[1] - super.gridCell.getCoordinates()[1]) ^ i == 1) ? Math.signum(super.gridCell.getCoordinates()[1] - playerLocation[1]) + 1 : Math.signum(super.gridCell.getCoordinates()[0] - playerLocation[0]) + 2;
       viableDirection = canMove(direction);
     }
@@ -59,11 +64,17 @@ public class Zombie extends AbstractEntity {
     neighborCell.setEntity(this);
     super.gridCell.setEntity(null);
 
-    int startTimeInMillis = 0;
-    animations.addAll(passWall.getAnimations(startTimeInMillis, this));
-    startTimeInMillis += passWall.addDelayInMillis();
+    movementDelay += (repeatDelay > 0)? repeatDelay : 0;
 
-    animations.add(new EntityAnimation(startTimeInMillis, this, super.gridCell.getEntityXY(), neighborCell.getEntityXY(), Data.Animation.zombieTravelTime))
+    animations.addAll(passWall.getAnimations(movementDelay, this));
+    movementDelay += passWall.addDelayInMillis();
+
+    if (repeatDelay < 0)
+      repeatDelay = movementDelay + Data.Animation.zombieTravelTime;
+    else
+      repeatDelay = -1;
+
+    animations.add(new EntityAnimation(movementDelay, this, super.gridCell.getEntityXY(), neighborCell.getEntityXY(), Data.Animation.zombieTravelTime));
     super.gridCell = neighborCell;
 
     return animations;

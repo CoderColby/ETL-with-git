@@ -63,6 +63,9 @@ public class Data {
       public static ImageIcon zombie(byte direction) {
         return new ImageIcon("../GameAssets/Images/Entity/Zombie" + direction + ".png");
       }
+      public static ImageIcon smartZombie(byte direction) {
+        return new ImageIcon("../GameAssets/Images/Entity/SmartZombie" + direction + ".png");
+      }
       
     }
 
@@ -136,6 +139,9 @@ public class Data {
     public static final String customLevelDirectory = "../GameAssets/Levels/CustomLevels/";
     public static final String customUnownedDirectory = customLevelDirectory + "Unowned Levels/";
     public static final String defaultLevelFile = "../GameAssets/Levels/StandardLevels/default.txt";
+
+    public static final String forRoom = "Room";
+    public static final String forWall = "Wall";
   }
   
 }
