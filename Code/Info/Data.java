@@ -1,11 +1,14 @@
 import java.awt.Font;
 import java.awt.Color;
+import java.awt.Image;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.awt.geom.AffineTransform;
+import java.awt.RenderingHints;
+import java.io.File;
 import java.util.Arrays;
+import java.util.ArrayList;
 import javax.swing.ImageIcon;
-import javax.swing.Image;
-import javax.swing.Graphics2D;
-import javax.swing.BufferedImage;
 
 public class Data {
 
@@ -116,22 +119,20 @@ public class Data {
   public static class Utilities {
 
     public static final String userFileDirectory = "../User/";
-    public static final int numOfLevels = new File(Utilities.standardLevelDirectory).list().length
-
-    public static String getLevelFilePath
+    public static final int numOfLevels = new File(Utilities.standardLevelDirectory).list().length;
 
     public static File[] getAllRegFilesInDirectory(File directory) {
       ArrayList<File> allFiles = new ArrayList<>();
-      for (File f : new File(path).listFiles()) {
+      for (File f : directory.listFiles()) {
         if (f.isDirectory())
-          allFiles.addAll(Arrays.asList(getAllRegFiles(f)));
+          allFiles.addAll(Arrays.asList(getAllRegFilesInDirectory(f)));
         else
           allFiles.add(f);
       }
-      return allFiles.toArray();
+      return (File[]) allFiles.toArray();
     }
 
-    public static string getUserFilePath(String username) {
+    public static String getUserFilePath(String username) {
       return Utilities.userFileDirectory + username;
     }
 

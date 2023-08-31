@@ -38,7 +38,7 @@ public class GameBoard extends JLayeredPane {
   private SmartZombie[] smartZombies;
   private Target[] targets;
   private KeyDoor[] keyDoors;
-  private Star star;
+  private Star[] stars;
   private int startEnergy;
   private int remainingEnergy;
   private boolean hasLost;
@@ -62,7 +62,8 @@ public class GameBoard extends JLayeredPane {
     ArrayList<Zombie> zombieTracker = new ArrayList<>();
     ArrayList<SmartZombie> smartZombieTracker = new ArrayList<>();
     ArrayList<Target> targetTracker = new ArrayList<>();
-    ArrayList<KeyDoor> keyDoorTracker = new Arraylist<>();
+    ArrayList<KeyDoor> keyDoorTracker = new ArrayList<>();
+    ArrayList<Star> starTracker = new ArrayList<>();
     
     for (int i = 0; i < 100; i++) {
       GridCell temp = new GridCell(fileContents[i], i, this);
@@ -77,7 +78,7 @@ public class GameBoard extends JLayeredPane {
       if (temp.hasRoomType(Target.TAG))
         targetTracker.add((Target) temp.getRoomType());
       else if (temp.hasRoomType(Star.TAG))
-        star = (Star) temp.getRoomType();
+        starTracker.add((Star) temp.getRoomType());
 
       for (byte wallNum = 0; wallNum < 2; wallNum++) {
         if (temp.hasWall(wallNum, KeyDoor.TAG))
@@ -91,6 +92,7 @@ public class GameBoard extends JLayeredPane {
     smartZombies = smartZombieTracker.toArray();
     targets = targetTracker.toArray();
     keyDoors = keyDoorTracker.toArray();
+    stars = starTracker.toArray();
     remainingEnergy = startEnergy;
     hasDied = false;
 
@@ -106,14 +108,8 @@ public class GameBoard extends JLayeredPane {
     
   }
 
-
-  public void move(byte direction) {
-    PriorityQueue<Animation> animations = new PriorityQueue(moveAndAnimate(direction));
-
-    
-  }
-
-  public ArrayList<Animation> moveAndAnimate(byte direction) { // direction represents the direction of the arrow key that was pressed
+  
+  public void move(byte direction) { // direction represents the direction of the arrow key that was pressed
 
     ArrayList<Animation> animations = new ArrayList<>();
 
@@ -126,35 +122,11 @@ public class GameBoard extends JLayeredPane {
 
     animations.addAll(player.move(direction));
     timer = player.getTimeOfMovement();
-    // if (player.getGridCell().hasRoomType(Elevator.TAG)) {
-    //   hasWon = true;
-    //   return animations;
-    // }
-    // if (player.getGridCell().hasItem(Key.TAG)) {
-    //   for (KeyDoor kd : keyDoors) {
-    //     if (kd.goesWithKey((Key) player.getGridCell().getItem()))
-    //       animations.addAll(kd.unlock());
-    //   }
-    // }
 
     if (hasWon) {
       Level.goToNextLevel = true;
       return animations;
     }
-
-    // for (int i = 0; i < 2 && !hasLost; i++) {
-    //   Arrays.sort(zombies);
-    //   for (Zombie z : zombies)
-    //     animations.addAll(z.move(getPlayerLocation()));
-
-      // SMART ZOMBIES???
-      
-        // if (z.willOverlapPlayer(zombieDirection)) {
-        //   animations.addAll(player.becomeInfected());
-        //   hasLost = true;
-        //   return animations;
-        // }
-    // }
 
 
     Arrays.sort(zombies);
@@ -168,13 +140,18 @@ public class GameBoard extends JLayeredPane {
     Arrays.sort(zombies);
     for (Zombie z : zombies)
       animations.addAll(z.move(getPlayerLocation(), timer));
-      
+
+    playAnimations(new PriorityQueue(animations));
+
+    if (hasLost)
+      player.infect();
+    
   }
 
 
 
   public void playAnimations(PriorityQueue<AnimationEvent> queue) {
-    long baseTime = SystemcurrentTimeMillis();
+    long baseTime = System.currentTimeMillis();
     AnimationEvent animation;
     long animationStartTime;
     long timeUntilAnimationStart;
@@ -233,8 +210,9 @@ public class GameBoard extends JLayeredPane {
     level.setEnergy(--remainingEnergy);
   }
 
-  public void setScreenCoordinates(Point r) {
-    display.setLocation(r);
+  public void addEnergy(int energyGain) {
+    remainingEnergy += energyGain;
+    level.setEnergy(remainingEnergy);
   }
 
   public void infectPlayer() {
@@ -252,11 +230,57 @@ public class GameBoard extends JLayeredPane {
 
 
   public void ToggleTarget() {
+    if (Target.isOngoing) {
+      ((Target) player.getGridCell().getRoomType()).cancelFix();
+      return;
+    }
     
+    if (!player.getGridCell().hasRoomType(Target.TAG) || ((Target) player.getGridCell().getRoomType()).isGood())
+      return;
+
+    JPanel targetPanel = ((Target) player.getGridCell().getRoomType()).fixPanel();
+    level.add(targetPanel);
+
+    while (!Target.hasFinished)
+      wait();
+
+    level.remove(targetPanel);
+
+    boolean targetsGood = true;
+    for (int i = 0; i < targets.length && targetsGood; i++)
+      targetsGood = targets[i].isGood();
+    if (targetsGood)
+      playAnimations(new PriorityQueue<Animation>(setPower(true, 0)));
   }
 
-  public void keyFound(byte keyID) {
+  public ArrayList<Animation> setPower(boolean isPowered, int delay) {
+    ArrayList<Animation> animations = new ArrayList<>();
+
+    for (int i = 0; i < 100; i++) {
+      animations.addAll(board[i/10][i%10].getWall(0).setPower(isPowered, delay));
+      animations.addAll(board[i/10][i%10].getWall(1).setPower(isPowered, delay));
+    }
+
+    return animations;
+  }
+
+  public ArrayList<Animation> unlockDoorsWithKey(Key key, int delay) {
+    ArrayList<Animation> animations = new ArrayList<>();
     
+    for (KeyDoor k : keyDoors)
+      animations.addAll(k.tryUnlock(key, delay));
+
+    return animations;
+  }
+
+
+  public String[] stringify() {
+    String[] gridCellStrings = new String[100];
+
+    for (int i = 0; i < 100; i++)
+      gridCellStrings[i] = board[i/10][i%10].stringify();
+
+    return gridCellStrings;
   }
 
 }
@@ -286,14 +310,14 @@ class GridCell {
   private GameBoard board;
 
   public GridCell(String[] fileContents, int coordinates, GameBoard board) {
-    rowColumn = int[2] {coordinates / 10, coordinates % 10};
+    rowColumn = new int[] {coordinates / 10, coordinates % 10};
     this.board = board;
     walls = new Wall[2];
-    walls[0] = AbstractWall.getWallByTag(fileContents[0]);
-    walls[1] = AbstractWall.getWallByTag(fileContents[1]);
-    roomType = AbstractRoomType.getRoomTypeByTag(fileContents[2]);
-    item = AbstractItem.getItemByTag(fileContents[3]);
-    entity = AbstractEntity.getEntityByTag(fileContents[4]);
+    walls[0] = AbstractWall.getWallByTag(fileContents[0], this);
+    walls[1] = AbstractWall.getWallByTag(fileContents[1], this);
+    roomType = AbstractRoomType.getRoomTypeByTag(fileContents[2], this);
+    item = AbstractItem.getItemByTag(fileContents[3], this);
+    entity = AbstractEntity.getEntityByTag(fileContents[4], this);
   }
 
   public char getRoomType() {
@@ -312,11 +336,32 @@ class GridCell {
     if (direction < 2)
       return walls[direction];
     else
-      try
+      try {
         return getNeighbor(direction).getWall(direction % 2);
-      catch (IndexOutOfBoundsException e)
-        return new Wall();
-      
+      } catch (IndexOutOfBoundsException e) {
+        return new Wall(this);
+      }
+  }
+
+  public void setRoomType(RoomType interior) {
+    this.interior = interior;
+  }
+
+  public void setItem(Item item) {
+    this.item = item;
+  }
+
+  public void setEntity(Entity entity) {
+    this.entity = entity;
+  }
+
+  public void setWall(Wall wall, byte direction) {
+    if (direction < 2)
+      this.walls[direction] = wall;
+    else
+      try {
+        getNeighbor(direction).setWall(direction % 2);
+      } catch (IndexOutOfBoundsException e) {/* do nothing */}
   }
 
   public GridCell getNeighbor(byte direction) throws IndexOutOfBoundsException {
@@ -327,5 +372,14 @@ class GridCell {
 
   public int[] getCoordinates() {
     return rowColumn;
+  }
+
+  public String stringify() {
+    String s = "";
+    AbstractGameObject[] objects = new AbstractGameObject[] {this.walls[0], this.walls[1], this.roomType, this.item, this.entity};
+    for (AbstractGameObject o : objects)
+      s += ((o != null)? o.getIdentifier() : "-") + " ";
+
+    return s.trim();
   }
 }

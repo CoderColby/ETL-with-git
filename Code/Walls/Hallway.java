@@ -1,12 +1,12 @@
 import java.util.ArrayList;
 
 
-public class Wall extends AbstractWall {
+public class Hallway extends AbstractWall {
 
-  public static final String TAG = "Wall";
+  public static final String TAG = "Hallway";
 
-  public Wall(GridCell gridCell, byte startCondition) {
-    super(Wall.TAG + ":" + startCondition, gridCell, Data.Images.wall);
+  public Hallway(GridCell gridCell, byte startCondition) {
+    super(Hallway.TAG + ":" + startCondition, gridCell, new ImageIcon());
   }
 
   public ArrayList<Animation> getAnimations(int delay, AbstractEntity entity) {
@@ -25,7 +25,7 @@ public class Wall extends AbstractWall {
   }
 
   public boolean canPass(String entityTag) {
-    return false;
+    return true;
   }
 
   public void requiresPower() {
@@ -34,6 +34,6 @@ public class Wall extends AbstractWall {
 
 
   public void transform(byte transformationType) {
-    // should never get here
+    // empty; should never be called
   }
 }

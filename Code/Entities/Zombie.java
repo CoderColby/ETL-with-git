@@ -1,21 +1,26 @@
 import javax.swing.ImageIcon;
+import java.lang.Comparable;
 import java.lang.IndexOutOfBoundsException;
 import java.util.ArrayList;
 
 
-public class Zombie extends AbstractEntity {
+public class Zombie extends AbstractEntity implements Comparable {
 
   public static final String TAG = "Zombie";
 
   private int repeatDelay;
 
-  public Zombie(GridCell gridCell) {
-    super(TAG, gridCell, Data.Images.Entity.zombie(2));
+  public Zombie(GridCell gridCell, byte startCondition) {
+    super(Zombie.TAG + ":" + startCondition, gridCell, Data.Images.Entity.zombie(startCondition));
     repeatDelay = -1;
   }
 
+  public int compareTo(Zombie other) {
+    return Double.compare(super.getDistanceFromPlayer(), other.getDistanceFromPlayer());
+  }
+
   public void turn(byte direction) {
-    super.super.setIcon(Data.Images.Entity.zombie(direction));
+    super.image = Data.Images.Entity.zombie(direction).getImage();
     super.gridCell.getGameBoard().repaint();
   }
 
@@ -27,11 +32,12 @@ public class Zombie extends AbstractEntity {
     
     GameBoard thisGameBoard = super.gridCell.getGameBoard();
     GridCell neighborCell;
-    try
+    try {
       neighborCell = thisGameBoard.getGridCell(super.gridCell.getCoordinates(), direction);
-    catch (IndexOutOfBoundsException e)
+    } catch (IndexOutOfBoundsException e) {
       return false;
-    
+    }
+  
     if (neighborCell.hasEntity(Zombie.TAG) || neighborCell.hasEntity(SmartZombie.TAG))
       return false;
     return true;
@@ -57,7 +63,7 @@ public class Zombie extends AbstractEntity {
     GridCell neighborCell = thisGameBoard.getGridCell(super.gridCell.getCoordinates(), direction);
 
     if (neighborCell.hasEntity(Player.TAG)) {
-      thisGameBoard.hasLost();
+      thisGameBoard.infectPlayer();
       return animations;
     }
 

@@ -13,7 +13,7 @@ public class EntityAnimation extends AnimationEvent {
   private Timer timer;
   private int timeElapsedInMillis;
 
-  public EntityAnimation(int startTimeInMillis, JLabel entity, int startPosition, int endPosition, int durationInMillis) {
+  public EntityAnimation(int startTimeInMillis, JLabel entity, int[] startPosition, int[] endPosition, int durationInMillis) {
     super(startTimeInMillis);
     this.entity = entity;
     this.startPosition = startPosition;
@@ -21,20 +21,21 @@ public class EntityAnimation extends AnimationEvent {
     this.durationInMillis = durationInMillis;
   }
 
-  @Override
   public void run() {
     float[] currentPosition = {startPosition[0], startPosition[1]};
     float[] distancePerTick = {(endPosition[0] - currentPosition[0]) / (durationInMillis / timeBetweenTicksInMillis), (endPosition[1] - currentPosition[1]) / (durationInMillis / timeBetweenTicksInMillis)};
     timeElapsedInMillis = 0;
     
     timer = new Timer(timeBetweenTicksInMillis, event -> {
-      entity.setLocation(currentPosition[0] + distancePerTick[0], currentPosition[1] + distancePerTick[1]);
+      currentPosition[0] += distancePerTick[0];
+      currentPosition[1] += distancePerTick[1];
+      entity.setLocation(Math.round(currentPosition[0]), Math.round(currentPosition[1]));
 
       timeElapsedInMillis += timeBetweenTicksInMillis;
       if (timeElapsedInMillis >= durationInMillis)
         timer.stop();
 
-      gameBoard.repaint();
+      entity.getGridCell().getGameBoard().repaint();
     });
     timer.start();
 
@@ -42,6 +43,6 @@ public class EntityAnimation extends AnimationEvent {
 
     entity.setLocation(endPosition[0], startPosition[1]);
     
-    wall.getGridCell().getGameBoard().repaint();
+    entity.getGridCell().getGameBoard().repaint();
   }
 }

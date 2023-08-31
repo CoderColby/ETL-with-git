@@ -116,8 +116,8 @@ public class User {
     return this.unlockedLevels;
   }
 
-  public String getUserName() {
-    return this.userName;
+  public String getUsername() {
+    return this.username;
   }
 
   public String passwordDots() { // Not Necessary?
@@ -140,7 +140,7 @@ public class User {
   public static String isValidUsername(String username) {
     if (username.isEmpty())
       return "Please provide a username\n";
-    else if (username.contains(' '))
+    else if (username.contains(" "))
       return "Please ensure username does not contain spaces\n";
     return "";
   }
@@ -148,13 +148,13 @@ public class User {
   public static String isValidPassword(String password) {
     if (password.isEmpty())
       return "Please provide a password\n";
-    else if (password.contains(' '))
+    else if (password.contains(" "))
       return "Please ensure password does not contain spaces\n";
     return "";
   }
 
   public static boolean isUserExist(String username) {
-    return (new File(Data.getUserFilePath(username))).exists()
+    return (new File(Data.getUserFilePath(username))).exists();
   }
 
   public static boolean isCorrectPassword(String username, String password) {

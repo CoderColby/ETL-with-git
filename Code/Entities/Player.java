@@ -9,12 +9,12 @@ public class Player extends AbstractEntity {
 
   private int movementDelayInMillis;
 
-  public Player(GridCell gridCell) {
-    super(TAG, gridCell, Data.Images.Entity.human(2));
+  public Player(GridCell gridCell, byte startCondition) {
+    super(Player.TAG + ":" + startCondition, gridCell, Data.Images.Entity.human(startCondition));
   }
 
   public void turn(byte direction) {
-    super.super.setIcon(Data.Images.Entity.human(direction));
+    super.image = Data.Images.Entity.human(direction).getImage();
     super.gridCell.getGameBoard().repaint();
   }
 
@@ -26,10 +26,11 @@ public class Player extends AbstractEntity {
     
     GameBoard thisGameBoard = super.gridCell.getGameBoard();
     GridCell neighborCell;
-    try
+    try {
       neighborCell = thisGameBoard.getGridCell(super.gridCell.getCoordinates(), direction);
-    catch (IndexOutOfBoundsException e)
+    } catch (IndexOutOfBoundsException e) {
       return false;
+    }
     
     if (neighborCell.hasEntity(Zombie.TAG) || neighborCell.hasEntity(SmartZombie.TAG))
       return false;
@@ -58,10 +59,15 @@ public class Player extends AbstractEntity {
     animations.add(new EntityAnimation(movementDelayInMillis, new JLabel(this), super.gridCell.getXY(), neighborCell.getXY(), Data.Animation.humanTravelTime));
     super.gridCell = neighborCell;
 
-    if (super.gridCell.hasItem(Key.TAG))
-      thisGameBoard.unlockDoorsWithKey((Key) neighborCell.getItem());
+    if (super.gridCell.hasItem(Key.TAG)) {
+      animations.addAll(this.gameBoard.unlockDoorsWithKey((Key) super.gridCell.getItem(), movementDelayInMillis + Data.Animation.humanTravelTime));
+      super.gridCell.setItem(null);
+    } else if (super.gridCell.hasItem(Battery.TAG)) {
+      this.gameBoard.addEnergy(((Battery) super.gridCell.getItem()).getEnergy());
+      super.gridCell.setItem(null);
+    }
     if (super.gridCell.hasRoomType(Elevator.TAG))
-      this.GameBoard.hasReturned();
+      this.gameBoard.hasReturned();
     
     return animations;
   }

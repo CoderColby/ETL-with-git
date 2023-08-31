@@ -1,8 +1,13 @@
 import java.io.File;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.event.*;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JButton;
+import javax.swing.SwingConstants;
+import javax.swing.AbstractAction;
 import java.util.Scanner;
 
 
@@ -16,6 +21,8 @@ public class Level extends JPanel {
   
   private String startEnergy;
   private GameBoard levelBoard;
+  private String levelTitle;
+  private File levelFile;
 
   
   public Level(File levelFile, boolean isCustom) {
@@ -26,13 +33,13 @@ public class Level extends JPanel {
     super.requestFocus();
 
     Scanner fileIn = new Scanner(levelFile);
-    String levelTitle = fileIn.nextLine().trim();
+    levelTitle = fileIn.nextLine().trim();
     startEnergy = fileIn.nextLine().trim();
 
     String[][] boardData = new String[100][5];
 
     for (int i = 0; i < 100; i++)
-      boardData[i] = fileIn.nextLine().split();
+      boardData[i] = fileIn.nextLine().split(" ");
     fileIn.close();
     
     levelBoard = new GameBoard(boardData, Integer.parseInt(startEnergy));
@@ -49,7 +56,7 @@ public class Level extends JPanel {
     jlbl_levelTitle.setFont(Data.Fonts.header2);
 
     // Label for level name
-    String levelDesc = (isCustom) ? "made by " + levelFile.getParent().getName() : levelFile.getName().substring("level".length(), levelFile.getName().indexOf('.'));
+    String levelDesc = (isCustom) ? "made by " + levelFile.getParentFile().getName() : levelFile.getName().substring("level".length(), levelFile.getName().indexOf('.'));
     JLabel jlbl_levelName = new JLabel("Level " + levelDesc, SwingConstants.CENTER);
     jlbl_levelName.setBounds(0, 130, 350, 50);
     jlbl_levelName.setFont(Data.Fonts.dataLabel);
@@ -59,11 +66,11 @@ public class Level extends JPanel {
     jlbl_energyLabel.setBounds(0, 200, 350, 30);
     jlbl_energyLabel.setFont(Data.Fonts.dataLabel);
 
-    // Label for perfect energy level
-    JLabel jlbl_perfectEnergy = new JLabel("Perfect Energy: " + perfectEnergy);
-    jlbl_perfectEnergy.setBounds(230, 235, 100, 20);
-    jlbl_perfectEnergy.setForeground(Data.Colors.perfectLevel);
-    jlbl_perfectEnergy.setFont(new Font("Monospace", Font.PLAIN, 12));
+    // // Label for perfect energy level
+    // JLabel jlbl_perfectEnergy = new JLabel("Perfect Energy: " + perfectEnergy);
+    // jlbl_perfectEnergy.setBounds(230, 235, 100, 20);
+    // jlbl_perfectEnergy.setForeground(Data.Colors.perfectLevel);
+    // jlbl_perfectEnergy.setFont(new Font("Monospace", Font.PLAIN, 12));
 
     // Value for energy level
     jlbl_energyAmt = new JLabel(startEnergy, SwingConstants.CENTER);
@@ -91,7 +98,7 @@ public class Level extends JPanel {
     jbtn_restart.setBackground(Data.Colors.buttonBackground);
     jbtn_restart.setFont(Data.Fonts.menuButton);
     jbtn_restart.addActionListener(e -> {
-      resetLevel();
+      reset();
     });
 
     // Button to menu
@@ -111,7 +118,7 @@ public class Level extends JPanel {
     root.add(jlbl_levelTitle);
     root.add(jlbl_levelName);
     root.add(jlbl_energyLabel);
-    root.add(jlbl_perfectEnergy);
+    // root.add(jlbl_perfectEnergy);
     root.add(jlbl_energyAmt);
     root.add(jlbl_genLabel);
     root.add(jlbl_genNum);
@@ -134,7 +141,7 @@ public class Level extends JPanel {
 
     class keyAction extends AbstractAction {
 
-      private int directionMinus2;
+      private int direction;
       
       public keyAction(int keyPressed) {
         this.direction = keyPressed - 35;
@@ -142,7 +149,6 @@ public class Level extends JPanel {
 
       public void actionPerformed(ActionEvent e) {
         levelBoard.move(floorGrid, direction - 4 * (direction / 2));
-        if ()
       }
     }
 
@@ -176,10 +182,13 @@ public class Level extends JPanel {
     // Disable key press events and display message "YOU DIED" over floor with floor still visible
   }
 
+  public String getTitle() {
+    return levelTitle;
+  }
+
   private void reset() {
     Level.returnToMenu = false;
     Level.goToNextLevel = false;
-    this.levelFile = levelFile;
     
     levelBoard.reset();
 
