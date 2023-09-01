@@ -76,4 +76,8 @@ public class Player extends AbstractEntity {
   public int getTimeOfMovement() {
     return movementDelayInMillis;
   }
+
+  public void cycleOptions() {
+    // Nothing
+  }
 }

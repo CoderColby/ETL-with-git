@@ -9,9 +9,11 @@ public class Zombie extends AbstractEntity implements Comparable {
   public static final String TAG = "Zombie";
 
   private int repeatDelay;
+  private byte startCondition;
 
   public Zombie(GridCell gridCell, byte startCondition) {
     super(Zombie.TAG + ":" + startCondition, gridCell, Data.Images.Entity.zombie(startCondition));
+    this.startCondition = startCondition;
     repeatDelay = -1;
   }
 
@@ -84,5 +86,11 @@ public class Zombie extends AbstractEntity implements Comparable {
     super.gridCell = neighborCell;
 
     return animations;
+  }
+
+  public void cycleOptions() {
+    startCondition = ++startCondition % 4;
+    super.image = Data.Images.zombie(startCondition);
+    super.identifier = zombie.TAG + ":" + startCondition;
   }
 }

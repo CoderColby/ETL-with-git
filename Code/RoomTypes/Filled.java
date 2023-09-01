@@ -8,4 +8,8 @@ public class Filled extends AbstractRoomType {
   public Filled(GridCell gridCell, byte startCondition) {
     super(Filled.TAG + ":" + startCondition, gridCell, Data.Images.filled);
   }
+
+  public void cycleOptions() {
+    // nothing
+  }
 }

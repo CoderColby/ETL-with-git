@@ -45,4 +45,8 @@ public class OnceDoor extends AbstractWall {
     super.image = Data.Images.onceDoor(transformationType).getImage();
     super.gridCell.repaint();
   }
+
+  public void cycleOptions() {
+    // nothing
+  }
 }

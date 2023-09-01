@@ -8,4 +8,8 @@ public class Star extends AbstractRoomType {
   public Star(GridCell gridCell, byte startCondition) {
     super(Star.TAG + ":" + startCondition, gridCell, Data.Images.star);
   }
+
+  public void cycleOptions() {
+    // nothing
+  }
 }

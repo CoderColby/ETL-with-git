@@ -36,4 +36,8 @@ public class Hallway extends AbstractWall {
   public void transform(byte transformationType) {
     // empty; should never be called
   }
+
+  public void cycleOptions() {
+    // nothing
+  }
 }

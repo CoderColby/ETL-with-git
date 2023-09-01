@@ -45,4 +45,8 @@ public class PowerDoor extends AbstractWall {
     super.image = Data.Images.powerDoor(transformationType).getImage();
     super.gridCell.repaint();
   }
+
+  public void cycleOptions() {
+    // nothing
+  }
 }

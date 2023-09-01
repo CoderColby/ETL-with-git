@@ -54,4 +54,10 @@ public class LockedDoor extends AbstracWall {
     super.image = Data.Images.lockedDoor(transformationType).getImage();
     super.gridCell.repaint();
   }
+
+  public void cycleOptions() {
+    ID = ++ID % 10;
+    super.image = Data.Images.lockedDoor(ID);
+    super.identifier = LockedDoor.TAG + ":" + ID;
+  }
 }

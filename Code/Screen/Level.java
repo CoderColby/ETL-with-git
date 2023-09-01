@@ -79,18 +79,24 @@ public class Level extends JPanel {
 
     // Label for num of generators
     JLabel jlbl_genLabel = new JLabel("Generators Active:", SwingConstants.CENTER);
-    jlbl_genLabel.setBounds(0, 300, 350, 30);
+    // jlbl_genLabel.setBounds(0, 300, 350, 30);
     jlbl_genLabel.setFont(Data.Fonts.dataLabel);
 
     // Value for num of generators
-    jlbl_genNum = new JLabel("0", SwingConstants.CENTER);
-    jlbl_genNum.setBounds(0, 330, 350, 30); // FIX ME
+    jlbl_genNum = new JLabel(levelBoard.getNumOfGoodTargets(), SwingConstants.CENTER);
+    // jlbl_genNum.setBounds(0, 330, 350, 30); // FIX ME
     jlbl_genNum.setFont(Data.Fonts.dataLabel);
 
     // Label for total num of generators
-    JLabel jlbl_genTotal = new JLabel("/" + levelBoard.getNumOfGen(), SwingConstants.CENTER);
-    jlbl_genTotal.setBounds(0, 330, 350, 30); // FIX ME
+    JLabel jlbl_genTotal = new JLabel("/" + levelBoard.getNumOfTargets(), SwingConstants.CENTER);
+    // jlbl_genTotal.setBounds(0, 330, 350, 30); // FIX ME
     jlbl_genTotal.setFont(Data.Fonts.dataLabel);
+
+    JPanel jpnl_genLabels = new JPanel();
+    jpnl_genLabels.setBounds(0, 330, 350, 30);
+    jpnl_genLabels.add(jlbl_genLabel);
+    jpnl_genLabels.add(jlbl_genNum);
+    jpnl_genLabels.add(jlbl_genTotal);
 
     // Button to restart
     JButton jbtn_restart = new JButton("Restart");
@@ -120,8 +126,9 @@ public class Level extends JPanel {
     root.add(jlbl_energyLabel);
     // root.add(jlbl_perfectEnergy);
     root.add(jlbl_energyAmt);
-    root.add(jlbl_genLabel);
-    root.add(jlbl_genNum);
+    // root.add(jlbl_genLabel);
+    // root.add(jlbl_genNum);
+    root.add(jpnl_genLabels);
     root.add(jbtn_restart);
     root.add(jbtn_menu);
     // root.add(note);

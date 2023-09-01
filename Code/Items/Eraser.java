@@ -7,4 +7,8 @@ public class Eraser extends AbstractItem {
   public Eraser() {
     super(Eraser.TAG, new GridCell(), Data.Images.eraser);
   }
+
+  public void cycleOptions() {
+    // nothing
+  }
 }

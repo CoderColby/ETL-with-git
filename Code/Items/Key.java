@@ -15,4 +15,10 @@ public class Key extends AbstractItem {
   public byte getID() {
     return ID;
   }
+
+  public void cycleOptions() {
+    ID = ++ID % 10;
+    super.image = Data.Images.key(ID);
+    super.identifier = Key.TAG + ":" + ID;
+  }
 }

@@ -7,6 +7,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
   public static final String TAG = "Smart_Zombie";
 
   private ArrayList<Sentinel> sentinels;
+  private byte startCondition;
 
   private class Sentinel extends ArrayList<Byte> {
     private GridCell gridCell;
@@ -72,7 +73,8 @@ public class SmartZombie extends AbstractEntity implements Comparable {
 
 
   public SmartZombie(GridCell gridCell, byte startCondition) {
-    super(SmartZombie.TAG + ":" + startCondition, gridCell, Data.Images.SmartZombie(startCondition));
+    super(SmartZombie.TAG + ":" + startCondition, gridCell, Data.Images.smartZombie(startCondition));
+    this.startCondition = startCondition;
   }
 
 
@@ -150,5 +152,11 @@ public class SmartZombie extends AbstractEntity implements Comparable {
     super.gridCell = neighborCell;
 
     return animations;
+  }
+
+  public void cycleOptions() {
+    startCondition = ++startCondition % 4;
+    super.image = Data.Images.smartZombie(startCondition);
+    super.identifier = SmartZombie.TAG + ":" + startCondition;
   }
 }

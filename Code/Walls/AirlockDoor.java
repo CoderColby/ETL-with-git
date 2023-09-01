@@ -47,4 +47,10 @@ public class AirlockDoor extends AbstracWall {
     super.image = Data.Images.airlockDoor(transformationType).getImage();
     super.gridCell.repaint();
   }
+
+  public void cycleOptions() {
+    isOpen = !isOpen;
+    super.image = Data.Images.target((isOpen)? AirlockDoor.OPEN : AirlockDoor.CLOSED);
+    super.identifier = Target.TAG + ":" + (isOpen)? AirlockDoor.OPEN : AirlockDoor.CLOSED;
+  }
 }

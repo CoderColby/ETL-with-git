@@ -168,47 +168,96 @@ public class GameWindow extends JFrame {
     private GameWindow window;
     private GameBoard levelBoard;
     private JPanel levelDisplay;
-    private AbstractGameObject currentItem;
+    private AbstractGameObject currentObject;
 
     private JTextField jtxf_levelName;
     private JTextField jtxf_levelEnergy;
 
-    private class DesignerButton extends JButton {
-      ImageIcon[] images;
-      GridCell gridCell;
-      String type;
 
-      public DesignerButton(GridCell gridCell, String type, ImageIcon[] images) {
+    private abstract class DesignerButton extends JButton {
+      protected GridCell gridCell;
+
+      protected DesignerButton(GridCell gridCell) {
         this.gridCell = gridCell;
-        this.type = type;
-        this.images = images;
       }
 
-      public boolean isType(String other) {
-        return type.equals(other);
+      public GridCell getGridCell() {
+        return gridCell;
       }
 
-      public void setImage(ImageIcon newImage, int position) {
-        if (position < 0)
-          images = new ImageIcon[3];
-        else
-          images[position] = newImage;
-        repaint();
+      public abstract void setObject(AbstractGameObject object);
+
+      public abstract void cycleOptions();
+    }
+
+    private class RoomButton extends DesignerButton {
+
+      public RoomButton(GridCell gridCell) {
+        super(gridCell);
+        super.repaint();
+      }
+
+      public void setObject(AbstractGameObject object) {
+        if (object.getIdentifier().equals(Eraser.TAG)) {
+          super.gridCell.setRoomType(null);
+          super.gridCell.setEntity(null);
+          super.gridCell.setItem(null);
+        } else {
+          object.addSelf(super.gridCell, 0);
+        }
+        super.repaint();
+      }
+
+      public void cycleOptions() {
+        if (super.gridCell.getItem() != null)
+          super.gridCell.getItem().cycleOptions();
+        else if (super.gridCell.getEntity() != null)
+          super.gridCell.getEntity().cycleOptions();
+        else if (super.gridCell.getRoomType() != null)
+          super.gridCell.getRoomType().cycleOptions();
+        super.repaint();
       }
 
       @Override
       protected void paintComponent(Graphics g) {
+        ImageIcon[] images = new ImageIcon[] {gridCell.getRoomType(), gridCell.getItem(), gridCell.getEntity()};
         super.paintComponent(g);
         for (ImageIcon image : images) {
           if (image != null)
             g.drawImage(image.getImage(), 0, 0, null);
         }
       }
+    }
 
-      public GridCell getGridCell() {
-        return gridCell;
+    private class WallButton extends DesignerButton {
+      private byte orientation;
+
+      public WallButton(GridCell gridCell, byte orientation) {
+        super(gridCell);
+        this.orientation = orientation;
+      }
+
+      public void setObject(AbstractGameObject object) {
+        if (object.getIdentifier().equals(Eraser.TAG)) {
+          super.setIcon(new Hallway(super.gridCell, 0));
+        } else {
+          object.addSelf(super.gridCell, 0);
+        }
+        super.repaint();
+      }
+
+      public void cycleOptions() {
+        super.gridCell.getWall(orientation).cycleOptions();
+        super.repaint();
+      }
+
+      @Override
+      protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+          g.drawImage(super.gridCell.getWall(orientation), 0, 0, null);
       }
     }
+
     
     public LevelDesigner(File loadFile, GameWindow window) {
       this.window = window;
@@ -249,7 +298,7 @@ public class GameWindow extends JFrame {
         JDataButton newWall = new JDataButton(walls[i]);
         newWall.setBounds(startLocation + i * (objectSeparation + GameBoard.WALL_THICKNESS), 15, GameBoard.WALL_THICKNESS, GameBoard.ROOM_HEIGHT);
         newWall.addActionListener(e -> {
-          currentItem = newWall.getObject();
+          currentObject = newWall.getObject();
           super.repaint();
         });
         jpnl_gameItems.add(newWall);
@@ -262,7 +311,7 @@ public class GameWindow extends JFrame {
         JDataButton newRoomType = new JDataButton(roomTypes[i]);
         newRoomType.setBounds(startLocation + i * (objectSeparation + GameBoard.WALL_THICKNESS), 80, GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
         newRoomType.addActionListener(e -> {
-          currentItem = newRoomType.getObject();
+          currentObject = newRoomType.getObject();
           super.repaint();
         });
         jpnl_gameItems.add(newRoomType);
@@ -275,7 +324,7 @@ public class GameWindow extends JFrame {
         JDataButton newItem = new JDataButton(items[i]);
         newItem.setBounds(startLocation + i * (objectSeparation + GameBoard.WALL_THICKNESS), 140, GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
         newItem.addActionListener(e -> {
-          currentItem = newItem.getObject();
+          currentObject = newItem.getObject();
           super.repaint();
         });
         jpnl_gameItems.add(newItem);
@@ -288,7 +337,7 @@ public class GameWindow extends JFrame {
         JDataButton newEntity = new JDataButton(entities[i]);
         newEntity.setBounds(startLocation + i * (objectSeparation + GameBoard.WALL_THICKNESS), 200, GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
         newEntity.addActionListener(e -> {
-          currentItem = newEntity.getObject();
+          currentObject = newEntity.getObject();
           super.repaint();
         });
         jpnl_gameItems.add(newEntity);
@@ -413,40 +462,38 @@ public class GameWindow extends JFrame {
       levelDisplay.setBounds(100, 100, GameBoard.BOARD_DIMENSION, GameBoard.BOARD_DIMENSION);
       levelDisplay.setBorder(BorderFactory.createLineBorder(Color.BLACK, 7));
 
+      ArrayList<DesignerButton> buttons = new ArrayList<>(280);
+
       for (int i = 0; i < 100; i++) {
         GridCell cell = levelBoard.getGridCell(new int[] {i % 10, i / 10});
-        DesignerButton db = new DesignerButton(cell, Data.Utilities.forRoom, new ImageIcon[] {cell.getRoomType(), cell.getItem(), cell.getEntity()});
-        db.setBounds((i % 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), (i / 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
-        db.addActionListener(e -> {
-          if (db.isType(currentItem.getType()) || currentItem.TAG.equals(Eraser.TAG)) {
-            db.setImage(currentItem.getImage(), currentItem.getLayer());
-            currentItem.addSelf(db.getGridCell(), 0);
-          }
-        });
-        levelDisplay.add(db);
+        RoomButton rb = new RoomButton(cell);
+        rb.setBounds((i % 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), (i / 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
+        buttons.add(rb);
       }
 
       for (int i = 0; i < 90; i++) {
-        Wall cellWall = levelBoard.getGridCell(new int[] {i % 9, i / 9}).getWall(0);
-        DesignerButton db = new DesignerButton(cellWall.getGridCell(), Data.Utilities.forWall, new ImageIcon[] {cellWall, null, null});
-        db.setBounds(GameBoard.ROOM_HEIGHT + (i % 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), (i / 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.WALL_THICKNESS, GameBoard.ROOM_HEIGHT);
-        db.addActionListener(e -> {
-          if (db.isType(currentItem.getType()) || currentItem.TAG.equals(Eraser.TAG)) {
-            db.setImage(currentItem.getImage(), currentItem.getLayer());
-            currentItem.addSelf(db.getGridCell(), 0);
-          }
-        });
-        levelDisplay.add(db);
+        GridCell cell = levelBoard.getGridCell(new int[] {i % 9, i / 9});
+        WallButton wb = new WallButton(cell);
+        wb.setBounds(GameBoard.ROOM_HEIGHT + (i % 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), (i / 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.WALL_THICKNESS, GameBoard.ROOM_HEIGHT);
+        buttons.add(wb);
       }
 
       for (int i = 0; i < 90; i++) {
-        Wall cellWall = levelBoard.getGridCell(new int[] {i / 9, i % 9}).getWall(1);
-        DesignerButton db = new DesignerButton(cellWall.getGridCell(), Data.Utilities.forWall, new ImageIcon[] {cellWall, null, null});
-        db.setBounds(GameBoard.ROOM_HEIGHT + (i / 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), (i % 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.WALL_THICKNESS, GameBoard.ROOM_HEIGHT);
-        db.addActionListener(e -> {
-          if (db.isType(currentItem.getType()) || currentItem.getTag().equals(Eraser.TAG)) {
-            db.setImage(Data.Images.rotateIcon(currentItem.getImage(), 90), currentItem.getLayer());
-            currentItem.addSelf(db.getGridCell(), 1);
+        GridCell gridCell = levelBoard.getGridCell(new int[] {i / 9, i % 9});
+        WallButton wb = new WallButton(cell);
+        wb.setBounds(GameBoard.ROOM_HEIGHT + (i / 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), (i % 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.WALL_THICKNESS, GameBoard.ROOM_HEIGHT);
+        buttons.add(wb);
+      }
+
+      for (DesignerButton db : buttons) {
+        db.addMouseListener(new MouseAdapter() {
+          @Override
+          public void mouseClicked(MouseEvent e) {
+            if (SwingUtilities.isLeftMouseButton(e)) {
+              db.setObject(currentObject)
+            } else if (SwingUtilities.isRightMouseButton(e)) {
+              db.cycleOptions();
+            }
           }
         });
         levelDisplay.add(db);

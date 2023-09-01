@@ -49,4 +49,8 @@ public class DetectionDoor extends AbstracWall {
     super.image = Data.Images.detectionDoor(transformationType).getImage();
     super.gridCell.repaint();
   }
+
+  public void cycleOptions() {
+    // nothing
+  }
 }

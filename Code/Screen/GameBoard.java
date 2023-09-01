@@ -97,13 +97,13 @@ public class GameBoard extends JLayeredPane {
     hasDied = false;
 
     for (int i = 0; i < 100; i++) {
-      super.add(board[i/10][i%10].getJLabelImageOfRoomType(), ROOMTYPE_LAYER);
-      super.add(board[i/10][i%10].getJLabelImageOfItem(), ITEM_LAYER);
-      super.add(board[i/10][i%10].getJLabelImageOfEntity(), ENTITY_LAYER);
+      super.add(new JLabel(board[i/10][i%10].getRoomType()), ROOMTYPE_LAYER);
+      super.add(new JLabel(board[i/10][i%10].getItem()), ITEM_LAYER);
+      super.add(new JLabel(board[i/10][i%10].getEntity()), ENTITY_LAYER);
       if (i % 10 < 9)
-        super.add(board[i/10][i%10].getJLabelImageOfWall(0), WALL_LAYER);
+        super.add(new JLabel(board[i/10][i%10].getWall(0)), WALL_LAYER);
       if (i / 10 < 9)
-        super.add(board[i/10][i%10].getJLabelImageOfWall(1), WALL_LAYER);
+        super.add(new JLabel(board[i/10][i%10].getWall(1)), WALL_LAYER);
     }
     
   }
@@ -228,20 +228,22 @@ public class GameBoard extends JLayeredPane {
   ////////////////////////////////////////////////////////////////////////////////////////// Core Functionality
   
 
+  private JPanel targetPanel;
 
   public void ToggleTarget() {
     if (Target.isOngoing) {
-      ((Target) player.getGridCell().getRoomType()).cancelFix();
+      Target.isOngoing = false;
+      notifyAll();
       return;
     }
     
     if (!player.getGridCell().hasRoomType(Target.TAG) || ((Target) player.getGridCell().getRoomType()).isGood())
       return;
 
-    JPanel targetPanel = ((Target) player.getGridCell().getRoomType()).fixPanel();
+    targetPanel = ((Target) player.getGridCell().getRoomType()).fixPanel();
     level.add(targetPanel);
 
-    while (!Target.hasFinished)
+    while (Target.isOngoing)
       wait();
 
     level.remove(targetPanel);
@@ -273,6 +275,18 @@ public class GameBoard extends JLayeredPane {
     return animations;
   }
 
+  public int getNumOfTargets() {
+    return targets.length;
+  }
+
+  public int getNumOfGoodTargets() {
+    int count;
+    for (Target t : targets)
+      if (t.isGood())
+        count++;
+    return count;
+  }
+
 
   public String[] stringify() {
     String[] gridCellStrings = new String[100];
@@ -293,7 +307,7 @@ class GridCell {
   public static final byte RIGHT_WALL = 0;
   public static final byte BOTTOM_WALL = 1;
   public static final byte LEFT_WALL = 2;
-  public static final byte TOP_WALL = 4;
+  public static final byte TOP_WALL = 3;
 
   private static final int[] EntityXYPos = new int[] {}; /////////// What position is entity pic?
   private static final int[] ItemXYPos = new int[] {}; /////////// What position is item pic?
@@ -333,14 +347,18 @@ class GridCell {
   }
 
   public Wall getWall(byte direction) {
+    ImageIcon wall;
     if (direction < 2)
-      return walls[direction];
+      wall = walls[direction];
     else
       try {
         return getNeighbor(direction).getWall(direction % 2);
       } catch (IndexOutOfBoundsException e) {
-        return new Wall(this);
+        wall = new Wall(this);
       }
+    if (direction == 1)
+      wall = Data.Images.rotateIcon(wall, 90);
+    return wall;
   }
 
   public void setRoomType(RoomType interior) {

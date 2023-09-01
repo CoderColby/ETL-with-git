@@ -36,4 +36,8 @@ public class Wall extends AbstractWall {
   public void transform(byte transformationType) {
     // should never get here
   }
+
+  public void cycleOptions() {
+    // nothing
+  }
 }
