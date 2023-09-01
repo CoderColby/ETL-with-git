@@ -1,7 +1,7 @@
 import javax.swing.JLabel;
 import javax.swing.Timer;
 
-public class EntityAnimation extends AnimationEvent {
+public class EntityAnimation extends Animation {
 
   private static final int timeBetweenTicksInMillis = 20;
 

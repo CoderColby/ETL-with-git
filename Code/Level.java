@@ -24,11 +24,16 @@ public class Level extends JPanel {
   private String levelTitle;
   private File levelFile;
 
+  private User currentUser;
+  private boolean isCustom;
+
   
-  public Level(File levelFile, boolean isCustom) {
+  public Level(File levelFile, boolean isCustom, User currentUser) {
     Level.returnToMenu = false;
     Level.goToNextLevel = false;
+    this.currentUser = currentUser;
     this.levelFile = levelFile;
+    this.isCustom = isCustom;
     super.setFocusable(true);
     super.requestFocus();
 
@@ -187,6 +192,18 @@ public class Level extends JPanel {
 
   public void playerDeath() {
     // Disable key press events and display message "YOU DIED" over floor with floor still visible
+  }
+
+  public boolean isCustom() {
+    return isCustom;
+  }
+
+  public int getNum() {
+    levelFile.getName().substring("level".length(), levelFile.getName().length() - ".txt".length());
+  }
+
+  public User getUser() {
+    return currentUser;
   }
 
   public String getTitle() {

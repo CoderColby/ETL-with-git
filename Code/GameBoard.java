@@ -125,6 +125,9 @@ public class GameBoard extends JLayeredPane {
 
     if (hasWon) {
       Level.goToNextLevel = true;
+      level.getUser().incrementLevels();
+      if (stars.length == 0 && !level.isCustom())
+        level.getUser().addPerfectLevel(level.getNum());
       return animations;
     }
 
@@ -143,8 +146,10 @@ public class GameBoard extends JLayeredPane {
 
     playAnimations(new PriorityQueue(animations));
 
-    if (hasLost)
+    if (hasLost) {
       player.infect();
+      level.playerDeath();
+    }
     
   }
 
@@ -287,6 +292,14 @@ public class GameBoard extends JLayeredPane {
     return count;
   }
 
+  public void removeStar(Star star) {
+    ArrayList<Star> otherStars = new ArrayList<>(Arrays.asList(stars));
+    otherStars.remove(star);
+    star.getGridCell().setRoomType(null);
+    stars = otherStars.toArray();
+    super.repaint();
+  }
+
 
   public String[] stringify() {
     String[] gridCellStrings = new String[100];
@@ -332,6 +345,22 @@ class GridCell {
     roomType = AbstractRoomType.getRoomTypeByTag(fileContents[2], this);
     item = AbstractItem.getItemByTag(fileContents[3], this);
     entity = AbstractEntity.getEntityByTag(fileContents[4], this);
+  }
+
+  public boolean hasRoomType(String tag) {
+    return roomType != null && tag.equals(roomType.getIdentifier().split(":")[0]);
+  }
+
+  public boolean hasItem(String tag) {
+    return item != null && tag.equals(item.getIdentifier().split(":")[0]);
+  }
+
+  public boolean hasEntity(String tag) {
+    return entity != null && tag.equals(entity.getIdentifier().split(":")[0]);
+  }
+
+  public boolean hasWall(byte orientation, String tag) {
+    return walls[orientation] != null && tag.equals(walls[orientation].getIdentifier().split(":")[0]);
   }
 
   public char getRoomType() {

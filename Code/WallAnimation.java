@@ -1,5 +1,5 @@
 
-public class WallAnimation extends AnimationEvent {
+public class WallAnimation extends Animation {
 
   private Wall wall;
   private byte transformationType;

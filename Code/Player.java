@@ -6,16 +6,23 @@ import java.util.ArrayList;
 public class Player extends AbstractEntity {
 
   public static final String TAG = "Player";
+  public static final byte HEALTHY = 0;
+  public static final byte INFECTED = 1;
 
   private int movementDelayInMillis;
 
   public Player(GridCell gridCell, byte startCondition) {
-    super(Player.TAG + ":" + startCondition, gridCell, Data.Images.Entity.human(startCondition));
+    super(Player.TAG + ":" + startCondition, gridCell, Data.Images.Entity.human(Player.HEALTHY));
   }
 
   public void turn(byte direction) {
     super.image = Data.Images.Entity.human(direction).getImage();
     super.gridCell.getGameBoard().repaint();
+  }
+
+  public void infect() {
+    super.image = Data.Images.Entity.human(Player.INFECTED);
+    super.gridCell.repaint();
   }
 
   public boolean canMove(byte direction) {
@@ -68,6 +75,8 @@ public class Player extends AbstractEntity {
     }
     if (super.gridCell.hasRoomType(Elevator.TAG))
       this.gameBoard.hasReturned();
+    else if (super.gridCell.hasRoomType(Star.TAG))
+      this.gameBoard.removeStar((Star) super.gridCell.getRoomType());
     
     return animations;
   }
