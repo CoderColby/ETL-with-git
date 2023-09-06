@@ -1,16 +1,17 @@
 import java.util.ArrayList;
 
 
-public class Door extends AbstracWall {
+public class Door extends AbstractWall {
 
   public static final String TAG = "Door";
+  public static final byte DEFAULT = 0;
   public static final byte CLOSED = 0;
   public static final byte OPEN = 1;
 
   private boolean isOpen;
 
   public Door(GridCell gridCell, byte startCondition) {
-    super(Door.TAG + ":" + startCondition, gridCell, Data.Images.door(Door.CLOSED));
+    super(Door.TAG + ":" + startCondition, gridCell, Data.Images.Wall.door(Door.CLOSED));
     isOpen = true;
   }
 
@@ -20,7 +21,7 @@ public class Door extends AbstracWall {
 
 
   public ArrayList<Animation> getAnimations(String entityTag, int delay) {
-    ArrayList<Animation> animations = new ArrayLsit<>();
+    ArrayList<Animation> animations = new ArrayList<>();
     animations.add(new WallAnimation(delay, this, Door.OPEN));
     animations.add(new WallAnimation(delay + Data.Animation.humanTravelTime, this, Door.CLOSED));
     return animations;
@@ -44,14 +45,14 @@ public class Door extends AbstracWall {
   }
 
 
-  public boolean requiresPower() {
+  public boolean requiresEnergy() {
     return true;
   }
 
 
   public void transform(byte transformationType) {
-    super.image = Data.Images.door(transformationType).getImage();
-    super.gridCell.repaint();
+    super.setImage(Data.Images.Wall.door(transformationType).getImage());
+    super.gridCell.getGameBoard().repaint();
   }
 
   public void cycleOptions() {

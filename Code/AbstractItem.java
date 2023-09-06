@@ -9,6 +9,7 @@ public abstract class AbstractItem extends AbstractGameObject {
   }
 
   public void addSelf(GridCell gridCell, byte modifier) {
+    super.gridCell = gridCell;
     gridCell.setItem(this);
   }
 
@@ -20,6 +21,7 @@ public abstract class AbstractItem extends AbstractGameObject {
       case Battery.TAG:
         return new Battery(gridCell, startCondition);
       case Key.TAG:
-        return new Door(gridCell, startCondition);
+        return new Key(gridCell, startCondition);
+    }
   }
 }

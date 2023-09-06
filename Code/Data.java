@@ -15,7 +15,6 @@ public class Data {
   public static class Animation {
     public static final int humanTravelTime = 1000;
     public static final int zombieTravelTime = 800;
-    public static final int animationSpeed = 5;
   }
 
   public static class Fonts {
@@ -45,15 +44,22 @@ public class Data {
     public static class Wall {
       
       public static final ImageIcon wall = new ImageIcon("../GameAssets/Images/Walls/Wall.png");
-      public static final ImageIcon regDoor = new ImageIcon("../GameAssets/Images/Walls/Door_Regular.png");
-      public static final ImageIcon airDoor = new ImageIcon("../GameAssets/Images/Walls/Door_Airlock.png");
-      public static final ImageIcon secDoor = new ImageIcon("../GameAssets/Images/Walls/Door_Security.png");
-      public static final ImageIcon oneDoor = new ImageIcon("../GameAssets/Images/Walls/Door_Once.png");
-      public static final ImageIcon detDoor = new ImageIcon("../GameAssets/Images/Walls/Door_Detection.png");
-      public static final ImageIcon doorActive = new ImageIcon("../Images/Walls/Door_Active.png");
-      public static final ImageIcon airDoorActive = new ImageIcon("../GameAssets/Images/Walls/Door_Airlock_Active.png");
-    
-      public static ImageIcon lockDoor (byte num) {
+      public static ImageIcon door(byte num) {
+        return new ImageIcon("../GameAssets/Images/Walls/Door" + num + ".png");
+      }
+      public static ImageIcon airlockDoor(byte num) {
+        return new ImageIcon("../GameAssets/Images/Walls/AirlockDoor" + num + ".png");
+      }
+      public static ImageIcon detectionDoor(byte num) {
+        return new ImageIcon("../GameAssets/Images/Walls/DetectionDoor" + num + ".png");
+      }
+      public static ImageIcon onceDoor(byte num) {
+        return new ImageIcon("../GameAssets/Images/Walls/OnceDoor" + num + ".png");
+      }
+      public static ImageIcon powerDoor(byte num) {
+        return new ImageIcon("../GameAssets/Images/Walls/PowerDoor" + num + ".png");
+      }
+      public static ImageIcon lockedDoor(byte num) {
         return new ImageIcon("../GameAssets/Images/Walls/LockedDoor" + num + ".png");
       }
     }
@@ -69,7 +75,6 @@ public class Data {
       public static ImageIcon smartZombie(byte direction) {
         return new ImageIcon("../GameAssets/Images/Entity/SmartZombie" + direction + ".png");
       }
-      
     }
 
     public static class Item {
@@ -77,13 +82,17 @@ public class Data {
       public static ImageIcon key(byte num) {
         return new ImageIcon("../GameAssets/Images/Item/Key" + num + ".png");
       }
-      
+      public static final ImageIcon eraser = new ImageIcon("../GameAssets/Images/Item/Eraser.png");
+      public static ImageIcon battery = new ImageIcon("../GameAssets/Images/Item/Battery.png");
     }
 
     public static class RoomType {
-      public static final ImageIcon generator = new ImageIcon("../GameAssets/Images/RoomObjects/Generator.png");
-      public static final ImageIcon elevator = new ImageIcon("../GameAssets/Images/RoomObjects/Elevator.png");
-      public static final ImageIcon generatorActive = new ImageIcon("../GameAssets/Images/RoomObjects/Generator_Active.png");
+      public static final ImageIcon star = new ImageIcon("../GameAssets/Images/RoomObject/Star.png");
+      public static final ImageIcon filled = new ImageIcon("../GameAssets/Images/RoomObject/Filled.png");
+      public static final ImageIcon elevator = new ImageIcon("../GameAssets/Images/RoomObject/Elevator.png");
+      public static ImageIcon target(byte num) {
+        return new ImageIcon("../GameAssets/Images/RoomObject/Target" + num + ".png");
+      }
     }
 
     public static class Other {
@@ -132,6 +141,10 @@ public class Data {
       return (File[]) allFiles.toArray();
     }
 
+    public static String getLevelFilePath(int num) {
+      return Utilities.standardLevelDirectory + "level" + num + ".txt";
+    }
+
     public static String getUserFilePath(String username) {
       return Utilities.userFileDirectory + username;
     }
@@ -140,6 +153,7 @@ public class Data {
     public static final String customLevelDirectory = "../GameAssets/Levels/CustomLevels/";
     public static final String customUnownedDirectory = customLevelDirectory + "Unowned Levels/";
     public static final String defaultLevelFile = "../GameAssets/Levels/StandardLevels/default.txt";
+    public static final String temporaryDemoFile = "../GameAssets/Levels/temp.txt";
 
     public static final String forRoom = "Room";
     public static final String forWall = "Wall";

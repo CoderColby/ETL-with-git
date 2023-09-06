@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public abstract class AbstractEntity extends AbstractGameObject {
 
-  public final String TYPE = Data.Utilities.forRoom;
+  public static final String TYPE = Data.Utilities.forRoom;
 
   protected AbstractEntity(String tag, GridCell gridCell, ImageIcon image) {
     super(tag, gridCell, AbstractEntity.TYPE, image);
@@ -16,11 +16,12 @@ public abstract class AbstractEntity extends AbstractGameObject {
 
   protected double getDistanceFromPlayer() {
     int[] hereCoords = gridCell.getCoordinates();
-    int[] playerCoords = gridCell.getBoard().getPlayerLocation();
+    int[] playerCoords = gridCell.getGameBoard().getPlayerLocation();
     return Math.sqrt(Math.pow(hereCoords[0] - playerCoords[0], 2) + Math.pow(hereCoords[1] - playerCoords[1], 2));
   }
 
   public void addSelf(GridCell gridCell, byte modifier) {
+    super.gridCell = gridCell;
     gridCell.setEntity(this);
   }
   
@@ -36,5 +37,6 @@ public abstract class AbstractEntity extends AbstractGameObject {
         return new SmartZombie(gridCell, startCondition);
       case Zombie.TAG:
         return new Zombie(gridCell, startCondition);
+    }
   }
 }

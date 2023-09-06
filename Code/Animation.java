@@ -6,8 +6,8 @@ public abstract class Animation implements Runnable, Comparable {
     this.startTimeInMillis = startTimeInMillis;
   }
 
-  public int compareTo(Animation other) {
-    return Integer.compare(this.startTimeInMillis, other.startTimeInMillis);
+  public int compareTo(Object other) {
+    return Integer.compare(this.startTimeInMillis, ((Animation) other).startTimeInMillis);
   }
 
   public abstract void run();

@@ -1,16 +1,17 @@
 import java.util.ArrayList;
 
 
-public class DetectionDoor extends AbstracWall {
+public class DetectionDoor extends AbstractWall {
 
   public static final String TAG = "Detection_Door";
+  public static final byte DEFAULT = 1;
   public static final byte CLOSED = 0;
   public static final byte OPEN = 1;
 
   private boolean isOpen;
 
   public DetectionDoor(GridCell gridCell, byte startCondition) {
-    super(DetectionDoor.TAG + ":" + startCondition, gridCell, Data.Images.detectionDoor(startCondition));
+    super(DetectionDoor.TAG + ":" + startCondition, gridCell, Data.Images.Wall.detectionDoor(startCondition));
     isOpen = startCondition == DetectionDoor.OPEN;
   }
 
@@ -20,7 +21,7 @@ public class DetectionDoor extends AbstracWall {
 
 
   public ArrayList<Animation> getAnimations(String entityTag, int delay) {
-    ArrayList<Animation> animations = new ArrayLsit<>();
+    ArrayList<Animation> animations = new ArrayList<>();
     if (!entityTag.equals(Player.TAG)) {
       animations.add(new WallAnimation(delay + Data.Animation.zombieTravelTime, this, DetectionDoor.CLOSED));
       isOpen = !isOpen;
@@ -40,14 +41,14 @@ public class DetectionDoor extends AbstracWall {
   }
 
 
-  public boolean requiresPower() {
+  public boolean requiresEnergy() {
     return false;
   }
 
 
   public void transform(byte transformationType) {
-    super.image = Data.Images.detectionDoor(transformationType).getImage();
-    super.gridCell.repaint();
+    super.setImage(Data.Images.Wall.detectionDoor(transformationType).getImage());
+    super.gridCell.getGameBoard().repaint();
   }
 
   public void cycleOptions() {

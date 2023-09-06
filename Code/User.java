@@ -154,11 +154,11 @@ public class User {
   }
 
   public static boolean isUserExist(String username) {
-    return (new File(Data.getUserFilePath(username))).exists();
+    return (new File(Data.Utilities.getUserFilePath(username))).exists();
   }
 
   public static boolean isCorrectPassword(String username, String password) {
-    File userFile = new File(Data.getUserFilePath(username));
+    File userFile = new File(Data.Utilities.getUserFilePath(username));
     Scanner fileIn = new Scanner(userFile);
     String filePassword = fileIn.nextLine().trim();
     fileIn.close();

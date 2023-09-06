@@ -4,13 +4,14 @@ import java.util.ArrayList;
 public class OnceDoor extends AbstractWall {
 
   public static final String TAG = "Once_Door";
+  public static final byte DEFAULT = 1;
   public static final byte CLOSED = 0;
   public static final byte OPEN = 1;
 
   private boolean isOpen;
 
   public OnceDoor(GridCell gridCell, byte startCondition) {
-    super(OnceDoor.TAG + ":" + startCondition, gridCell, Data.Images.onceDoor(startCondition));
+    super(OnceDoor.TAG + ":" + startCondition, gridCell, Data.Images.Wall.onceDoor(startCondition));
     isOpen = startCondition == OnceDoor.OPEN;
   }
 
@@ -36,14 +37,14 @@ public class OnceDoor extends AbstractWall {
     return isOpen;
   }
 
-  public void requiresPower() {
+  public boolean requiresEnergy() {
     return false;
   }
 
 
   public void transform(byte transformationType) {
-    super.image = Data.Images.onceDoor(transformationType).getImage();
-    super.gridCell.repaint();
+    super.setImage(Data.Images.Wall.onceDoor(transformationType).getImage());
+    super.gridCell.getGameBoard().repaint();
   }
 
   public void cycleOptions() {

@@ -1,9 +1,11 @@
 import java.util.ArrayList;
+import javax.swing.ImageIcon;
 
 
 public class Hallway extends AbstractWall {
 
   public static final String TAG = "Hallway";
+  public static final byte DEFAULT = 0;
 
   public Hallway(GridCell gridCell, byte startCondition) {
     super(Hallway.TAG + ":" + startCondition, gridCell, new ImageIcon());
@@ -28,7 +30,7 @@ public class Hallway extends AbstractWall {
     return true;
   }
 
-  public void requiresPower() {
+  public boolean requiresEnergy() {
     return false;
   }
 

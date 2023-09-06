@@ -2,9 +2,9 @@ import javax.swing.ImageIcon;
 
 public abstract class AbstractGameObject extends ImageIcon {
 
-  private String identifier;
+  protected String identifier;
   private final String TYPE;
-  protected final GridCell gridCell
+  protected GridCell gridCell;
 
   protected AbstractGameObject(String identifier, GridCell gridCell, String type, ImageIcon image) {
     super(image.getImage());
@@ -19,6 +19,10 @@ public abstract class AbstractGameObject extends ImageIcon {
 
   public String getIdentifier() {
     return identifier;
+  }
+
+  public GridCell getGridCell() {
+    return gridCell;
   }
 
   public abstract void addSelf(GridCell gridCell, byte modifier);

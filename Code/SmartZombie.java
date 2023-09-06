@@ -5,6 +5,7 @@ import java.lang.Comparable;
 public class SmartZombie extends AbstractEntity implements Comparable {
 
   public static final String TAG = "Smart_Zombie";
+  public static final byte DEFAULT = 1;
 
   private ArrayList<Sentinel> sentinels;
   private byte startCondition;
@@ -63,7 +64,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
 
         int index = host.sentinels.indexOf(newSentinel);
         if (index >= 0)
-          host.sentinels.get(index).setIllegalDirection((direction + 2) % 4);
+          host.sentinels.get(index).setIllegalDirection((d + 2) % 4);
         else
           sentinels.add(newSentinel);
       }
@@ -73,7 +74,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
 
 
   public SmartZombie(GridCell gridCell, byte startCondition) {
-    super(SmartZombie.TAG + ":" + startCondition, gridCell, Data.Images.smartZombie(startCondition));
+    super(SmartZombie.TAG + ":" + startCondition, gridCell, Data.Images.Entity.smartZombie(startCondition));
     this.startCondition = startCondition;
   }
 
@@ -96,11 +97,11 @@ public class SmartZombie extends AbstractEntity implements Comparable {
     sentinels.add(new Sentinel(super.gridCell, new ArrayList<Byte>(), this, new ArrayList<Byte>()));
 
     while (!sentinels.isEmpty()) {
-      ArrayList<Sentinel> previousSentinels = sentinels.clone();
+      ArrayList<Sentinel> previousSentinels = (ArrayList<Sentinel>) sentinels.clone();
       sentinels = new ArrayList<Sentinel>();
       
       for (Sentinel s : previousSentinels)
-        sentinels.add(s.seek());
+        sentinels.addAll(s.seek());
 
       for (Sentinel s : sentinels)
         if (s.gridCell.hasEntity(Player.TAG) || (s.gridCell.hasRoomType(Target.TAG) && ((Target) s.gridCell.getRoomType()).isGood()))
@@ -114,13 +115,13 @@ public class SmartZombie extends AbstractEntity implements Comparable {
     ArrayList<Byte> path = calculatePath();
     if (path.isEmpty())
       return -1;
-    return path[0];
+    return path.get(0);
   }
 
 
-  public ArrayList<AnimationEvent> move(int[] playerLocation, int movementDelay) {
-    byte direction = calculateDirection(playerLocation);
-    ArrayList<AnimationEvent> animations = new ArrayList<>();
+  public ArrayList<Animation> move(int movementDelay) {
+    byte direction = calculateDirection();
+    ArrayList<Animation> animations = new ArrayList<>();
 
     if (direction < 0)
       return animations;
@@ -155,8 +156,8 @@ public class SmartZombie extends AbstractEntity implements Comparable {
   }
 
   public void cycleOptions() {
-    startCondition = ++startCondition % 4;
-    super.image = Data.Images.smartZombie(startCondition);
+    startCondition = (byte) (++startCondition % 4);
+    super.setImage(Data.Images.smartZombie(startCondition).getImage());
     super.identifier = SmartZombie.TAG + ":" + startCondition;
   }
 }

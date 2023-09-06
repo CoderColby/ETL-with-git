@@ -61,7 +61,7 @@ public class Level extends JPanel {
     jlbl_levelTitle.setFont(Data.Fonts.header2);
 
     // Label for level name
-    String levelDesc = (isCustom) ? "made by " + levelFile.getParentFile().getName() : levelFile.getName().substring("level".length(), levelFile.getName().indexOf('.'));
+    String levelDesc = (isCustom) ? "made by " + currentUser.getUsername() : levelFile.getName().substring("level".length(), levelFile.getName().indexOf('.'));
     JLabel jlbl_levelName = new JLabel("Level " + levelDesc, SwingConstants.CENTER);
     jlbl_levelName.setBounds(0, 130, 350, 50);
     jlbl_levelName.setFont(Data.Fonts.dataLabel);
@@ -88,7 +88,7 @@ public class Level extends JPanel {
     jlbl_genLabel.setFont(Data.Fonts.dataLabel);
 
     // Value for num of generators
-    jlbl_genNum = new JLabel(levelBoard.getNumOfGoodTargets(), SwingConstants.CENTER);
+    jlbl_genNum = new JLabel(Integer.toString(levelBoard.getNumOfGoodTargets()), SwingConstants.CENTER);
     // jlbl_genNum.setBounds(0, 330, 350, 30); // FIX ME
     jlbl_genNum.setFont(Data.Fonts.dataLabel);
 
@@ -149,6 +149,7 @@ public class Level extends JPanel {
       }
     };
 
+    /*
     root.addKeyListener(kl);
 
     class keyAction extends AbstractAction {
@@ -160,7 +161,7 @@ public class Level extends JPanel {
       }
 
       public void actionPerformed(ActionEvent e) {
-        levelBoard.move(floorGrid, direction - 4 * (direction / 2));
+        levelBoard.move(direction - 4 * (direction / 2));
       }
     }
 
@@ -176,6 +177,7 @@ public class Level extends JPanel {
     root.getActionMap().put(MOVE_LEFT, new keyAction(2));
     root.getActionMap().put(MOVE_RIGHT, new keyAction(0));
     root.getActionMap().put(ACTIVATE_GEN, new keyAction(4));
+    */
 
     super.add(root);
     

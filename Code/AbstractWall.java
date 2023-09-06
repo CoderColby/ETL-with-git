@@ -4,7 +4,7 @@ import javax.swing.ImageIcon;
 
 public abstract class AbstractWall extends AbstractGameObject {
 
-  public final String TYPE = Data.Utilities.forWall;
+  public static final String TYPE = Data.Utilities.forWall;
 
   protected boolean isPowered;
 
@@ -12,7 +12,7 @@ public abstract class AbstractWall extends AbstractGameObject {
     super(tag, gridCell, AbstractWall.TYPE, image);
   }
 
-  public abstract ArrayList<Animation> getAnimations(int delay, AbstractEntity entity);
+  public abstract ArrayList<Animation> getAnimations(String entityTag, int delay);
 
   public abstract ArrayList<Animation> setPower(boolean isPowered, int delay);
 
@@ -20,11 +20,12 @@ public abstract class AbstractWall extends AbstractGameObject {
 
   public abstract int addDelayInMillis();
 
-  public abstract boolean requiresPower();
+  public abstract boolean requiresEnergy();
 
   public abstract void transform(byte transformationType);
 
   public void addSelf(GridCell gridCell, byte modifier) {
+    super.gridCell = gridCell;
     gridCell.setWall(this, modifier);
   }
 

@@ -5,9 +5,12 @@ import java.io.FileInputStream;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
+import javax.swing.ImageIcon;
 import java.lang.IndexOutOfBoundsException;
 import java.awt.Rectangle;
+import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.Graphics;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.PriorityQueue;
@@ -33,11 +36,11 @@ public class GameBoard extends JLayeredPane {
 
   private String[][] fileContents;
   private GridCell[][] board;
-  private Human player;
+  private Player player;
   private Zombie[] zombies;
   private SmartZombie[] smartZombies;
   private Target[] targets;
-  private KeyDoor[] keyDoors;
+  private LockedDoor[] lockedDoors;
   private Star[] stars;
   private int startEnergy;
   private int remainingEnergy;
@@ -62,7 +65,7 @@ public class GameBoard extends JLayeredPane {
     ArrayList<Zombie> zombieTracker = new ArrayList<>();
     ArrayList<SmartZombie> smartZombieTracker = new ArrayList<>();
     ArrayList<Target> targetTracker = new ArrayList<>();
-    ArrayList<KeyDoor> keyDoorTracker = new ArrayList<>();
+    ArrayList<KeyDoor> lockedDoorTracker = new ArrayList<>();
     ArrayList<Star> starTracker = new ArrayList<>();
     
     for (int i = 0; i < 100; i++) {
@@ -72,8 +75,8 @@ public class GameBoard extends JLayeredPane {
         zombieTracker.add((Zombie) temp.getEntity());
       else if (temp.hasEntity(SmartZombie.TAG))
         smartZombieTracker.add((SmartZombie) temp.getEntity());
-      else if (temp.hasEntity(Human.TAG))
-        player = (Human) temp.getEntity();
+      else if (temp.hasEntity(Player.TAG))
+        player = (Player) temp.getEntity();
 
       if (temp.hasRoomType(Target.TAG))
         targetTracker.add((Target) temp.getRoomType());
@@ -81,18 +84,18 @@ public class GameBoard extends JLayeredPane {
         starTracker.add((Star) temp.getRoomType());
 
       for (byte wallNum = 0; wallNum < 2; wallNum++) {
-        if (temp.hasWall(wallNum, KeyDoor.TAG))
-          keyDoorTracker.add((KeyDoor) temp.getWall(wallNum));
+        if (temp.hasWall(wallNum, LockedDoor.TAG))
+          lockedDoorTracker.add((LockedDoor) temp.getWall(wallNum));
       }
       
       board[i/10][i%10] = temp;
     }
 
-    zombies = zombieTracker.toArray();
-    smartZombies = smartZombieTracker.toArray();
-    targets = targetTracker.toArray();
-    keyDoors = keyDoorTracker.toArray();
-    stars = starTracker.toArray();
+    zombies = (Zombie[]) zombieTracker.toArray();
+    smartZombies = (SmartZombie[]) smartZombieTracker.toArray();
+    targets = (Target[]) targetTracker.toArray();
+    lockedDoors = (LockedDoor[]) lockedDoorTracker.toArray();
+    stars = (Star[]) starTracker.toArray();
     remainingEnergy = startEnergy;
     hasDied = false;
 
@@ -105,6 +108,12 @@ public class GameBoard extends JLayeredPane {
       if (i / 10 < 9)
         super.add(new JLabel(board[i/10][i%10].getWall(1)), WALL_LAYER);
     }
+    
+  }
+
+
+  @Override
+  public void paintComponent(Graphics g) {
     
   }
 
@@ -138,7 +147,7 @@ public class GameBoard extends JLayeredPane {
 
     Arrays.sort(smartZombies);
     for (SmartZombie s : smartZombies)
-      animations.addAll(s.move(getPlayerLocation(), timer));
+      animations.addAll(s.move(timer));
 
     Arrays.sort(zombies);
     for (Zombie z : zombies)
@@ -155,7 +164,7 @@ public class GameBoard extends JLayeredPane {
 
 
 
-  public void playAnimations(PriorityQueue<AnimationEvent> queue) {
+  public void playAnimations(PriorityQueue<Animation> queue) {
     long baseTime = System.currentTimeMillis();
     AnimationEvent animation;
     long animationStartTime;
@@ -264,8 +273,8 @@ public class GameBoard extends JLayeredPane {
     ArrayList<Animation> animations = new ArrayList<>();
 
     for (int i = 0; i < 100; i++) {
-      animations.addAll(board[i/10][i%10].getWall(0).setPower(isPowered, delay));
-      animations.addAll(board[i/10][i%10].getWall(1).setPower(isPowered, delay));
+      animations.addAll(board[i/10][i%10].getWall((byte)0).setPower(isPowered, delay));
+      animations.addAll(board[i/10][i%10].getWall((byte)1).setPower(isPowered, delay));
     }
 
     return animations;
@@ -274,7 +283,7 @@ public class GameBoard extends JLayeredPane {
   public ArrayList<Animation> unlockDoorsWithKey(Key key, int delay) {
     ArrayList<Animation> animations = new ArrayList<>();
     
-    for (KeyDoor k : keyDoors)
+    for (LockedDoor k : lockedDoors)
       animations.addAll(k.tryUnlock(key, delay));
 
     return animations;
@@ -329,12 +338,14 @@ class GridCell {
 
 
 
-  private RoomType roomType;
-  private Item item;
-  private Entity entity;
-  private Wall[] walls;
+  private AbstractRoomType roomType;
+  private AbstractItem item;
+  private AbstractEntity entity;
+  private AbstractWall[] walls;
   private int[] rowColumn;
   private GameBoard board;
+
+  public GridCell() {}
 
   public GridCell(String[] fileContents, int coordinates, GameBoard board) {
     rowColumn = new int[] {coordinates / 10, coordinates % 10};
@@ -363,51 +374,51 @@ class GridCell {
     return walls[orientation] != null && tag.equals(walls[orientation].getIdentifier().split(":")[0]);
   }
 
-  public char getRoomType() {
-    return interior;
+  public AbstractRoomType getRoomType() {
+    return roomType;
   }
 
-  public char getItem() {
+  public AbstractItem getItem() {
     return item;
   }
 
-  public Entity getEntity() {
+  public AbstractEntity getEntity() {
     return entity;
   }
 
-  public Wall getWall(byte direction) {
+  public AbstractWall getWall(byte direction) {
     ImageIcon wall;
     if (direction < 2)
       wall = walls[direction];
     else
       try {
-        return getNeighbor(direction).getWall(direction % 2);
+        return getNeighbor(direction).getWall((byte) (direction % 2));
       } catch (IndexOutOfBoundsException e) {
-        wall = new Wall(this);
+        wall = new Wall(this, (byte)0);
       }
     if (direction == 1)
       wall = Data.Images.rotateIcon(wall, 90);
     return wall;
   }
 
-  public void setRoomType(RoomType interior) {
-    this.interior = interior;
+  public void setRoomType(AbstractRoomType roomType) {
+    this.roomType = roomType;
   }
 
-  public void setItem(Item item) {
+  public void setItem(AbstractItem item) {
     this.item = item;
   }
 
-  public void setEntity(Entity entity) {
+  public void setEntity(AbstractEntity entity) {
     this.entity = entity;
   }
 
-  public void setWall(Wall wall, byte direction) {
+  public void setWall(AbstractWall wall, byte direction) {
     if (direction < 2)
       this.walls[direction] = wall;
     else
       try {
-        getNeighbor(direction).setWall(direction % 2);
+        getNeighbor(direction).setWall(wall, (byte) (direction % 2));
       } catch (IndexOutOfBoundsException e) {/* do nothing */}
   }
 
@@ -419,6 +430,10 @@ class GridCell {
 
   public int[] getCoordinates() {
     return rowColumn;
+  }
+
+  public GameBoard getGameBoard() {
+    return board;
   }
 
   public String stringify() {

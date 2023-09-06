@@ -1,10 +1,11 @@
 
+
 public class WallAnimation extends Animation {
 
-  private Wall wall;
+  private AbstractWall wall;
   private byte transformationType;
 
-  public WallAnimation(int startTimeInMillis, Wall wall, byte transformationType) {
+  public WallAnimation(int startTimeInMillis, AbstractWall wall, byte transformationType) {
     super(startTimeInMillis);
     this.wall = wall;
     this.transformationType = transformationType;

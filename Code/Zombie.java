@@ -7,6 +7,7 @@ import java.util.ArrayList;
 public class Zombie extends AbstractEntity implements Comparable {
 
   public static final String TAG = "Zombie";
+  public static final byte DEFAULT = 1;
 
   private int repeatDelay;
   private byte startCondition;
@@ -17,17 +18,17 @@ public class Zombie extends AbstractEntity implements Comparable {
     repeatDelay = -1;
   }
 
-  public int compareTo(Zombie other) {
-    return Double.compare(super.getDistanceFromPlayer(), other.getDistanceFromPlayer());
+  public int compareTo(Object other) {
+    return Double.compare(super.getDistanceFromPlayer(), ((Zombie) other).getDistanceFromPlayer());
   }
 
   public void turn(byte direction) {
-    super.image = Data.Images.Entity.zombie(direction).getImage();
+    super.setImage(Data.Images.Entity.zombie(direction).getImage());
     super.gridCell.getGameBoard().repaint();
   }
 
   public boolean canMove(byte direction) {
-    Wall passWall = super.gridCell.getWall(direction);
+    AbstractWall passWall = super.gridCell.getWall(direction);
 
     if (!passWall.canPass(TAG))
       return false;
@@ -35,7 +36,7 @@ public class Zombie extends AbstractEntity implements Comparable {
     GameBoard thisGameBoard = super.gridCell.getGameBoard();
     GridCell neighborCell;
     try {
-      neighborCell = thisGameBoard.getGridCell(super.gridCell.getCoordinates(), direction);
+      neighborCell = super.gridCell.getNeighbor(direction);
     } catch (IndexOutOfBoundsException e) {
       return false;
     }
@@ -46,8 +47,8 @@ public class Zombie extends AbstractEntity implements Comparable {
   }
 
   
-  public ArrayList<AnimationEvent> move(int[] playerLocation, int movementDelay) {
-    ArrayList<AnimationEvent> animations = new ArrayList<>();
+  public ArrayList<Animation> move(int[] playerLocation, int movementDelay) {
+    ArrayList<Animation> animations = new ArrayList<>();
     
     byte direction;
     boolean viableDirection = false;
@@ -62,7 +63,7 @@ public class Zombie extends AbstractEntity implements Comparable {
       
     Wall passWall = super.gridCell.getWall(direction);
     GameBoard thisGameBoard = super.gridCell.getGameBoard();
-    GridCell neighborCell = thisGameBoard.getGridCell(super.gridCell.getCoordinates(), direction);
+    GridCell neighborCell = super.gridCell.getNeighbor(direction);
 
     if (neighborCell.hasEntity(Player.TAG)) {
       thisGameBoard.infectPlayer();
@@ -90,7 +91,7 @@ public class Zombie extends AbstractEntity implements Comparable {
 
   public void cycleOptions() {
     startCondition = ++startCondition % 4;
-    super.image = Data.Images.zombie(startCondition);
-    super.identifier = zombie.TAG + ":" + startCondition;
+    super.setImage(Data.Images.Entity.zombie(startCondition).getImage());
+    super.identifier = Zombie.TAG + ":" + startCondition;
   }
 }

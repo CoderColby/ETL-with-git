@@ -10,12 +10,13 @@ public abstract class AbstractRoomType extends AbstractGameObject {
   }
 
   public void addSelf(GridCell gridCell, byte modifier) {
+    super.gridCell = gridCell;
     gridCell.setRoomType(this);
   }
 
   public static AbstractRoomType getRoomTypeByTag(String roomTypeTag, GridCell gridCell) {
-    String roomTypeType = itemTag.split(":")[0];
-    byte startCondition = Byte.parseByte(itemTag.split(":")[1]);
+    String roomTypeType = roomTypeTag.split(":")[0];
+    byte startCondition = Byte.parseByte(roomTypeTag.split(":")[1]);
     
     switch (roomTypeType) {
       case Elevator.TAG:
@@ -26,5 +27,6 @@ public abstract class AbstractRoomType extends AbstractGameObject {
         return new Star(gridCell, startCondition);
       case Target.TAG:
         return new Target(gridCell, startCondition);
+    }
   }
 }

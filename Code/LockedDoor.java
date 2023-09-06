@@ -1,17 +1,17 @@
 import java.util.ArrayList;
 
 
-public class LockedDoor extends AbstracWall {
+public class LockedDoor extends AbstractWall {
 
   public static final String TAG = "Locked_Door";
-  public static final byte CLOSED = 0;
-  public static final byte OPEN = 1;
+  public static final byte DEFAULT = 0;
+  public static final byte OPEN = 10;
 
   private boolean isOpen;
   private byte ID;
 
   public LockedDoor(GridCell gridCell, byte startCondition) {
-    super(LockedDoor.TAG + ":" + startCondition, gridCell, Data.Images.lockedDoor(LockedDoor.CLOSED));
+    super(LockedDoor.TAG + ":" + startCondition, gridCell, Data.Images.Wall.lockedDoor(startCondition));
     this.ID = startCondition;
     isOpen = false;
   }
@@ -37,7 +37,7 @@ public class LockedDoor extends AbstracWall {
   }
 
 
-  public boolean requiresPower() {
+  public boolean requiresEnergy() {
     return false;
   }
 
@@ -51,13 +51,13 @@ public class LockedDoor extends AbstracWall {
 
 
   public void transform(byte transformationType) {
-    super.image = Data.Images.lockedDoor(transformationType).getImage();
-    super.gridCell.repaint();
+    super.setImage(Data.Images.Wall.lockedDoor(transformationType).getImage());
+    super.gridCell.getGameBoard().repaint();
   }
 
   public void cycleOptions() {
     ID = ++ID % 10;
-    super.image = Data.Images.lockedDoor(ID);
+    super.setImage(Data.Images.Wall.lockedDoor(ID).getImage());
     super.identifier = LockedDoor.TAG + ":" + ID;
   }
 }
