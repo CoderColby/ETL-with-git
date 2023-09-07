@@ -8,7 +8,7 @@ public class Key extends AbstractItem {
   private byte ID;
 
   public Key(GridCell gridCell, byte startCondition) {
-    super(Key.TAG + ":" + startCondition, gridCell, Data.Images.Item.key(startConditions));
+    super(Key.TAG + ":" + startCondition, gridCell, Data.Images.Item.key(startCondition));
     this.ID = startCondition;
   }
 
@@ -18,7 +18,7 @@ public class Key extends AbstractItem {
   }
 
   public void cycleOptions() {
-    ID = ++ID % 10;
+    ID = (byte) (++ID % 10);
     super.setImage(Data.Images.Item.key(ID).getImage());
     super.identifier = Key.TAG + ":" + ID;
   }

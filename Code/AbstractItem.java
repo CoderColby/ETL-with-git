@@ -22,6 +22,8 @@ public abstract class AbstractItem extends AbstractGameObject {
         return new Battery(gridCell, startCondition);
       case Key.TAG:
         return new Key(gridCell, startCondition);
+      default:
+        return null;
     }
   }
 }

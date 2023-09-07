@@ -1,4 +1,5 @@
 import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import java.lang.IndexOutOfBoundsException;
 import java.util.ArrayList;
 
@@ -26,7 +27,7 @@ public class Player extends AbstractEntity {
   }
 
   public boolean canMove(byte direction) {
-    Wall passWall = super.gridCell.getWall(direction);
+    AbstractWall passWall = super.gridCell.getWall(direction);
 
     if (!passWall.canPass(TAG))
       return false;
@@ -34,7 +35,7 @@ public class Player extends AbstractEntity {
     GameBoard thisGameBoard = super.gridCell.getGameBoard();
     GridCell neighborCell;
     try {
-      neighborCell = thisGameBoard.getGridCell(super.gridCell.getCoordinates(), direction);
+      neighborCell = super.gridCell.getNeighbor(direction);
     } catch (IndexOutOfBoundsException e) {
       return false;
     }
@@ -48,9 +49,9 @@ public class Player extends AbstractEntity {
 
   
   public ArrayList<Animation> move(byte direction) {
-    Wall passWall = super.gridCell.getWall(direction);
+    AbstractWall passWall = super.gridCell.getWall(direction);
     GameBoard thisGameBoard = super.gridCell.getGameBoard();
-    GridCell neighborCell = thisGameBoard.getGridCell(super.gridCell.getCoordinates(), direction);
+    GridCell neighborCell = super.gridCell.getNeighbor(direction);
 
     neighborCell.setEntity(this);
     super.gridCell.setEntity(null);
@@ -60,14 +61,14 @@ public class Player extends AbstractEntity {
 
     ArrayList<Animation> animations = new ArrayList<>();
 
-    animations.addAll(passWall.getAnimations(0, this));
+    animations.addAll(passWall.getAnimations(Player.TAG, (byte) 0));
     movementDelayInMillis = passWall.addDelayInMillis();
 
-    animations.add(new EntityAnimation(movementDelayInMillis, new JLabel(this), super.gridCell.getXY(), neighborCell.getXY(), Data.Animation.humanTravelTime));
+    animations.add(new EntityAnimation(movementDelayInMillis, this, super.gridCell.getXY(), neighborCell.getXY(), Data.Animation.humanTravelTime));
     super.gridCell = neighborCell;
 
     if (super.gridCell.hasItem(Key.TAG)) {
-      animations.addAll(this.gameBoard.unlockDoorsWithKey((Key) super.gridCell.getItem(), movementDelayInMillis + Data.Animation.humanTravelTime));
+      animations.addAll(thisGameBoard.unlockDoorsWithKey((Key) super.gridCell.getItem(), movementDelayInMillis + Data.Animation.humanTravelTime));
       super.gridCell.setItem(null);
     } else if (super.gridCell.hasItem(Battery.TAG)) {
       super.gridCell.getGameBoard().addEnergy(((Battery) super.gridCell.getItem()).getEnergy());

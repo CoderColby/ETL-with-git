@@ -53,7 +53,7 @@ public class Zombie extends AbstractEntity implements Comparable {
     byte direction;
     boolean viableDirection = false;
     for (int i = 0; i < 2 && !viableDirection; i++) { // Unnecessarily complicated line here; compares difference in row distance vs column distance from player
-      direction = (byte) (Math.abs(playerLocation[0] - super.gridCell.getCoordinates()[0]) > Math.abs(playerLocation[1] - super.gridCell.getCoordinates()[1]) ^ i == 1) ? Math.signum(super.gridCell.getCoordinates()[1] - playerLocation[1]) + 1 : Math.signum(super.gridCell.getCoordinates()[0] - playerLocation[0]) + 2;
+      direction = (byte) ((Math.abs(playerLocation[0] - super.gridCell.getCoordinates()[0]) > Math.abs(playerLocation[1] - super.gridCell.getCoordinates()[1]) ^ i == 1) ? Math.signum(super.gridCell.getCoordinates()[1] - playerLocation[1]) + 1 : Math.signum(super.gridCell.getCoordinates()[0] - playerLocation[0]) + 2);
       viableDirection = canMove(direction);
     }
     if (!viableDirection)
@@ -61,7 +61,7 @@ public class Zombie extends AbstractEntity implements Comparable {
     
     turn(direction);
       
-    Wall passWall = super.gridCell.getWall(direction);
+    AbstractWall passWall = super.gridCell.getWall(direction);
     GameBoard thisGameBoard = super.gridCell.getGameBoard();
     GridCell neighborCell = super.gridCell.getNeighbor(direction);
 
@@ -75,7 +75,7 @@ public class Zombie extends AbstractEntity implements Comparable {
 
     movementDelay += (repeatDelay > 0)? repeatDelay : 0;
 
-    animations.addAll(passWall.getAnimations(movementDelay, this));
+    animations.addAll(passWall.getAnimations(Zombie.TAG, movementDelay));
     movementDelay += passWall.addDelayInMillis();
 
     if (repeatDelay < 0)
@@ -90,7 +90,7 @@ public class Zombie extends AbstractEntity implements Comparable {
   }
 
   public void cycleOptions() {
-    startCondition = ++startCondition % 4;
+    startCondition = (byte) (++startCondition % 4);
     super.setImage(Data.Images.Entity.zombie(startCondition).getImage());
     super.identifier = Zombie.TAG + ":" + startCondition;
   }

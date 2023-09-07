@@ -44,7 +44,7 @@ public class LockedDoor extends AbstractWall {
 
   public ArrayList<Animation> openWithKey(Key key, int delay) {
     ArrayList<Animation> animations = new ArrayList<>();
-    if (this.ID = key.getID())
+    if (this.ID == key.getID())
       animations.add(new WallAnimation(delay, this, LockedDoor.OPEN));
     return animations;
   }
@@ -56,7 +56,7 @@ public class LockedDoor extends AbstractWall {
   }
 
   public void cycleOptions() {
-    ID = ++ID % 10;
+    ID = (byte) (++ID % 10);
     super.setImage(Data.Images.Wall.lockedDoor(ID).getImage());
     super.identifier = LockedDoor.TAG + ":" + ID;
   }

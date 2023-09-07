@@ -15,7 +15,7 @@ public class OnceDoor extends AbstractWall {
     isOpen = startCondition == OnceDoor.OPEN;
   }
 
-  public ArrayList<Animation> getAnimations(int delay, AbstractEntity entity) {
+  public ArrayList<Animation> getAnimations(String entityTag, int delay) {
     ArrayList<Animation> animations = new ArrayList<>();
     animations.add(new WallAnimation(delay + Data.Animation.humanTravelTime, this, OnceDoor.CLOSED));
     isOpen = false;

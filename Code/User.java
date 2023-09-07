@@ -38,7 +38,7 @@ public class User {
       this.password = fileIn.nextLine().trim();
       this.realName = fileIn.nextLine().trim();
       this.unlockedLevels = fileIn.nextInt(); fileIn.nextLine();
-      this.perfectLevels = new ArrayList<Integer>(Data.MAX_LEVELS);
+      this.perfectLevels = new ArrayList<Integer>(Data.Utilities.numOfLevels);
       while (fileIn.hasNext())
         this.perfectLevels.add(Integer.parseInt(fileIn.next()));
       fileIn.close();

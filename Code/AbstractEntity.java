@@ -37,6 +37,8 @@ public abstract class AbstractEntity extends AbstractGameObject {
         return new SmartZombie(gridCell, startCondition);
       case Zombie.TAG:
         return new Zombie(gridCell, startCondition);
+      default:
+        return null;
     }
   }
 }

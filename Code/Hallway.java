@@ -11,7 +11,7 @@ public class Hallway extends AbstractWall {
     super(Hallway.TAG + ":" + startCondition, gridCell, new ImageIcon());
   }
 
-  public ArrayList<Animation> getAnimations(int delay, AbstractEntity entity) {
+  public ArrayList<Animation> getAnimations(String entityTag, int delay) {
     return new ArrayList<Animation>();
   }
 

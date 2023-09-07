@@ -15,6 +15,8 @@ public class AirlockDoor extends AbstractWall {
     isOpen = startCondition == AirlockDoor.OPEN;
   }
 
+  private static JLabel initializeLabel(
+
   public boolean canPass(String entityTag) {
     return isOpen || entityTag.equals(Player.TAG);
   }

@@ -14,7 +14,7 @@ public class Target extends AbstractRoomType {
   private boolean isGood;
 
   public Target(GridCell gridCell, byte startCondition) {
-    super(Target.TAG + ":" + startCondition, gridCell, Data.Images.RoomType.target);
+    super(Target.TAG + ":" + startCondition, gridCell, Data.Images.RoomType.target(startCondition));
     isGood = startCondition == Target.GOOD;
   }
 
@@ -30,7 +30,7 @@ public class Target extends AbstractRoomType {
   public void cycleOptions() {
     isGood = !isGood;
     super.setImage(Data.Images.RoomType.target((isGood)? Target.GOOD : Target.BAD).getImage());
-    super.identifier = Target.TAG + ":" + (isGood)? Target.GOOD : Target.BAD;
+    super.identifier = Target.TAG + ":" + ((isGood)? Target.GOOD : Target.BAD);
   }
 
   
@@ -40,12 +40,12 @@ public class Target extends AbstractRoomType {
     root.setBackground(Color.BLACK);
 
     JButton b = new JButton("Press me to return");
-    b.addActionListener(new ActionEvent() { public void actionPerformed(ActionEvent e) {
+    b.addActionListener(event -> {
       Target.this.isGood = true;
       Target.super.setImage(Data.Images.RoomType.target(Target.GOOD).getImage());
       Target.isOngoing = false;
       notifyAll();
-    }});
+    });
 
     return root;
   }

@@ -27,6 +27,8 @@ public abstract class AbstractRoomType extends AbstractGameObject {
         return new Star(gridCell, startCondition);
       case Target.TAG:
         return new Target(gridCell, startCondition);
+      default:
+        return null;
     }
   }
 }

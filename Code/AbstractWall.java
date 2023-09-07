@@ -50,6 +50,8 @@ public abstract class AbstractWall extends AbstractGameObject {
         return new PowerDoor(gridCell, startCondition);
       case Wall.TAG:
         return new Wall(gridCell, startCondition);
+      default:
+        return null;
     }
   }
 }

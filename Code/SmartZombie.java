@@ -20,8 +20,10 @@ public class SmartZombie extends AbstractEntity implements Comparable {
       this.gridCell = gridCell;
       this.host = host;
       this.illegalDirections = new ArrayList<Byte>();
-      super.add(direction);
-      this.illegalDirections.add((direction + 2) % 4);
+      if (direction >= 0) {
+        super.add(direction);
+        this.illegalDirections.add((byte) ((direction + 2) % 4));
+      }
     }
 
     public void setIllegalDirection(byte illegalDirection) {
@@ -44,7 +46,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
       ArrayList<Byte> viableDirections = new ArrayList<>();
 
       for (byte i = 0; i < 4; i++)
-        if (gridCell.getWall(i).canPass(SmartZombie.TAG) && !illegalDirection.contains(i) &&
+        if (gridCell.getWall(i).canPass(SmartZombie.TAG) && !illegalDirections.contains(i) &&
            !gridCell.getNeighbor(i).hasEntity(SmartZombie.TAG) && !gridCell.getNeighbor(i).hasEntity(Zombie.TAG))
           viableDirections.add(i);
 
@@ -54,7 +56,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
     
     public ArrayList<Sentinel> seek() {
       ArrayList<Byte> viableDirections = scan();
-      ArrayList<Sentinels> sentinels = new ArrayList<>();
+      ArrayList<Sentinel> sentinels = new ArrayList<>();
       
       if (viableDirections.isEmpty())
         return sentinels;
@@ -64,7 +66,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
 
         int index = host.sentinels.indexOf(newSentinel);
         if (index >= 0)
-          host.sentinels.get(index).setIllegalDirection((d + 2) % 4);
+          host.sentinels.get(index).setIllegalDirection((byte) ((d + 2) % 4));
         else
           sentinels.add(newSentinel);
       }
@@ -78,9 +80,14 @@ public class SmartZombie extends AbstractEntity implements Comparable {
     this.startCondition = startCondition;
   }
 
+  public void turn(byte direction) {
+    super.setImage(Data.Images.Entity.smartZombie(direction).getImage());
+    super.gridCell.getGameBoard().repaint();
+  }
 
-  public int compareTo(SmartZombie other) {
-    return Integer.compare(this.getMovesToTarget(), other.getMovesToTarget());
+
+  public int compareTo(Object other) {
+    return Integer.compare(this.getMovesToTarget(), ((SmartZombie) other).getMovesToTarget());
   }
 
 
@@ -94,7 +101,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
 
   public ArrayList<Byte> calculatePath() {
     sentinels = new ArrayList<Sentinel>();
-    sentinels.add(new Sentinel(super.gridCell, new ArrayList<Byte>(), this, new ArrayList<Byte>()));
+    sentinels.add(new Sentinel(super.gridCell, new ArrayList<Byte>(), this, (byte) -1));
 
     while (!sentinels.isEmpty()) {
       ArrayList<Sentinel> previousSentinels = (ArrayList<Sentinel>) sentinels.clone();
@@ -128,9 +135,9 @@ public class SmartZombie extends AbstractEntity implements Comparable {
     
     turn(direction);
       
-    Wall passWall = super.gridCell.getWall(direction);
+    AbstractWall passWall = super.gridCell.getWall(direction);
     GameBoard thisGameBoard = super.gridCell.getGameBoard();
-    GridCell neighborCell = thisGameBoard.getGridCell(super.gridCell.getCoordinates(), direction);
+    GridCell neighborCell = super.gridCell.getNeighbor(direction);
 
     if (neighborCell.hasEntity(Player.TAG)) {
       thisGameBoard.infectPlayer();
@@ -141,7 +148,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
     super.gridCell.setEntity(null);
 
     movementDelay += Data.Animation.humanTravelTime;
-    animations.addAll(passWall.getAnimations(movementDelay, this));
+    animations.addAll(passWall.getAnimations(SmartZombie.TAG, movementDelay));
     movementDelay += passWall.addDelayInMillis();
 
     if (neighborCell.hasRoomType(Target.TAG) && ((Target) neighborCell.getRoomType()).isGood()) {
@@ -157,7 +164,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
 
   public void cycleOptions() {
     startCondition = (byte) (++startCondition % 4);
-    super.setImage(Data.Images.smartZombie(startCondition).getImage());
+    super.setImage(Data.Images.Entity.smartZombie(startCondition).getImage());
     super.identifier = SmartZombie.TAG + ":" + startCondition;
   }
 }

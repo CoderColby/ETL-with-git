@@ -37,7 +37,12 @@ public class Level extends JPanel {
     super.setFocusable(true);
     super.requestFocus();
 
-    Scanner fileIn = new Scanner(levelFile);
+    Scanner fileIn;
+    try {
+      fileIn = new Scanner(levelFile);
+    } catch (FileNotFoundException e) {
+      System.out.println("Level file not found");
+    }
     levelTitle = fileIn.nextLine().trim();
     startEnergy = fileIn.nextLine().trim();
 
@@ -47,8 +52,8 @@ public class Level extends JPanel {
       boardData[i] = fileIn.nextLine().split(" ");
     fileIn.close();
     
-    levelBoard = new GameBoard(boardData, Integer.parseInt(startEnergy));
-    levelBoard.setBounds(/*???*/);
+    levelBoard = new GameBoard(boardData, Integer.parseInt(startEnergy), this);
+    // levelBoard.setBounds(/*???*/);
 
     // Base panel
     JPanel root = new JPanel();
@@ -201,7 +206,7 @@ public class Level extends JPanel {
   }
 
   public int getNum() {
-    levelFile.getName().substring("level".length(), levelFile.getName().length() - ".txt".length());
+    return Integer.parseInt(levelFile.getName().substring("level".length(), levelFile.getName().length() - ".txt".length()));
   }
 
   public User getUser() {
