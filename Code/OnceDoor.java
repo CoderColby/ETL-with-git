@@ -10,14 +10,19 @@ public class OnceDoor extends AbstractWall {
 
   private boolean isOpen;
 
-  public OnceDoor(GridCell gridCell, byte startCondition) {
-    super(OnceDoor.TAG + ":" + startCondition, gridCell, Data.Images.Wall.onceDoor(startCondition));
+
+  public OnceDoor() {
+    super(OnceDoor.TAG + ":" + OnceDoor.DEFAULT, new GridCell(), AbstractWall.initializeLabel(new GridCell(), Data.Images.Wall.onceDoor(OnceDoor.DEFAULT), (byte) 0), (byte) 0);
+  }
+
+  public OnceDoor(GridCell gridCell, byte startCondition, byte orientation) {
+    super(OnceDoor.TAG + ":" + startCondition, gridCell, AbstractWall.initializeLabel(gridCell, Data.Images.Wall.onceDoor(startCondition), orientation), orientation);
     isOpen = startCondition == OnceDoor.OPEN;
   }
 
   public ArrayList<Animation> getAnimations(String entityTag, int delay) {
     ArrayList<Animation> animations = new ArrayList<>();
-    animations.add(new WallAnimation(delay + Data.Animation.humanTravelTime, this, OnceDoor.CLOSED));
+    animations.add(new WallAnimation(delay + Data.Animation.playerTravelTime, this, OnceDoor.CLOSED));
     isOpen = false;
     return animations;
   }
@@ -44,7 +49,7 @@ public class OnceDoor extends AbstractWall {
 
   public void transform(byte transformationType) {
     super.setImage(Data.Images.Wall.onceDoor(transformationType).getImage());
-    super.gridCell.getGameBoard().repaint();
+    // super.gridCell.getGameBoard().repaint();
   }
 
   public void cycleOptions() {

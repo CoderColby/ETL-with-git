@@ -13,8 +13,13 @@ public class Target extends AbstractRoomType {
 
   private boolean isGood;
 
+  
+  public Target() {
+    super(Target.TAG + ":" + Target.DEFAULT, new GridCell(), AbstractItem.initializeLabel(new GridCell(), Data.Images.RoomType.target(Target.DEFAULT)));
+  }
+  
   public Target(GridCell gridCell, byte startCondition) {
-    super(Target.TAG + ":" + startCondition, gridCell, Data.Images.RoomType.target(startCondition));
+    super(Target.TAG + ":" + startCondition, gridCell, AbstractRoomType.initializeLabel(gridCell, Data.Images.RoomType.target(startCondition)));
     isGood = startCondition == Target.GOOD;
   }
 

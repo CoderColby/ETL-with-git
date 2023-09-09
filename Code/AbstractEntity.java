@@ -1,17 +1,27 @@
 import javax.swing.JLabel;
 import javax.swing.ImageIcon;
+import java.awt.Image;
 import java.util.ArrayList;
+
 
 public abstract class AbstractEntity extends AbstractGameObject {
 
   public static final String TYPE = Data.Utilities.forRoom;
+  public static final int DIMENSION = GameBoard.ROOM_HEIGHT - 5;
 
-  protected AbstractEntity(String tag, GridCell gridCell, ImageIcon image) {
-    super(tag, gridCell, AbstractEntity.TYPE, image);
+  private final int AnimationDuration;
+
+  protected AbstractEntity(String tag, GridCell gridCell, JLabel label, int AnimationDuration) {
+    super(tag, gridCell, AbstractEntity.TYPE, label);
+    this.AnimationDuration = AnimationDuration;
   }
   
   public GridCell getGridCell() {
     return gridCell;
+  }
+
+  public int getAnimationDuration() {
+    return AnimationDuration;
   }
 
   protected double getDistanceFromPlayer() {
@@ -21,8 +31,16 @@ public abstract class AbstractEntity extends AbstractGameObject {
   }
 
   public void addSelf(GridCell gridCell, byte modifier) {
-    super.gridCell = gridCell;
-    gridCell.setEntity(this);
+    gridCell.setEntity(AbstractEntity.getEntityByTag(this.getIdentifier(), gridCell));
+  }
+
+  protected static JLabel initializeLabel(GridCell gridCell, ImageIcon image) {
+    JLabel label = new JLabel(new ImageIcon(image.getImage().getScaledInstance(AbstractEntity.DIMENSION, AbstractEntity.DIMENSION, Image.SCALE_FAST)));
+    int[] rowColumnOff = gridCell.getPixelOffset();
+    int placement = (GameBoard.ROOM_HEIGHT - AbstractEntity.DIMENSION) / 2;
+    label.setBounds(rowColumnOff[0] + placement, rowColumnOff[1] + placement, AbstractEntity.DIMENSION, AbstractEntity.DIMENSION);
+    gridCell.getGameBoard().add(label, GameBoard.ENTITY_LAYER);
+    return label;
   }
   
 

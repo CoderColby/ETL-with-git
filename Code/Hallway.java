@@ -7,8 +7,13 @@ public class Hallway extends AbstractWall {
   public static final String TAG = "Hallway";
   public static final byte DEFAULT = 0;
 
-  public Hallway(GridCell gridCell, byte startCondition) {
-    super(Hallway.TAG + ":" + startCondition, gridCell, new ImageIcon());
+
+  public Hallway() {
+    super(Hallway.TAG + ":" + Hallway.DEFAULT, new GridCell(), AbstractWall.initializeLabel(new GridCell(), new ImageIcon(), (byte) 0), (byte) 0);
+  }
+
+  public Hallway(GridCell gridCell, byte startCondition, byte orientation) {
+    super(Hallway.TAG + ":" + startCondition, gridCell, AbstractWall.initializeLabel(gridCell, new ImageIcon(), orientation), orientation);
   }
 
   public ArrayList<Animation> getAnimations(String entityTag, int delay) {

@@ -12,8 +12,13 @@ public class Zombie extends AbstractEntity implements Comparable {
   private int repeatDelay;
   private byte startCondition;
 
+  
+  public Zombie() {
+    super(Zombie.TAG + ":" + Zombie.DEFAULT, new GridCell(), AbstractItem.initializeLabel(new GridCell(), Data.Images.Entity.zombie(Zombie.DEFAULT)), Data.Animation.zombieTravelTime);
+  }
+  
   public Zombie(GridCell gridCell, byte startCondition) {
-    super(Zombie.TAG + ":" + startCondition, gridCell, Data.Images.Entity.zombie(startCondition));
+    super(Zombie.TAG + ":" + startCondition, gridCell, AbstractEntity.initializeLabel(gridCell, Data.Images.Entity.zombie(startCondition)), Data.Animation.zombieTravelTime);
     this.startCondition = startCondition;
     repeatDelay = -1;
   }
@@ -50,7 +55,7 @@ public class Zombie extends AbstractEntity implements Comparable {
   public ArrayList<Animation> move(int[] playerLocation, int movementDelay) {
     ArrayList<Animation> animations = new ArrayList<>();
     
-    byte direction;
+    byte direction = Zombie.DEFAULT;
     boolean viableDirection = false;
     for (int i = 0; i < 2 && !viableDirection; i++) { // Unnecessarily complicated line here; compares difference in row distance vs column distance from player
       direction = (byte) ((Math.abs(playerLocation[0] - super.gridCell.getCoordinates()[0]) > Math.abs(playerLocation[1] - super.gridCell.getCoordinates()[1]) ^ i == 1) ? Math.signum(super.gridCell.getCoordinates()[1] - playerLocation[1]) + 1 : Math.signum(super.gridCell.getCoordinates()[0] - playerLocation[0]) + 2);
@@ -83,7 +88,7 @@ public class Zombie extends AbstractEntity implements Comparable {
     else
       repeatDelay = -1;
 
-    animations.add(new EntityAnimation(movementDelay, this, super.gridCell.getEntityXY(), neighborCell.getEntityXY(), Data.Animation.zombieTravelTime));
+    animations.add(new EntityAnimation(movementDelay, this, direction));
     super.gridCell = neighborCell;
 
     return animations;

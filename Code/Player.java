@@ -7,23 +7,29 @@ import java.util.ArrayList;
 public class Player extends AbstractEntity {
 
   public static final String TAG = "Player";
+  public static final byte DEFAULT = 0;
   public static final byte HEALTHY = 0;
   public static final byte INFECTED = 1;
 
   private int movementDelayInMillis;
 
+  
+  public Player() {
+    super(Player.TAG + ":" + Player.DEFAULT, new GridCell(), AbstractItem.initializeLabel(new GridCell(), Data.Images.Entity.player(Player.DEFAULT)), Data.Animation.playerTravelTime);
+  }
+  
   public Player(GridCell gridCell, byte startCondition) {
-    super(Player.TAG + ":" + startCondition, gridCell, Data.Images.Entity.human(Player.HEALTHY));
+    super(Player.TAG + ":" + startCondition, gridCell, AbstractEntity.initializeLabel(gridCell, Data.Images.Entity.player(Player.HEALTHY)), Data.Animation.playerTravelTime);
   }
 
   public void turn(byte direction) {
-    super.setImage(Data.Images.Entity.human(direction).getImage());
-    super.gridCell.getGameBoard().repaint();
+    super.setImage(Data.Images.Entity.player(direction).getImage());
+    // super.gridCell.getGameBoard().repaint();
   }
 
   public void infect() {
-    super.setImage(Data.Images.Entity.human(Player.INFECTED).getImage());
-    super.gridCell.getGameBoard().repaint();
+    super.setImage(Data.Images.Entity.player(Player.INFECTED).getImage());
+    // super.gridCell.getGameBoard().repaint();
   }
 
   public boolean canMove(byte direction) {
@@ -64,11 +70,11 @@ public class Player extends AbstractEntity {
     animations.addAll(passWall.getAnimations(Player.TAG, (byte) 0));
     movementDelayInMillis = passWall.addDelayInMillis();
 
-    animations.add(new EntityAnimation(movementDelayInMillis, this, super.gridCell.getXY(), neighborCell.getXY(), Data.Animation.humanTravelTime));
+    animations.add(new EntityAnimation(movementDelayInMillis, this, direction));
     super.gridCell = neighborCell;
 
     if (super.gridCell.hasItem(Key.TAG)) {
-      animations.addAll(thisGameBoard.unlockDoorsWithKey((Key) super.gridCell.getItem(), movementDelayInMillis + Data.Animation.humanTravelTime));
+      animations.addAll(thisGameBoard.unlockDoorsWithKey((Key) super.gridCell.getItem(), movementDelayInMillis + Data.Animation.playerTravelTime));
       super.gridCell.setItem(null);
     } else if (super.gridCell.hasItem(Battery.TAG)) {
       super.gridCell.getGameBoard().addEnergy(((Battery) super.gridCell.getItem()).getEnergy());

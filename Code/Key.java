@@ -7,11 +7,15 @@ public class Key extends AbstractItem {
 
   private byte ID;
 
+  
+  public Key() {
+    super(Key.TAG + ":" + Key.DEFAULT, new GridCell(), AbstractItem.initializeLabel(new GridCell(), Data.Images.Item.key(Key.DEFAULT)));
+  }
+  
   public Key(GridCell gridCell, byte startCondition) {
-    super(Key.TAG + ":" + startCondition, gridCell, Data.Images.Item.key(startCondition));
+    super(Key.TAG + ":" + startCondition, gridCell, initializeLabel(gridCell, Data.Images.Item.key(startCondition)));
     this.ID = startCondition;
   }
-
 
   public byte getID() {
     return ID;

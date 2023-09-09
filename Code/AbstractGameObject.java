@@ -1,4 +1,6 @@
 import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+
 
 public abstract class AbstractGameObject extends ImageIcon {
 
@@ -7,8 +9,8 @@ public abstract class AbstractGameObject extends ImageIcon {
   protected GridCell gridCell;
   protected JLabel label;
 
-  protected AbstractGameObject(String identifier, GridCell gridCell, String type, ImageIcon image, JLabel label) {
-    super(image.getImage());
+  protected AbstractGameObject(String identifier, GridCell gridCell, String type, JLabel label) {
+    super(((ImageIcon) label.getIcon()).getImage());
     this.identifier = identifier;
     this.gridCell = gridCell;
     this.TYPE = type;

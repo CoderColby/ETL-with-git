@@ -75,7 +75,7 @@ public class GameWindow extends JFrame {
         });
       } else {
         super.setText(null);
-        super.setIcon(Data.Images.Other.lock);
+        super.setIcon(new ImageIcon(Data.Images.Other.lock.getImage().getScaledInstance(100, 100, Image.SCALE_FAST)));
         super.setEnabled(false);
       }
   
@@ -202,13 +202,14 @@ public class GameWindow extends JFrame {
       }
 
       public void setObject(AbstractGameObject object) {
-        if (object.getIdentifier().equals(Eraser.TAG)) {
+        if (object.getIdentifier().split(":")[0].equals(Eraser.TAG)) {
           super.gridCell.setRoomType(null);
           super.gridCell.setEntity(null);
           super.gridCell.setItem(null);
-        } else {
-          object.addSelf(super.gridCell, (byte)0);
-        }
+        } else if (object.getType().equals(Data.Utilities.forRoom))
+          object.addSelf(super.gridCell, (byte) 0);
+        else
+          return;
         super.repaint();
       }
 
@@ -242,11 +243,12 @@ public class GameWindow extends JFrame {
       }
 
       public void setObject(AbstractGameObject object) {
-        if (object.getIdentifier().equals(Eraser.TAG)) {
-          super.setIcon(new Hallway(super.gridCell, (byte)0));
-        } else {
-          object.addSelf(super.gridCell, (byte)0);
-        }
+        if (object.getIdentifier().split(":")[0].equals(Eraser.TAG))
+          super.gridCell.setWall(AbstractWall.getWallByTag(Hallway.TAG + ":" + Hallway.DEFAULT, super.gridCell, orientation), orientation);
+        else if (object.getType().equals(Data.Utilities.forWall))
+          object.addSelf(super.gridCell, orientation);
+        else
+          return;
         super.repaint();
       }
 
@@ -293,11 +295,10 @@ public class GameWindow extends JFrame {
       jpnl_gameItems.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
   
       // For displaying game objects to select
-      GridCell fake = new GridCell();
-      AbstractWall[] walls = new AbstractWall[] {new Wall(fake, Wall.DEFAULT), new Door(fake, Door.DEFAULT), new PowerDoor(fake, PowerDoor.DEFAULT), new OnceDoor(fake, OnceDoor.DEFAULT), new AirlockDoor(fake, AirlockDoor.DEFAULT), new DetectionDoor(fake, DetectionDoor.DEFAULT), new LockedDoor(fake, DetectionDoor.DEFAULT)};
-      AbstractRoomType[] roomTypes = new AbstractRoomType[] {new Elevator(fake, Elevator.DEFAULT), new Target(fake, Target.DEFAULT), new Filled(fake, Filled.DEFAULT), new Star(fake, Star.DEFAULT)};
-      AbstractItem[] items = new AbstractItem[] {new Key(fake, Key.DEFAULT), new Battery(fake, Battery.DEFAULT)};
-      AbstractEntity[] entities = new AbstractEntity[] {new Zombie(fake, Zombie.DEFAULT), new SmartZombie(fake, SmartZombie.DEFAULT)};
+      AbstractWall[] walls = new AbstractWall[] {new Wall(), new Door(), new PowerDoor(), new OnceDoor(), new AirlockDoor(), new DetectionDoor(), new LockedDoor()};
+      AbstractRoomType[] roomTypes = new AbstractRoomType[] {new Elevator(), new Target(), new Filled(), new Star()};
+      AbstractItem[] items = new AbstractItem[] {new Key(), new Battery()};
+      AbstractEntity[] entities = new AbstractEntity[] {new Zombie(), new SmartZombie()};
       int objectSeparation;
       int startLocation;
   
@@ -387,7 +388,12 @@ public class GameWindow extends JFrame {
             if (filename.equals(f.getName())) {
               super.remove(levelDisplay);
               // Read load-in file
-              Scanner fileIn = new Scanner(levelFile);
+              Scanner fileIn = null;
+              try {
+                fileIn = new Scanner(f);
+              } catch (FileNotFoundException ef) {
+                // nothing
+              }
               levelTitle = fileIn.nextLine().trim();
               startEnergy = fileIn.nextLine().trim();
               super.add(buildLevel(fileIn));
@@ -410,8 +416,13 @@ public class GameWindow extends JFrame {
         Level level = new Level(LevelDesigner.this.levelFile, true, currentUser);
         
         GameWindow.this.add(level);
-        while (!(Level.goToNextLevel || Level.returnToMenu));
-          wait();
+        while (!(Level.goToNextLevel || Level.returnToMenu)) {
+          try {
+            wait();
+          } catch (InterruptedException f) {
+            // nothing
+          }
+        }
         GameWindow.this.remove(level);
       });
 
@@ -514,7 +525,12 @@ public class GameWindow extends JFrame {
 
 
     private void writeToFile(File file) {
-      PrintWriter fileOut = new PrintWriter(file);
+      PrintWriter fileOut = null;
+      try {
+        fileOut = new PrintWriter(file);
+      } catch (FileNotFoundException f) {
+        // nothing
+      }
       fileOut.println(jtxf_levelName.getText().trim());
       fileOut.println(jtxf_levelEnergy.getText().trim());
       fileOut.println();
@@ -539,6 +555,13 @@ public class GameWindow extends JFrame {
     super.getContentPane().add(createLogin());
     super.setVisible(true);
   }
+
+  private JTextField jtxf_loginUsername;
+  private JTextField jtxf_loginPassword;
+  private JTextField jtxf_signupUsername;
+  private JTextField jtxf_signupPassword;
+  private JTextField jtxf_signupConfirmPassword;
+  private JTextField jtxf_signupName;
 
   /* √ */
   public JPanel createLogin() { // Creates login page for new and old users
@@ -566,12 +589,12 @@ public class GameWindow extends JFrame {
     jlbl_loginPassword.setFont(Data.Fonts.textLabel);
 
     // Field for username
-    JTextField jtxf_loginUsername = new JTextField();
+    jtxf_loginUsername = new JTextField();
     jtxf_loginUsername.setBounds(100, 175, 300, 25);
     jtxf_loginUsername.setFont(Data.Fonts.textField);
 
     // Field for password
-    JTextField jtxf_loginPassword = new JTextField();
+    jtxf_loginPassword = new JTextField();
     jtxf_loginPassword.setBounds(100, 255, 300, 25);
     jtxf_loginPassword.setFont(Data.Fonts.textField);
 
@@ -581,8 +604,8 @@ public class GameWindow extends JFrame {
     jbtn_loginButton.setBackground(Data.Colors.buttonBackground);
     jbtn_loginButton.setFont(Data.Fonts.menuButton);
     jbtn_loginButton.addActionListener(l -> {
-      String username = jtxf_loginUsername.getText().trim();
-      String password = jtxf_loginPassword.getText();
+      String username = GameWindow.this.jtxf_loginUsername.getText().trim();
+      String password = GameWindow.this.jtxf_loginPassword.getText();
       String errorMessages = "";
 
       // Validate input
@@ -595,7 +618,11 @@ public class GameWindow extends JFrame {
           errorMessages = "This user has a password different than the one provided, please try again.";
       }
       if (errorMessages.isEmpty()) { // If no invalid input yet
-        currentUser = new User(new File(Data.Utilities.getUserFilePath(username))); // Make new user
+        try {
+          currentUser = new User(new File(Data.Utilities.getUserFilePath(username))); // Make new user
+        } catch (FileNotFoundException f) {
+          // nothing
+        }
         replace(createMenu(0));
       } else
         JOptionPane.showMessageDialog(this, errorMessages.trim());
@@ -637,22 +664,22 @@ public class GameWindow extends JFrame {
     jlbl_signupName.setFont(Data.Fonts.textLabel);
 
     // Field for username
-    JTextField jtxf_signupUsername = new JTextField();
+    jtxf_signupUsername = new JTextField();
     jtxf_signupUsername.setBounds(600, 175, 300, 25);
     jtxf_signupUsername.setFont(Data.Fonts.textField);
 
     // Field for password
-    JTextField jtxf_signupPassword = new JTextField();
+    jtxf_signupPassword = new JTextField();
     jtxf_signupPassword.setBounds(600, 255, 300, 25);
     jtxf_signupPassword.setFont(Data.Fonts.textField);
 
     // Field for password confirmation
-    JTextField jtxf_signupConfirmPassword = new JTextField();
+    jtxf_signupConfirmPassword = new JTextField();
     jtxf_signupConfirmPassword.setBounds(600, 335, 300, 25);
     jtxf_signupConfirmPassword.setFont(Data.Fonts.textField);
 
     // Field for name
-    JTextField jtxf_signupName = new JTextField();
+    jtxf_signupName = new JTextField();
     jtxf_signupName.setBounds(600, 415, 300, 25);
     jtxf_signupName.setFont(Data.Fonts.textField);
 
@@ -662,9 +689,9 @@ public class GameWindow extends JFrame {
     jbtn_signupButton.setBackground(Data.Colors.buttonBackground);
     jbtn_signupButton.setFont(Data.Fonts.menuButton);
     jbtn_signupButton.addActionListener(l -> {
-      String username = jtxf_signupUsername.getText().trim();
-      String password = jtxf_signupPassword.getText();
-      String realName = jtxf_signupName.getText();
+      String username = GameWindow.this.jtxf_signupUsername.getText().trim();
+      String password = GameWindow.this.jtxf_signupPassword.getText();
+      String realName = GameWindow.this.jtxf_signupName.getText();
       String errorMessages = "";
 
       // Validate input
@@ -675,7 +702,7 @@ public class GameWindow extends JFrame {
         errorMessages += User.isValidPassword(password);
         if (realName.isEmpty()) // If no name is provided
           errorMessages += "Please provide your name.\n";
-        if (!password.equals(jtxf_signupConfirmPassword.getText())) // If confirmation password is different
+        if (!password.equals(GameWindow.this.jtxf_signupConfirmPassword.getText())) // If confirmation password is different
           errorMessages += "Please ensure that both passwords are identical.\n";
       }
       if (errorMessages.isEmpty()) { // If no invalid input
@@ -701,6 +728,7 @@ public class GameWindow extends JFrame {
     
   } // Login page for new and existing users, creates new user object
 
+  
   /* √ */
   public JPanel createMenu(int levelGroup) { // Creates menu page showing all unlocked levels, with custom level options and account settings
     
@@ -818,8 +846,12 @@ public class GameWindow extends JFrame {
     boolean statusGood = true;
     for (level = startingLevel; level <= Data.Utilities.numOfLevels && !Level.returnToMenu; level++) {
       replace(new Level(new File(Data.Utilities.getLevelFilePath(level)), false, currentUser));
-      while (!(Level.goToNextLevel || Level.returnToMenu));
-        wait();
+      while (!(Level.goToNextLevel || Level.returnToMenu))
+        try {
+          wait();
+        } catch(InterruptedException e) {
+          // nothing
+        }
     }
 
     createMenu((level - 1) / 10);
@@ -1094,8 +1126,13 @@ public class GameWindow extends JFrame {
       button.setFont(Data.Fonts.customButton);
       button.addActionListener(e -> {
         GameWindow.this.replace(new Level(((JDataButton) e.getSource()).getFile(), true, GameWindow.this.currentUser));
-        while (!(Level.goToNextLevel || Level.returnToMenu));
-          wait();
+        while (!(Level.goToNextLevel || Level.returnToMenu)) {
+          try {
+            wait();
+          } catch (InterruptedException f) {
+            // nothing
+          }
+        }
         GameWindow.this.replace(GameWindow.this.createLevelBrowser());
       });
 

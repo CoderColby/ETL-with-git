@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import javax.swing.JLabel;
 
 
 public class AirlockDoor extends AbstractWall {
@@ -10,12 +11,15 @@ public class AirlockDoor extends AbstractWall {
 
   private boolean isOpen;
 
-  public AirlockDoor(GridCell gridCell, byte startCondition) {
-    super(AirlockDoor.TAG + ":" + startCondition, gridCell, Data.Images.Wall.airlockDoor(startCondition));
-    isOpen = startCondition == AirlockDoor.OPEN;
+
+  public AirlockDoor() {
+    super(AirlockDoor.TAG + ":" + AirlockDoor.DEFAULT, new GridCell(), AbstractWall.initializeLabel(new GridCell(), Data.Images.Wall.airlockDoor(AirlockDoor.DEFAULT), (byte) 0), (byte) 0);
   }
 
-  private static JLabel initializeLabel(
+  public AirlockDoor(GridCell gridCell, byte startCondition, byte orientation) {
+    super(AirlockDoor.TAG + ":" + startCondition, gridCell, AbstractWall.initializeLabel(gridCell, Data.Images.Wall.airlockDoor(startCondition), orientation), orientation);
+    isOpen = startCondition == AirlockDoor.OPEN;
+  }
 
   public boolean canPass(String entityTag) {
     return isOpen || entityTag.equals(Player.TAG);
@@ -24,7 +28,7 @@ public class AirlockDoor extends AbstractWall {
 
   public ArrayList<Animation> getAnimations(String entityTag, int delay) {
     ArrayList<Animation> animations = new ArrayList<>();
-    animations.add(new WallAnimation(delay + ((isOpen)? 0 : Data.Animation.humanTravelTime), this, (isOpen)? AirlockDoor.CLOSED : AirlockDoor.OPEN));
+    animations.add(new WallAnimation(delay + ((isOpen)? 0 : Data.Animation.playerTravelTime), this, (isOpen)? AirlockDoor.CLOSED : AirlockDoor.OPEN));
     isOpen = !isOpen;
     return animations;
   }
@@ -48,7 +52,7 @@ public class AirlockDoor extends AbstractWall {
 
   public void transform(byte transformationType) {
     super.setImage(Data.Images.Wall.airlockDoor(transformationType).getImage());
-    super.gridCell.getGameBoard().repaint();
+    // super.gridCell.getGameBoard().repaint();
   }
 
   public void cycleOptions() {

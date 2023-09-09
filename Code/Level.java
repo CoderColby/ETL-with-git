@@ -1,4 +1,6 @@
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.*;
@@ -37,11 +39,12 @@ public class Level extends JPanel {
     super.setFocusable(true);
     super.requestFocus();
 
-    Scanner fileIn;
+    Scanner fileIn = null;
     try {
       fileIn = new Scanner(levelFile);
     } catch (FileNotFoundException e) {
       System.out.println("Level file not found");
+      System.exit(1);
     }
     levelTitle = fileIn.nextLine().trim();
     startEnergy = fileIn.nextLine().trim();

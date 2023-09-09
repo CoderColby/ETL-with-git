@@ -69,6 +69,12 @@ public class User {
       fileOut = new PrintWriter(this.userFile);
     } catch(FileNotFoundException e) {
       System.out.println("Error: userFile no longer exists");
+      try {
+        this.userFile.createNewFile();
+        fileOut = new PrintWriter(this.userFile);
+      } catch (Exception f) {
+        System.out.println("Error: userFile could not be created");
+      }
       return;
     }
     fileOut.println(this.password);
@@ -159,7 +165,13 @@ public class User {
 
   public static boolean isCorrectPassword(String username, String password) {
     File userFile = new File(Data.Utilities.getUserFilePath(username));
-    Scanner fileIn = new Scanner(userFile);
+    Scanner fileIn;
+    try {
+      fileIn = new Scanner(userFile);
+    } catch (FileNotFoundException e) {
+      System.out.println("File not found");
+      return false;
+    }
     String filePassword = fileIn.nextLine().trim();
     fileIn.close();
     return filePassword.equals(password);

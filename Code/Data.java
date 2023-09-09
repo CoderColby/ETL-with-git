@@ -13,7 +13,7 @@ import javax.swing.ImageIcon;
 public class Data {
 
   public static class Animation {
-    public static final int humanTravelTime = 1000;
+    public static final int playerTravelTime = 1000;
     public static final int zombieTravelTime = 800;
     public static final int smartZombieTravelTime = 1000;
   }
@@ -44,31 +44,31 @@ public class Data {
 
     public static class Wall {
       
-      public static final ImageIcon wall = new ImageIcon("../GameAssets/Images/Walls/Wall.png");
+      public static final ImageIcon wall = new ImageIcon("../GameAssets/Images/Wall/Wall.png");
       public static ImageIcon door(byte num) {
-        return new ImageIcon("../GameAssets/Images/Walls/Door" + num + ".png");
+        return new ImageIcon("../GameAssets/Images/Wall/Door" + num + ".png");
       }
       public static ImageIcon airlockDoor(byte num) {
-        return new ImageIcon("../GameAssets/Images/Walls/AirlockDoor" + num + ".png");
+        return new ImageIcon("../GameAssets/Images/Wall/AirlockDoor" + num + ".png");
       }
       public static ImageIcon detectionDoor(byte num) {
-        return new ImageIcon("../GameAssets/Images/Walls/DetectionDoor" + num + ".png");
+        return new ImageIcon("../GameAssets/Images/Wall/DetectionDoor" + num + ".png");
       }
       public static ImageIcon onceDoor(byte num) {
-        return new ImageIcon("../GameAssets/Images/Walls/OnceDoor" + num + ".png");
+        return new ImageIcon("../GameAssets/Images/Wall/OnceDoor" + num + ".png");
       }
       public static ImageIcon powerDoor(byte num) {
-        return new ImageIcon("../GameAssets/Images/Walls/PowerDoor" + num + ".png");
+        return new ImageIcon("../GameAssets/Images/Wall/PowerDoor" + num + ".png");
       }
       public static ImageIcon lockedDoor(byte num) {
-        return new ImageIcon("../GameAssets/Images/Walls/LockedDoor" + num + ".png");
+        return new ImageIcon("../GameAssets/Images/Wall/LockedDoor" + num + ".png");
       }
     }
 
     public static class Entity {
 
-      public static ImageIcon human(byte direction) {
-        return new ImageIcon("../GameAssets/Images/Entity/Human" + direction + ".png");
+      public static ImageIcon player(byte direction) {
+        return new ImageIcon("../GameAssets/Images/Entity/Player" + direction + ".png");
       }
       public static ImageIcon zombie(byte direction) {
         return new ImageIcon("../GameAssets/Images/Entity/Zombie" + direction + ".png");
@@ -88,11 +88,11 @@ public class Data {
     }
 
     public static class RoomType {
-      public static final ImageIcon star = new ImageIcon("../GameAssets/Images/RoomObject/Star.png");
-      public static final ImageIcon filled = new ImageIcon("../GameAssets/Images/RoomObject/Filled.png");
-      public static final ImageIcon elevator = new ImageIcon("../GameAssets/Images/RoomObject/Elevator.png");
+      public static final ImageIcon star = new ImageIcon("../GameAssets/Images/RoomType/Star.png");
+      public static final ImageIcon filled = new ImageIcon("../GameAssets/Images/RoomType/Filled.png");
+      public static final ImageIcon elevator = new ImageIcon("../GameAssets/Images/RoomType/Elevator.png");
       public static ImageIcon target(byte num) {
-        return new ImageIcon("../GameAssets/Images/RoomObject/Target" + num + ".png");
+        return new ImageIcon("../GameAssets/Images/RoomType/Target" + num + ".png");
       }
     }
 

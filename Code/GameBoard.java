@@ -101,21 +101,15 @@ public class GameBoard extends JLayeredPane {
     remainingEnergy = startEnergy;
     hasLost = false;
 
-    for (int i = 0; i < 100; i++) {
-      super.add(new JLabel(board[i/10][i%10].getRoomType()), ROOMTYPE_LAYER);
-      super.add(new JLabel(board[i/10][i%10].getItem()), ITEM_LAYER);
-      super.add(new JLabel(board[i/10][i%10].getEntity()), ENTITY_LAYER);
-      if (i % 10 < 9)
-        super.add(new JLabel(board[i/10][i%10].getWall((byte) 0)), WALL_LAYER);
-      if (i / 10 < 9)
-        super.add(new JLabel(board[i/10][i%10].getWall((byte) 1)), WALL_LAYER);
-    }
-    
-  }
-
-
-  @Override
-  public void paintComponent(Graphics g) {
+    // for (int i = 0; i < 100; i++) {
+    //   super.add(new JLabel(board[i/10][i%10].getRoomType()), ROOMTYPE_LAYER);
+    //   super.add(new JLabel(board[i/10][i%10].getItem()), ITEM_LAYER);
+    //   super.add(new JLabel(board[i/10][i%10].getEntity()), ENTITY_LAYER);
+    //   if (i % 10 < 9)
+    //     super.add(new JLabel(board[i/10][i%10].getWall((byte) 0)), WALL_LAYER);
+    //   if (i / 10 < 9)
+    //     super.add(new JLabel(board[i/10][i%10].getWall((byte) 1)), WALL_LAYER);
+    // }
     
   }
 
@@ -358,8 +352,8 @@ class GridCell {
     rowColumn = new int[] {coordinates / 10, coordinates % 10};
     this.board = board;
     walls = new Wall[2];
-    walls[0] = AbstractWall.getWallByTag(fileContents[0], this);
-    walls[1] = AbstractWall.getWallByTag(fileContents[1], this);
+    walls[0] = AbstractWall.getWallByTag(fileContents[0], this, (byte) 0);
+    walls[1] = AbstractWall.getWallByTag(fileContents[1], this, (byte) 1);
     roomType = AbstractRoomType.getRoomTypeByTag(fileContents[2], this);
     item = AbstractItem.getItemByTag(fileContents[3], this);
     entity = AbstractEntity.getEntityByTag(fileContents[4], this);
@@ -401,11 +395,15 @@ class GridCell {
       try {
         return getNeighbor(direction).getWall((byte) (direction % 2));
       } catch (IndexOutOfBoundsException e) {
-        wall = new Wall(this, (byte)0);
+        wall = AbstractWall.getWallByTag(Wall.TAG + ":" + Wall.DEFAULT, this, (byte) (direction % 2));
       }
     if (direction == 1)
       wall.setImage(Data.Images.rotateIcon(wall, 90).getImage());
     return wall;
+  }
+
+  public int[] getPixelOffset() {
+    return new int[] {rowColumn[0] * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), rowColumn[1] * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS)};
   }
 
   public void setRoomType(AbstractRoomType roomType) {
@@ -430,8 +428,8 @@ class GridCell {
   }
 
   public GridCell getNeighbor(byte direction) throws IndexOutOfBoundsException {
-    int rowShift = direction - 2 + 2 * ((3 - direction) / 3); // 0:0; 1:-1; 2:0; 3:1
-    int columnShift = direction - 2 + 2 * ((3 - direction) / 3); // 0:0; 1:-1; 2:0; 3:1
+    int rowShift = 1 - direction + 2 * (direction / 3); // 0:1; 1:0; 2:-1; 3:0
+    int columnShift = 2 - direction - 2 * ((5 - direction) / 5); // 0:0; 1:1; 2:0; 3:-1
     return board.getGridCell(new int[] {rowColumn[0] + rowShift, rowColumn[1] + columnShift});
   }
 
@@ -492,46 +490,55 @@ class EntityAnimation extends Animation {
   private static final int timeBetweenTicksInMillis = 20;
 
   private AbstractEntity entity;
-  private JLabel entityLabel;
+  private byte direction;
   private int[] startPosition;
   private int[] endPosition;
   private float[] currentPosition;
   private float[] distancePerTick;
-  private int durationInMillis;
 
   private Timer timer;
   private int timeElapsedInMillis;
 
-  public EntityAnimation(int startTimeInMillis, AbstractEntity entity, int[] startPosition, int[] endPosition, int durationInMillis) {
+  public EntityAnimation(int startTimeInMillis, AbstractEntity entity, byte direction) {
     super(startTimeInMillis);
     this.entity = entity;
-    this.entityLabel = new JLabel(entity);
-    this.startPosition = startPosition;
-    this.endPosition = endPosition;
-    this.durationInMillis = durationInMillis;
+    this.direction = direction;
   }
 
   public void run() {
+    startPosition = new int[] {entity.getLabel().getX(), entity.getLabel().getY()};
+    int rowShift = 1 - direction + 2 * (direction / 3); // 0:1; 1:0; 2:-1; 3:0
+    int columnShift = 2 - direction - 2 * ((5 - direction) / 5); // 0:0; 1:1; 2:0; 3:-1
+    endPosition = new int[] {startPosition[0] + rowShift * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), startPosition[1] + columnShift * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS)};
+    
     currentPosition = new float[] {startPosition[0], startPosition[1]};
-    distancePerTick = new float[] {(endPosition[0] - currentPosition[0]) / (durationInMillis / timeBetweenTicksInMillis), (endPosition[1] - currentPosition[1]) / (durationInMillis / timeBetweenTicksInMillis)};
+    distancePerTick = new float[] {(endPosition[0] - currentPosition[0]) / (entity.getAnimationDuration() / timeBetweenTicksInMillis), (endPosition[1] - currentPosition[1]) / (entity.getAnimationDuration() / timeBetweenTicksInMillis)};
     timeElapsedInMillis = 0;
     
     timer = new Timer(timeBetweenTicksInMillis, event -> {
       EntityAnimation.this.currentPosition[0] += EntityAnimation.this.distancePerTick[0];
       EntityAnimation.this.currentPosition[1] += EntityAnimation.this.distancePerTick[1];
-      EntityAnimation.this.entityLabel.setLocation(Math.round(EntityAnimation.this.currentPosition[0]), Math.round(EntityAnimation.this.currentPosition[1]));
+      EntityAnimation.this.entity.getLabel().setLocation(Math.round(EntityAnimation.this.currentPosition[0]), Math.round(EntityAnimation.this.currentPosition[1]));
 
       EntityAnimation.this.timeElapsedInMillis += EntityAnimation.timeBetweenTicksInMillis;
-      if (EntityAnimation.this.timeElapsedInMillis >= EntityAnimation.this.durationInMillis)
+      if (EntityAnimation.this.timeElapsedInMillis >= EntityAnimation.this.entity.getAnimationDuration()) {
         EntityAnimation.this.timer.stop();
+        notifyAll();
+      }
 
       EntityAnimation.this.entity.getGridCell().getGameBoard().repaint();
     });
     timer.start();
 
-    Thread.sleep(durationInMillis);
+    while (timer.isRunning()) {
+      try {
+        wait();
+      } catch (InterruptedException e) {
+        // nothing
+      }
+    }
 
-    entityLabel.setLocation(endPosition[0], startPosition[1]);
+    entity.getLabel().setLocation(endPosition[0], endPosition[1]);
     
     entity.getGridCell().getGameBoard().repaint();
   }

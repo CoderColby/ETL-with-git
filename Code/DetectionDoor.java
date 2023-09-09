@@ -10,8 +10,13 @@ public class DetectionDoor extends AbstractWall {
 
   private boolean isOpen;
 
-  public DetectionDoor(GridCell gridCell, byte startCondition) {
-    super(DetectionDoor.TAG + ":" + startCondition, gridCell, Data.Images.Wall.detectionDoor(startCondition));
+
+  public DetectionDoor() {
+    super(DetectionDoor.TAG + ":" + DetectionDoor.DEFAULT, new GridCell(), AbstractWall.initializeLabel(new GridCell(), Data.Images.Wall.detectionDoor(DetectionDoor.DEFAULT), (byte) 0), (byte) 0);
+  }
+
+  public DetectionDoor(GridCell gridCell, byte startCondition, byte orientation) {
+    super(DetectionDoor.TAG + ":" + startCondition, gridCell, AbstractWall.initializeLabel(gridCell, Data.Images.Wall.detectionDoor(startCondition), orientation), orientation);
     isOpen = startCondition == DetectionDoor.OPEN;
   }
 
@@ -48,7 +53,7 @@ public class DetectionDoor extends AbstractWall {
 
   public void transform(byte transformationType) {
     super.setImage(Data.Images.Wall.detectionDoor(transformationType).getImage());
-    super.gridCell.getGameBoard().repaint();
+    // super.gridCell.getGameBoard().repaint();
   }
 
   public void cycleOptions() {

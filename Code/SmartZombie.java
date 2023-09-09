@@ -74,9 +74,13 @@ public class SmartZombie extends AbstractEntity implements Comparable {
     }
   }
 
-
+  
+  public SmartZombie() {
+    super(SmartZombie.TAG + ":" + SmartZombie.DEFAULT, new GridCell(), AbstractItem.initializeLabel(new GridCell(), Data.Images.Entity.smartZombie(SmartZombie.DEFAULT)), Data.Animation.smartZombieTravelTime);
+  }
+  
   public SmartZombie(GridCell gridCell, byte startCondition) {
-    super(SmartZombie.TAG + ":" + startCondition, gridCell, Data.Images.Entity.smartZombie(startCondition));
+    super(SmartZombie.TAG + ":" + startCondition, gridCell, AbstractEntity.initializeLabel(gridCell, Data.Images.Entity.smartZombie(startCondition)), Data.Animation.smartZombieTravelTime);
     this.startCondition = startCondition;
   }
 
@@ -147,7 +151,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
     neighborCell.setEntity(this);
     super.gridCell.setEntity(null);
 
-    movementDelay += Data.Animation.humanTravelTime;
+    movementDelay += Data.Animation.playerTravelTime;
     animations.addAll(passWall.getAnimations(SmartZombie.TAG, movementDelay));
     movementDelay += passWall.addDelayInMillis();
 
@@ -156,7 +160,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
       animations.addAll(thisGameBoard.setPower(false, movementDelay));
     }
     
-    animations.add(new EntityAnimation(movementDelay, this, super.gridCell.getEntityXY(), neighborCell.getEntityXY(), Data.Animation.smartZombieTravelTime));
+    animations.add(new EntityAnimation(movementDelay, this, direction));
     super.gridCell = neighborCell;
 
     return animations;

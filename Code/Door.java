@@ -10,8 +10,13 @@ public class Door extends AbstractWall {
 
   private boolean isOpen;
 
-  public Door(GridCell gridCell, byte startCondition) {
-    super(Door.TAG + ":" + startCondition, gridCell, Data.Images.Wall.door(Door.CLOSED));
+
+  public Door() {
+    super(Door.TAG + ":" + Door.DEFAULT, new GridCell(), AbstractWall.initializeLabel(new GridCell(), Data.Images.Wall.door(Door.DEFAULT), (byte) 0), (byte) 0);
+  }
+
+  public Door(GridCell gridCell, byte startCondition, byte orientation) {
+    super(Door.TAG + ":" + startCondition, gridCell, AbstractWall.initializeLabel(gridCell, Data.Images.Wall.door(Door.CLOSED), orientation), orientation);
     isOpen = true;
   }
 
@@ -23,7 +28,7 @@ public class Door extends AbstractWall {
   public ArrayList<Animation> getAnimations(String entityTag, int delay) {
     ArrayList<Animation> animations = new ArrayList<>();
     animations.add(new WallAnimation(delay, this, Door.OPEN));
-    animations.add(new WallAnimation(delay + Data.Animation.humanTravelTime, this, Door.CLOSED));
+    animations.add(new WallAnimation(delay + Data.Animation.playerTravelTime, this, Door.CLOSED));
     return animations;
   }
 
@@ -52,7 +57,7 @@ public class Door extends AbstractWall {
 
   public void transform(byte transformationType) {
     super.setImage(Data.Images.Wall.door(transformationType).getImage());
-    super.gridCell.getGameBoard().repaint();
+    // super.gridCell.getGameBoard().repaint();
   }
 
   public void cycleOptions() {

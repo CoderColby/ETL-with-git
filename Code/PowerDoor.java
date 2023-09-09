@@ -10,8 +10,13 @@ public class PowerDoor extends AbstractWall {
 
   private boolean isOpen;
 
-  public PowerDoor(GridCell gridCell, byte startCondition) {
-    super(PowerDoor.TAG + ":" + startCondition, gridCell, Data.Images.Wall.powerDoor(PowerDoor.CLOSED));
+
+  public PowerDoor() {
+    super(PowerDoor.TAG + ":" + PowerDoor.DEFAULT, new GridCell(), AbstractWall.initializeLabel(new GridCell(), Data.Images.Wall.powerDoor(PowerDoor.DEFAULT), (byte) 0), (byte) 0);
+  }
+
+  public PowerDoor(GridCell gridCell, byte startCondition, byte orientation) {
+    super(PowerDoor.TAG + ":" + startCondition, gridCell, AbstractWall.initializeLabel(gridCell, Data.Images.Wall.powerDoor(PowerDoor.CLOSED), orientation), orientation);
     isOpen = false;
   }
 
@@ -44,7 +49,7 @@ public class PowerDoor extends AbstractWall {
 
   public void transform(byte transformationType) {
     super.setImage(Data.Images.Wall.powerDoor(transformationType).getImage());
-    super.gridCell.getGameBoard().repaint();
+    // super.gridCell.getGameBoard().repaint();
   }
 
   public void cycleOptions() {
