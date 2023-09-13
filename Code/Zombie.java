@@ -14,11 +14,11 @@ public class Zombie extends AbstractEntity implements Comparable {
 
   
   public Zombie() {
-    super(Zombie.TAG + ":" + Zombie.DEFAULT, new GridCell(), AbstractItem.initializeLabel(new GridCell(), Data.Images.Entity.zombie(Zombie.DEFAULT)), Data.Animation.zombieTravelTime);
+    super(Zombie.TAG + ":" + Zombie.DEFAULT, Data.Images.Entity.zombie(Zombie.DEFAULT));
   }
   
   public Zombie(GridCell gridCell, byte startCondition) {
-    super(Zombie.TAG + ":" + startCondition, gridCell, AbstractEntity.initializeLabel(gridCell, Data.Images.Entity.zombie(startCondition)), Data.Animation.zombieTravelTime);
+    super(Zombie.TAG + ":" + startCondition, gridCell, Data.Images.Entity.zombie(startCondition), Data.Animation.zombieTravelTime);
     this.startCondition = startCondition;
     repeatDelay = -1;
   }
@@ -28,7 +28,7 @@ public class Zombie extends AbstractEntity implements Comparable {
   }
 
   public void turn(byte direction) {
-    super.setImage(Data.Images.Entity.zombie(direction).getImage());
+    super.setImage(new ImageIcon(Data.Images.Entity.zombie(direction)).getImage());
     super.gridCell.getGameBoard().repaint();
   }
 
@@ -96,7 +96,7 @@ public class Zombie extends AbstractEntity implements Comparable {
 
   public void cycleOptions() {
     startCondition = (byte) (++startCondition % 4);
-    super.setImage(Data.Images.Entity.zombie(startCondition).getImage());
+    super.setImage(new ImageIcon(Data.Images.Entity.zombie(startCondition)).getImage());
     super.identifier = Zombie.TAG + ":" + startCondition;
   }
 }

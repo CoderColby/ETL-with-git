@@ -1,3 +1,4 @@
+import javax.swing.ImageIcon;
 
 
 public class Key extends AbstractItem {
@@ -9,11 +10,11 @@ public class Key extends AbstractItem {
 
   
   public Key() {
-    super(Key.TAG + ":" + Key.DEFAULT, new GridCell(), AbstractItem.initializeLabel(new GridCell(), Data.Images.Item.key(Key.DEFAULT)));
+    super(Key.TAG + ":" + Key.DEFAULT, Data.Images.Item.key(Key.DEFAULT));
   }
   
   public Key(GridCell gridCell, byte startCondition) {
-    super(Key.TAG + ":" + startCondition, gridCell, initializeLabel(gridCell, Data.Images.Item.key(startCondition)));
+    super(Key.TAG + ":" + startCondition, gridCell, Data.Images.Item.key(startCondition));
     this.ID = startCondition;
   }
 
@@ -23,7 +24,7 @@ public class Key extends AbstractItem {
 
   public void cycleOptions() {
     ID = (byte) (++ID % 10);
-    super.setImage(Data.Images.Item.key(ID).getImage());
+    super.setImage(new ImageIcon(Data.Images.Item.key(ID)).getImage());
     super.identifier = Key.TAG + ":" + ID;
   }
 }

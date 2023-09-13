@@ -1,4 +1,4 @@
-
+import javax.swing.ImageIcon;
 
 
 public class Elevator extends AbstractRoomType {
@@ -8,14 +8,20 @@ public class Elevator extends AbstractRoomType {
 
   
   public Elevator() {
-    super(Elevator.TAG + ":" + Elevator.DEFAULT, new GridCell(), AbstractItem.initializeLabel(new GridCell(), Data.Images.RoomType.elevator));
+    super(Elevator.TAG + ":" + Elevator.DEFAULT, Data.Images.RoomType.elevator);
   }
   
   public Elevator(GridCell gridCell, byte startCondition) {
-    super(Elevator.TAG + ":" + startCondition, gridCell, AbstractRoomType.initializeLabel(gridCell, Data.Images.RoomType.elevator));
+    super(Elevator.TAG + ":" + startCondition, gridCell, Data.Images.RoomType.elevator);
   }
 
   public void cycleOptions() {
     // nothing
+  }
+
+  @Override
+  public void addSelf(GridCell gridCell, byte modifier) {
+    super.addSelf(gridCell, modifier);
+    gridCell.setEntity(AbstractEntity.getEntityByTag(Player.TAG + ":" + Player.DEFAULT, gridCell));
   }
 }

@@ -35,6 +35,8 @@ public class User {
       */
       
       this.userFile = userFile;
+      this.username = userFile.getName();
+      this.username = this.username.substring(0, this.username.length() - ".txt".length());
       this.password = fileIn.nextLine().trim();
       this.realName = fileIn.nextLine().trim();
       this.unlockedLevels = fileIn.nextInt(); fileIn.nextLine();
@@ -51,7 +53,7 @@ public class User {
 
   public User(String username, String password, String realName) { // New user
     this.userFile = new File(Data.Utilities.getUserFilePath(username));
-    new File(Data.Utilities.customLevelDirectory + username).mkdir();
+    (new File(Data.Utilities.customLevelDirectory + username)).mkdir();
     this.username = username;
     this.password = password;
     this.realName = realName;
@@ -67,13 +69,14 @@ public class User {
     PrintWriter fileOut;
     try {
       fileOut = new PrintWriter(this.userFile);
-    } catch(FileNotFoundException e) {
-      System.out.println("Error: userFile no longer exists");
+    } catch (FileNotFoundException e) {
+      System.out.println("Error: userFile does not exist");
       try {
         this.userFile.createNewFile();
         fileOut = new PrintWriter(this.userFile);
       } catch (Exception f) {
-        System.out.println("Error: userFile could not be created");
+        // System.out.println("Error: userFile could not be created");
+        System.out.println(f);
       }
       return;
     }

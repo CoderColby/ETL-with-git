@@ -2,6 +2,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.JSpinner;
+import javax.swing.ImageIcon;
 
 
 public class Battery extends AbstractItem {
@@ -13,11 +14,11 @@ public class Battery extends AbstractItem {
 
   
   public Battery() {
-    super(Battery.TAG + ":" + Battery.DEFAULT, new GridCell(), AbstractItem.initializeLabel(new GridCell(), Data.Images.Item.battery));
+    super(Battery.TAG + ":" + Battery.DEFAULT, Data.Images.Item.battery);
   }
   
   public Battery(GridCell gridCell, byte startCondition) {
-    super(Battery.TAG + ":" + startCondition, gridCell, AbstractItem.initializeLabel(gridCell, Data.Images.Item.battery));
+    super(Battery.TAG + ":" + startCondition, gridCell, Data.Images.Item.battery);
     this.energy = startCondition;
   }
 

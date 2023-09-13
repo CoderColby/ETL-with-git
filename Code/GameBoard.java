@@ -5,7 +5,7 @@ import java.io.FileInputStream;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
-import javax.swing.ImageIcon;
+// import javax.swing.ImageIcon;
 import javax.swing.Timer;
 import java.lang.IndexOutOfBoundsException;
 import java.awt.Rectangle;
@@ -93,12 +93,18 @@ public class GameBoard extends JLayeredPane {
       board[i/10][i%10] = temp;
     }
 
-    zombies = (Zombie[]) zombieTracker.toArray();
-    smartZombies = (SmartZombie[]) smartZombieTracker.toArray();
-    targets = (Target[]) targetTracker.toArray();
-    lockedDoors = (LockedDoor[]) lockedDoorTracker.toArray();
-    stars = (Star[]) starTracker.toArray();
+    if (!zombieTracker.isEmpty())
+      zombieTracker.toArray(zombies);
+    if (!smartZombieTracker.isEmpty())
+      smartZombieTracker.toArray(smartZombies);
+    if (!targetTracker.isEmpty())
+      targetTracker.toArray(targets);
+    if (!lockedDoorTracker.isEmpty())
+      lockedDoorTracker.toArray(lockedDoors);
+    if (!starTracker.isEmpty())
+      starTracker.toArray(stars);
     remainingEnergy = startEnergy;
+    hasWon = false;
     hasLost = false;
 
     // for (int i = 0; i < 100; i++) {
@@ -332,10 +338,10 @@ class GridCell {
   public static final byte LEFT_WALL = 2;
   public static final byte TOP_WALL = 3;
 
-  private static final int[] EntityXYPos = new int[] {}; /////////// What position is entity pic?
-  private static final int[] ItemXYPos = new int[] {}; /////////// What position is item pic?
-  private static final int[] RoomTypeXYPos = new int[] {}; /////////// What position is roomtype pic?
-  private static final int[] WallXYPos = new int[] {}; /////////// What position is wall pic? can swap index 0 with 1 for walls 0 and 1
+  // private static final int[] EntityXYPos = new int[] {}; /////////// What position is entity pic?
+  // private static final int[] ItemXYPos = new int[] {}; /////////// What position is item pic?
+  // private static final int[] RoomTypeXYPos = new int[] {}; /////////// What position is roomtype pic?
+  // private static final int[] WallXYPos = new int[] {}; /////////// What position is wall pic? can swap index 0 with 1 for walls 0 and 1
 
 
 
@@ -346,12 +352,14 @@ class GridCell {
   private int[] rowColumn;
   private GameBoard board;
 
-  public GridCell() {}
+  public GridCell() {
+    System.out.println("HIE");
+  }
 
   public GridCell(String[] fileContents, int coordinates, GameBoard board) {
     rowColumn = new int[] {coordinates / 10, coordinates % 10};
     this.board = board;
-    walls = new Wall[2];
+    walls = new AbstractWall[2];
     walls[0] = AbstractWall.getWallByTag(fileContents[0], this, (byte) 0);
     walls[1] = AbstractWall.getWallByTag(fileContents[1], this, (byte) 1);
     roomType = AbstractRoomType.getRoomTypeByTag(fileContents[2], this);
@@ -397,8 +405,8 @@ class GridCell {
       } catch (IndexOutOfBoundsException e) {
         wall = AbstractWall.getWallByTag(Wall.TAG + ":" + Wall.DEFAULT, this, (byte) (direction % 2));
       }
-    if (direction == 1)
-      wall.setImage(Data.Images.rotateIcon(wall, 90).getImage());
+    // if (direction == 1)
+    //   wall.setImage(Data.Images.rotateIcon(wall, 90).getImage());
     return wall;
   }
 
@@ -445,7 +453,7 @@ class GridCell {
     String s = "";
     AbstractGameObject[] objects = new AbstractGameObject[] {this.walls[0], this.walls[1], this.roomType, this.item, this.entity};
     for (AbstractGameObject o : objects)
-      s += ((o != null)? o.getIdentifier() : "-") + " ";
+      s += ((o != null)? o.getIdentifier() : "-:") + " ";
 
     return s.trim();
   }

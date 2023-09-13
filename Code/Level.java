@@ -30,7 +30,7 @@ public class Level extends JPanel {
   private boolean isCustom;
 
   
-  public Level(File levelFile, boolean isCustom, User currentUser) {
+  public Level(File levelFile, boolean isCustom, User currentUser, GameWindow window) {
     Level.returnToMenu = false;
     Level.goToNextLevel = false;
     this.currentUser = currentUser;
@@ -59,9 +59,9 @@ public class Level extends JPanel {
     // levelBoard.setBounds(/*???*/);
 
     // Base panel
-    JPanel root = new JPanel();
-    root.setLayout(null);
-    root.setBackground(Color.WHITE);
+    super.setLayout(null);
+    super.setBackground(Color.WHITE);
+    super.setBounds(window.getContentPane().getBounds());
 
     // Label for level title
     JLabel jlbl_levelTitle = new JLabel(levelTitle, SwingConstants.CENTER);
@@ -134,19 +134,19 @@ public class Level extends JPanel {
     // note.setBounds(10, 580, 330, 150);
     // note.setFont(new Font("Monospace", Font.ITALIC, 20));
 
-    root.add(jlbl_levelTitle);
-    root.add(jlbl_levelName);
-    root.add(jlbl_energyLabel);
+    super.add(jlbl_levelTitle);
+    super.add(jlbl_levelName);
+    super.add(jlbl_energyLabel);
     // root.add(jlbl_perfectEnergy);
-    root.add(jlbl_energyAmt);
+    super.add(jlbl_energyAmt);
     // root.add(jlbl_genLabel);
     // root.add(jlbl_genNum);
-    root.add(jpnl_genLabels);
-    root.add(jbtn_restart);
-    root.add(jbtn_menu);
+    super.add(jpnl_genLabels);
+    super.add(jbtn_restart);
+    super.add(jbtn_menu);
     // root.add(note);
 
-    root.add(levelBoard);
+    super.add(levelBoard);
 
     /////////////////////////////////////////// i fukin dunno wutz aftur dis
 
@@ -186,8 +186,6 @@ public class Level extends JPanel {
     root.getActionMap().put(MOVE_RIGHT, new keyAction(0));
     root.getActionMap().put(ACTIVATE_GEN, new keyAction(4));
     */
-
-    super.add(root);
     
   }
 

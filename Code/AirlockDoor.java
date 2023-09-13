@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import javax.swing.JLabel;
+import javax.swing.ImageIcon;
 
 
 public class AirlockDoor extends AbstractWall {
@@ -13,11 +14,11 @@ public class AirlockDoor extends AbstractWall {
 
 
   public AirlockDoor() {
-    super(AirlockDoor.TAG + ":" + AirlockDoor.DEFAULT, new GridCell(), AbstractWall.initializeLabel(new GridCell(), Data.Images.Wall.airlockDoor(AirlockDoor.DEFAULT), (byte) 0), (byte) 0);
+    super(AirlockDoor.TAG + ":" + AirlockDoor.DEFAULT, Data.Images.Wall.airlockDoor(AirlockDoor.DEFAULT));
   }
 
   public AirlockDoor(GridCell gridCell, byte startCondition, byte orientation) {
-    super(AirlockDoor.TAG + ":" + startCondition, gridCell, AbstractWall.initializeLabel(gridCell, Data.Images.Wall.airlockDoor(startCondition), orientation), orientation);
+    super(AirlockDoor.TAG + ":" + startCondition, gridCell, Data.Images.Wall.airlockDoor(startCondition), orientation);
     isOpen = startCondition == AirlockDoor.OPEN;
   }
 
@@ -51,13 +52,13 @@ public class AirlockDoor extends AbstractWall {
 
 
   public void transform(byte transformationType) {
-    super.setImage(Data.Images.Wall.airlockDoor(transformationType).getImage());
+    super.setImage(new ImageIcon(Data.Images.Wall.airlockDoor(transformationType)).getImage());
     // super.gridCell.getGameBoard().repaint();
   }
 
   public void cycleOptions() {
     isOpen = !isOpen;
-    super.setImage(Data.Images.Wall.airlockDoor((isOpen)? AirlockDoor.OPEN : AirlockDoor.CLOSED).getImage());
+    super.setImage(new ImageIcon(Data.Images.Wall.airlockDoor((isOpen)? AirlockDoor.OPEN : AirlockDoor.CLOSED)).getImage());
     super.identifier = Target.TAG + ":" + ((isOpen)? AirlockDoor.OPEN : AirlockDoor.CLOSED);
   }
 }

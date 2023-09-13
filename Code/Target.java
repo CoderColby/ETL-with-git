@@ -1,5 +1,6 @@
 import javax.swing.JPanel;
 import javax.swing.JButton;
+import javax.swing.ImageIcon;
 import java.awt.Color;
 
 
@@ -15,11 +16,11 @@ public class Target extends AbstractRoomType {
 
   
   public Target() {
-    super(Target.TAG + ":" + Target.DEFAULT, new GridCell(), AbstractItem.initializeLabel(new GridCell(), Data.Images.RoomType.target(Target.DEFAULT)));
+    super(Target.TAG + ":" + Target.DEFAULT, Data.Images.RoomType.target(Target.DEFAULT));
   }
   
   public Target(GridCell gridCell, byte startCondition) {
-    super(Target.TAG + ":" + startCondition, gridCell, AbstractRoomType.initializeLabel(gridCell, Data.Images.RoomType.target(startCondition)));
+    super(Target.TAG + ":" + startCondition, gridCell, Data.Images.RoomType.target(startCondition));
     isGood = startCondition == Target.GOOD;
   }
 
@@ -29,12 +30,12 @@ public class Target extends AbstractRoomType {
 
   public void setBad() {
     isGood = false;
-    super.setImage(Data.Images.RoomType.target(Target.BAD).getImage());
+    super.setImage(new ImageIcon(Data.Images.RoomType.target(Target.BAD)).getImage());
   }
 
   public void cycleOptions() {
     isGood = !isGood;
-    super.setImage(Data.Images.RoomType.target((isGood)? Target.GOOD : Target.BAD).getImage());
+    super.setImage(new ImageIcon(Data.Images.RoomType.target((isGood)? Target.GOOD : Target.BAD)).getImage());
     super.identifier = Target.TAG + ":" + ((isGood)? Target.GOOD : Target.BAD);
   }
 
@@ -47,7 +48,7 @@ public class Target extends AbstractRoomType {
     JButton b = new JButton("Press me to return");
     b.addActionListener(event -> {
       Target.this.isGood = true;
-      Target.super.setImage(Data.Images.RoomType.target(Target.GOOD).getImage());
+      Target.super.setImage(new ImageIcon(Data.Images.RoomType.target(Target.GOOD)).getImage());
       Target.isOngoing = false;
       notifyAll();
     });

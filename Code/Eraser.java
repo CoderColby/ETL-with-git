@@ -8,7 +8,7 @@ public class Eraser extends AbstractItem {
   public static final String TAG = "Eraser";
 
   public Eraser() {
-    super(Eraser.TAG, new GridCell(), new JLabel(new ImageIcon(Data.Images.Item.eraser.getImage().getScaledInstance(AbstractItem.DIMENSION, AbstractItem.DIMENSION, Image.SCALE_FAST))));
+    super(Eraser.TAG, Data.Images.Item.eraser);
   }
 
   public void cycleOptions() {

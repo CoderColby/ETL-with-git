@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import javax.swing.ImageIcon;
 
 
 public class LockedDoor extends AbstractWall {
@@ -12,11 +13,11 @@ public class LockedDoor extends AbstractWall {
 
 
   public LockedDoor() {
-    super(LockedDoor.TAG + ":" + LockedDoor.DEFAULT, new GridCell(), AbstractWall.initializeLabel(new GridCell(), Data.Images.Wall.lockedDoor(LockedDoor.DEFAULT), (byte) 0), (byte) 0);
+    super(LockedDoor.TAG + ":" + LockedDoor.DEFAULT, Data.Images.Wall.lockedDoor(LockedDoor.DEFAULT));
   }
 
   public LockedDoor(GridCell gridCell, byte startCondition, byte orientation) {
-    super(LockedDoor.TAG + ":" + startCondition, gridCell, AbstractWall.initializeLabel(gridCell, Data.Images.Wall.lockedDoor(startCondition), orientation), orientation);
+    super(LockedDoor.TAG + ":" + startCondition, gridCell, Data.Images.Wall.lockedDoor(startCondition), orientation);
     this.ID = startCondition;
     isOpen = false;
   }
@@ -56,13 +57,13 @@ public class LockedDoor extends AbstractWall {
 
 
   public void transform(byte transformationType) {
-    super.setImage(Data.Images.Wall.lockedDoor(transformationType).getImage());
+    super.setImage(new ImageIcon(Data.Images.Wall.lockedDoor(transformationType)).getImage());
     // super.gridCell.getGameBoard().repaint();
   }
 
   public void cycleOptions() {
     ID = (byte) (++ID % 10);
-    super.setImage(Data.Images.Wall.lockedDoor(ID).getImage());
+    super.setImage(new ImageIcon(Data.Images.Wall.lockedDoor(ID)).getImage());
     super.identifier = LockedDoor.TAG + ":" + ID;
   }
 }

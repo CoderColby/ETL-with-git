@@ -34,7 +34,6 @@ import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.ImageIcon;
 
 import java.awt.Dimension;
 import java.awt.Color;
@@ -75,7 +74,7 @@ public class GameWindow extends JFrame {
         });
       } else {
         super.setText(null);
-        super.setIcon(new ImageIcon(Data.Images.Other.lock.getImage().getScaledInstance(100, 100, Image.SCALE_FAST)));
+        super.setIcon(new ImageIcon(new ImageIcon(Data.Images.Other.lock).getImage().getScaledInstance(100, 100, Image.SCALE_FAST)));
         super.setEnabled(false);
       }
   
@@ -264,18 +263,33 @@ public class GameWindow extends JFrame {
       }
     }
 
-      // Read load-in file
-    private String levelTitle;
+    // Read load-in file
+    private String levelName;
     private String startEnergy;
     private File levelFile;
+    private JLabel jlbl_selectedItem;
     
     public LevelDesigner(File levelFile, GameWindow window) {
       this.window = window;
       this.levelFile = levelFile;
+
+      Scanner fileIn = null;
+      try {
+        fileIn = new Scanner(levelFile);
+      } catch (FileNotFoundException ef) {
+        // nothing
+        System.exit(1);
+      }
+      levelName = fileIn.nextLine().trim();
+      startEnergy = fileIn.nextLine().trim();
+      levelDisplay = buildLevel(fileIn);
+      super.add(levelDisplay);
+      super.repaint();
       
       // Base panel
       super.setLayout(null);
       super.setBackground(Color.WHITE);
+      super.setBounds(window.getContentPane().getBounds());
   
       // Title "Level Creator"
       JLabel jlbl_title = new JLabel("Level Creator");
@@ -283,7 +297,7 @@ public class GameWindow extends JFrame {
       jlbl_title.setFont(Data.Fonts.header1);
   
       // Label for currently selected item
-      JLabel jlbl_selectedItem = new JLabel();
+      jlbl_selectedItem = new JLabel();
       jlbl_selectedItem.setBounds(780, 30, 90, 90);
       jlbl_selectedItem.setBackground(new Color(150, 150, 150));
       jlbl_selectedItem.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
@@ -303,16 +317,13 @@ public class GameWindow extends JFrame {
       int startLocation;
   
       // Draw wall types
+      ArrayList<JDataButton> buttons = new ArrayList<>(300);
       objectSeparation = (jpnl_gameItems.getWidth() - walls.length * GameBoard.WALL_THICKNESS) / (walls.length + 1);
       startLocation = (jpnl_gameItems.getWidth() - (walls.length * (objectSeparation + GameBoard.WALL_THICKNESS) - objectSeparation)) / 2;
       for (int i = 0; i < walls.length; i++) {
         JDataButton newWall = new JDataButton(walls[i]);
         newWall.setBounds(startLocation + i * (objectSeparation + GameBoard.WALL_THICKNESS), 15, GameBoard.WALL_THICKNESS, GameBoard.ROOM_HEIGHT);
-        newWall.addActionListener(e -> {
-          currentObject = ((JDataButton) e.getSource()).getObject();
-          super.repaint();
-        });
-        jpnl_gameItems.add(newWall);
+        buttons.add(newWall);
       }
   
       // Draw room types
@@ -320,12 +331,8 @@ public class GameWindow extends JFrame {
       startLocation = (jpnl_gameItems.getWidth() - (roomTypes.length * (objectSeparation + GameBoard.ROOM_HEIGHT) - objectSeparation)) / 2;
       for (int i = 0; i < roomTypes.length; i++) {
         JDataButton newRoomType = new JDataButton(roomTypes[i]);
-        newRoomType.setBounds(startLocation + i * (objectSeparation + GameBoard.WALL_THICKNESS), 80, GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
-        newRoomType.addActionListener(e -> {
-          currentObject = ((JDataButton) e.getSource()).getObject();
-          super.repaint();
-        });
-        jpnl_gameItems.add(newRoomType);
+        newRoomType.setBounds(startLocation + i * (objectSeparation + GameBoard.ROOM_HEIGHT), 80, GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
+        buttons.add(newRoomType);
       }
 
       // Draw item types
@@ -333,12 +340,8 @@ public class GameWindow extends JFrame {
       startLocation = (jpnl_gameItems.getWidth() - (items.length * (objectSeparation + GameBoard.ROOM_HEIGHT) - objectSeparation)) / 2;
       for (int i = 0; i < items.length; i++) {
         JDataButton newItem = new JDataButton(items[i]);
-        newItem.setBounds(startLocation + i * (objectSeparation + GameBoard.WALL_THICKNESS), 140, GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
-        newItem.addActionListener(e -> {
-          currentObject = ((JDataButton) e.getSource()).getObject();
-          super.repaint();
-        });
-        jpnl_gameItems.add(newItem);
+        newItem.setBounds(startLocation + i * (objectSeparation + GameBoard.ROOM_HEIGHT), 140, GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
+        buttons.add(newItem);
       }
   
       // Draw entity types
@@ -346,37 +349,42 @@ public class GameWindow extends JFrame {
       startLocation = (jpnl_gameItems.getWidth() - (entities.length * (objectSeparation + GameBoard.ROOM_HEIGHT) - objectSeparation)) / 2;
       for (int i = 0; i < entities.length; i++) {
         JDataButton newEntity = new JDataButton(entities[i]);
-        newEntity.setBounds(startLocation + i * (objectSeparation + GameBoard.WALL_THICKNESS), 200, GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
-        newEntity.addActionListener(e -> {
+        newEntity.setBounds(startLocation + i * (objectSeparation + GameBoard.ROOM_HEIGHT), 200, GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
+        buttons.add(newEntity);
+      }
+
+      for (JDataButton j : buttons) {
+        j.addActionListener(e -> {
           currentObject = ((JDataButton) e.getSource()).getObject();
-          super.repaint();
+          jlbl_selectedItem.setIcon(currentObject);
+          // super.repaint();
         });
-        jpnl_gameItems.add(newEntity);
+        jpnl_gameItems.add(j);
       }
 
       // Label level name
       JLabel jlbl_levelName = new JLabel("Level name:", SwingConstants.CENTER);
-      jlbl_levelName.setBounds(700, 465, 250, 25);
+      jlbl_levelName.setBounds(700, 565, 250, 25);
       jlbl_levelName.setFont(Data.Fonts.textLabel);
 
       // Field level name
-      jtxf_levelName = new JTextField(levelTitle);
-      jtxf_levelName.setBounds(700, 490, 250, 30);
+      jtxf_levelName = new JTextField(levelName);
+      jtxf_levelName.setBounds(700, 590, 250, 30);
       jtxf_levelName.setFont(Data.Fonts.textField);
 
       // Label energy
       JLabel jlbl_levelEnergy = new JLabel("Energy:");
-      jlbl_levelEnergy.setBounds(765, 540, 80, 25);
+      jlbl_levelEnergy.setBounds(765, 640, 80, 25);
       jlbl_levelEnergy.setFont(Data.Fonts.textLabel);
 
       // Field energy
       jtxf_levelEnergy = new JTextField(startEnergy);
-      jtxf_levelEnergy.setBounds(845, 538, 40, 29);
+      jtxf_levelEnergy.setBounds(845, 638, 40, 29);
       jtxf_levelEnergy.setFont(Data.Fonts.textField);
 
       // Button to load a different level
       JButton jbtn_load = new JButton("Choose Level");
-      jbtn_load.setBounds(725, 590, 200, 40);
+      jbtn_load.setBounds(25, 740, 200, 40);
       jbtn_load.setBackground(Data.Colors.buttonBackground);
       jbtn_load.setFont(Data.Fonts.menuButton);
       jbtn_load.addActionListener(e -> {
@@ -388,32 +396,37 @@ public class GameWindow extends JFrame {
             if (filename.equals(f.getName())) {
               super.remove(levelDisplay);
               // Read load-in file
-              Scanner fileIn = null;
+              Scanner fileIn2 = null;
               try {
-                fileIn = new Scanner(f);
+                fileIn2 = new Scanner(f);
               } catch (FileNotFoundException ef) {
+                return;
                 // nothing
               }
-              levelTitle = fileIn.nextLine().trim();
-              startEnergy = fileIn.nextLine().trim();
-              super.add(buildLevel(fileIn));
+              levelName = fileIn2.nextLine().trim();
+              jtxf_levelName.setText(levelName);
+              startEnergy = fileIn2.nextLine().trim();
+              jtxf_levelEnergy.setText(startEnergy);
+              levelDisplay = buildLevel(fileIn2);
+              super.add(levelDisplay);
               super.repaint();
+              fileIn2.close();
               return;
             }
-          JOptionPane.showMessageDialog(this, "A level under that name does not exist!");
+          JOptionPane.showMessageDialog(this, "A level of that name does not exist!");
         }
       });
 
       // Button to demo level
       JButton jbtn_demo = new JButton("Demo");
-      jbtn_demo.setBounds(725, 640, 200, 40);
+      jbtn_demo.setBounds(275, 740, 200, 40);
       jbtn_demo.setBackground(Data.Colors.buttonBackground);
       jbtn_demo.setFont(Data.Fonts.menuButton);
       jbtn_demo.addActionListener(e -> {
         LevelDesigner.this.levelFile = new File(Data.Utilities.temporaryDemoFile);
         LevelDesigner.this.writeToFile(LevelDesigner.this.levelFile);
 
-        Level level = new Level(LevelDesigner.this.levelFile, true, currentUser);
+        Level level = new Level(LevelDesigner.this.levelFile, true, currentUser, GameWindow.this);
         
         GameWindow.this.add(level);
         while (!(Level.goToNextLevel || Level.returnToMenu)) {
@@ -428,27 +441,36 @@ public class GameWindow extends JFrame {
 
       // Button to save construction
       JButton jbtn_save = new JButton("Save As...");
-      jbtn_save.setBounds(725, 690, 200, 40);
+      jbtn_save.setBounds(525, 740, 200, 40);
       jbtn_save.setBackground(Data.Colors.buttonBackground);
       jbtn_save.setFont(Data.Fonts.menuButton);
       jbtn_save.addActionListener(e -> {
         
-        String filename = JOptionPane.showInputDialog(this, "Filename:").trim();
-        if (filename.isEmpty())
+        String filename = JOptionPane.showInputDialog(this, "Filename:");
+        if (filename == null || filename.trim().isEmpty())
           return;
-        if (GameWindow.this.customLevelExists(filename)) {
-          int option = JOptionPane.showConfirmDialog(this, "One of your custom levels already has this file name, would you like to overwrite it?");
-          if (option != JOptionPane.YES_OPTION)
-            return;
+        filename = filename.trim();
+        if (!filename.matches(".*\\.txt$"))
+          filename = filename.concat(".txt");
+
+        File tempLevelFile = null;
+        File[] levelFiles = Data.Utilities.getAllRegFilesInDirectory(new File(Data.Utilities.customLevelDirectory));
+        for (int i = 0; i < levelFiles.length; i++) {
+          if (levelFiles[i].getName().equals(filename)) {
+            tempLevelFile = levelFiles[i];
+            break;
+          }
         }
-        
-        File tempLevelFile = new File(Data.Utilities.customLevelDirectory + GameWindow.this.currentUser.getUsername() + "/" + filename);
-        LevelDesigner.this.writeToFile(tempLevelFile);
+        if (tempLevelFile == null || (tempLevelFile.getParentFile().getName().equals(GameWindow.this.currentUser.getUsername()) && JOptionPane.showConfirmDialog(this, "One of your custom levels already has this file name, would you like to overwrite it?") == JOptionPane.YES_OPTION)) {
+          LevelDesigner.this.writeToFile(new File(Data.Utilities.customLevelDirectory + GameWindow.this.currentUser.getUsername() + "/" + filename));
+        } else if (!tempLevelFile.getParentFile().getName().equals(GameWindow.this.currentUser.getUsername())) {
+          JOptionPane.showMessageDialog(GameWindow.this, "This filename is already being used by someone else. Please choose a different name.");
+        }
       });
 
       // Button to return home
       JButton jbtn_exit = new JButton("Exit");
-      jbtn_exit.setBounds(725, 740, 200, 40);
+      jbtn_exit.setBounds(775, 740, 200, 40);
       jbtn_exit.setBackground(Data.Colors.buttonBackground);
       jbtn_exit.setFont(Data.Fonts.menuButton);
       jbtn_exit.addActionListener(e -> {
@@ -474,47 +496,49 @@ public class GameWindow extends JFrame {
       String[][] boardData = new String[100][5];
   
       for (int i = 0; i < 100; i++)
-        boardData[i] = fileIn.nextLine().split(":");
+        boardData[i] = fileIn.nextLine().split(" ");
       fileIn.close();
       
       levelBoard = new GameBoard(boardData, 0, null);
       levelDisplay = new JPanel();
       levelDisplay.setLayout(null);
-      levelDisplay.setBounds(100, 100, GameBoard.BOARD_DIMENSION, GameBoard.BOARD_DIMENSION);
-      levelDisplay.setBorder(BorderFactory.createLineBorder(Color.BLACK, 7));
+      levelDisplay.setBounds(70, 110, GameBoard.BOARD_DIMENSION, GameBoard.BOARD_DIMENSION);
+      levelDisplay.setBorder(BorderFactory.createLineBorder(Color.BLACK, GameBoard.WALL_THICKNESS));
+      levelDisplay.setBackground(Data.Colors.levelBackground);
 
       ArrayList<DesignerButton> buttons = new ArrayList<>(280);
 
       for (int i = 0; i < 100; i++) {
         GridCell gridCell = levelBoard.getGridCell(new int[] {i % 10, i / 10});
         RoomButton rb = new RoomButton(gridCell);
-        rb.setBounds((i % 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), (i / 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
+        rb.setBounds(GameBoard.WALL_THICKNESS + (i % 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.WALL_THICKNESS + (i / 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
         buttons.add(rb);
       }
 
       for (int i = 0; i < 90; i++) {
         GridCell gridCell = levelBoard.getGridCell(new int[] {i / 9, i % 9});
-        WallButton wb = new WallButton(gridCell, (byte)0);
-        wb.setBounds(GameBoard.ROOM_HEIGHT + (i % 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), (i / 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.WALL_THICKNESS, GameBoard.ROOM_HEIGHT);
+        WallButton wb = new WallButton(gridCell, (byte) 0);
+        wb.setBounds(GameBoard.WALL_THICKNESS + GameBoard.ROOM_HEIGHT + (i % 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.WALL_THICKNESS + (i / 9) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.WALL_THICKNESS, GameBoard.ROOM_HEIGHT);
         buttons.add(wb);
       }
 
       for (int i = 0; i < 90; i++) {
         GridCell gridCell = levelBoard.getGridCell(new int[] {i / 10, i % 10});
-        WallButton wb = new WallButton(gridCell, (byte)1);
-        wb.setBounds((i % 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.ROOM_HEIGHT + (i / 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.WALL_THICKNESS, GameBoard.ROOM_HEIGHT);
+        WallButton wb = new WallButton(gridCell, (byte) 1);
+        wb.setBounds(GameBoard.WALL_THICKNESS + (i % 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.WALL_THICKNESS + GameBoard.ROOM_HEIGHT + (i / 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.ROOM_HEIGHT, GameBoard.WALL_THICKNESS);
         buttons.add(wb);
       }
 
       for (DesignerButton db : buttons) {
+        db.setBackground(Data.Colors.roomBackground);
         db.addMouseListener(new MouseAdapter() {
           @Override
           public void mouseClicked(MouseEvent e) {
             if (SwingUtilities.isLeftMouseButton(e)) {
+              if (currentObject != null)
               ((DesignerButton) e.getSource()).setObject(currentObject);
-            } else if (SwingUtilities.isRightMouseButton(e)) {
+            } else if (SwingUtilities.isRightMouseButton(e))
               ((DesignerButton) e.getSource()).cycleOptions();
-            }
           }
         });
         levelDisplay.add(db);
@@ -529,11 +553,12 @@ public class GameWindow extends JFrame {
       try {
         fileOut = new PrintWriter(file);
       } catch (FileNotFoundException f) {
-        // nothing
+        System.out.println("NO FILE!!");
+        System.out.println(file.getPath());
       }
       fileOut.println(jtxf_levelName.getText().trim());
       fileOut.println(jtxf_levelEnergy.getText().trim());
-      fileOut.println();
+      // fileOut.println();
   
       for (String s : this.levelBoard.stringify())
         fileOut.println(s);
@@ -549,13 +574,16 @@ public class GameWindow extends JFrame {
   public GameWindow() {
     super("ESCAPE THE LAB 2");
     super.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    super.getContentPane().setSize(1000, 800);
     super.setSize(1000, 820);
-    super.setPreferredSize(new Dimension(1000, 820));
+    super.setMinimumSize(new Dimension(1000, 820));
+    super.setMaximumSize(new Dimension(1000, 820));
     super.getContentPane().setLayout(null);
     super.getContentPane().add(createLogin());
     super.setVisible(true);
   }
 
+  
   private JTextField jtxf_loginUsername;
   private JTextField jtxf_loginPassword;
   private JTextField jtxf_signupUsername;
@@ -570,6 +598,8 @@ public class GameWindow extends JFrame {
     JPanel root = new JPanel();
     root.setLayout(null);
     root.setBackground(Color.WHITE);
+    root.setBounds(super.getContentPane().getBounds());
+    
 
     /////////////////////////////////////////////////////////// LOG IN PORTION
 
@@ -736,9 +766,10 @@ public class GameWindow extends JFrame {
     JPanel root = new JPanel();
     root.setLayout(null);
     root.setBackground(Color.WHITE);
+    root.setBounds(super.getContentPane().getBounds());
 
     // ETL logo
-    JLabel jlbl_logo = new JLabel(Data.Images.Other.logo);
+    JLabel jlbl_logo = new JLabel(new ImageIcon(Data.Images.Other.logo));
     jlbl_logo.setBounds(20, 20, 65 + 155, 75 + 80);
 
     // Label for name
@@ -818,7 +849,7 @@ public class GameWindow extends JFrame {
     root.add(jpnl_menuLevels);
 
     // Button for level navigation 
-    JButton jbtn_leftArrow = new JButton(new ImageIcon(Data.Images.Other.leftNavArrow.getImage().getScaledInstance(100, 180, Image.SCALE_FAST)));
+    JButton jbtn_leftArrow = new JButton(new ImageIcon(new ImageIcon(Data.Images.Other.leftNavArrow).getImage().getScaledInstance(100, 180, Image.SCALE_FAST)));
     jbtn_leftArrow.setBounds(50, 335, 100, 180);
     jbtn_leftArrow.setBorderPainted(false);
     jbtn_leftArrow.addActionListener(e -> {
@@ -826,7 +857,7 @@ public class GameWindow extends JFrame {
     });
 
     // Button for level navigation
-    JButton jbtn_rightArrow = new JButton(new ImageIcon(Data.Images.Other.rightNavArrow.getImage().getScaledInstance(100, 180, Image.SCALE_FAST)));
+    JButton jbtn_rightArrow = new JButton(new ImageIcon(new ImageIcon(Data.Images.Other.rightNavArrow).getImage().getScaledInstance(100, 180, Image.SCALE_FAST)));
     jbtn_rightArrow.setBounds(840, 335, 100, 180);
     jbtn_rightArrow.setBorderPainted(false);
     jbtn_rightArrow.addActionListener(e -> {
@@ -845,7 +876,7 @@ public class GameWindow extends JFrame {
     int level;
     boolean statusGood = true;
     for (level = startingLevel; level <= Data.Utilities.numOfLevels && !Level.returnToMenu; level++) {
-      replace(new Level(new File(Data.Utilities.getLevelFilePath(level)), false, currentUser));
+      replace(new Level(new File(Data.Utilities.getLevelFilePath(level)), false, currentUser, this));
       while (!(Level.goToNextLevel || Level.returnToMenu))
         try {
           wait();
@@ -864,6 +895,7 @@ public class GameWindow extends JFrame {
     JPanel root = new JPanel();
     root.setLayout(null);
     root.setBackground(Color.WHITE);
+    root.setBounds(super.getContentPane().getBounds());
 
     // Title
     JLabel jlbl_title = new JLabel("SETTINGS", SwingConstants.CENTER);
@@ -1002,15 +1034,6 @@ public class GameWindow extends JFrame {
     ownerDirectory.delete();
   } // Replaces username in custom levels so data is up to date and accurate
 
-  /* √ */
-  public boolean customLevelExists(String levelName) {
-    ArrayList<String> filenames = new ArrayList<>();
-    File[] userDirectories = (new File(Data.Utilities.customLevelDirectory + currentUser.getUsername())).listFiles();
-    for (File dir : userDirectories)
-      Collections.addAll(filenames, dir.list());
-    return filenames.contains(levelName);
-  }
-
 
   private JCheckBox jchk_privateOnly;
   private JPanel CLBroot;
@@ -1019,9 +1042,10 @@ public class GameWindow extends JFrame {
   public JPanel createLevelBrowser() {
     
     // Base panel
-    JPanel CLBroot = new JPanel();
+    CLBroot = new JPanel();
     CLBroot.setLayout(null);
     CLBroot.setBackground(Color.WHITE);
+    CLBroot.setBounds(super.getContentPane().getBounds());
 
     // Title
     JLabel jlbl_title = new JLabel("Select a Level:", SwingConstants.CENTER);
@@ -1064,7 +1088,7 @@ public class GameWindow extends JFrame {
     jlbl_pageNum.setFont(Data.Fonts.header2);
 
     // Button to decrement page number
-    JButton jbtn_leftArrow = new JButton(new ImageIcon(Data.Images.Other.leftNavArrow.getImage().getScaledInstance(30, 60, Image.SCALE_FAST)));
+    JButton jbtn_leftArrow = new JButton(new ImageIcon(new ImageIcon(Data.Images.Other.leftNavArrow).getImage().getScaledInstance(30, 60, Image.SCALE_FAST)));
     jbtn_leftArrow.setBounds(400, 700, 30, 60);
     jbtn_leftArrow.setBorderPainted(false);
     jbtn_leftArrow.addActionListener(e -> {
@@ -1080,7 +1104,7 @@ public class GameWindow extends JFrame {
     });
 
     // Button to increment page number
-    JButton jbtn_rightArrow = new JButton(new ImageIcon((new ImageIcon("Images/ArrowRight.png")).getImage().getScaledInstance(30, 60, Image.SCALE_FAST)));
+    JButton jbtn_rightArrow = new JButton(new ImageIcon((new ImageIcon(Data.Images.Other.rightNavArrow)).getImage().getScaledInstance(30, 60, Image.SCALE_FAST)));
     jbtn_rightArrow.setBounds(570, 700, 30, 60);
     jbtn_rightArrow.setBorderPainted(false);
     jbtn_rightArrow.addActionListener(e -> {
@@ -1125,7 +1149,7 @@ public class GameWindow extends JFrame {
       button.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
       button.setFont(Data.Fonts.customButton);
       button.addActionListener(e -> {
-        GameWindow.this.replace(new Level(((JDataButton) e.getSource()).getFile(), true, GameWindow.this.currentUser));
+        GameWindow.this.replace(new Level(((JDataButton) e.getSource()).getFile(), true, GameWindow.this.currentUser, GameWindow.this));
         while (!(Level.goToNextLevel || Level.returnToMenu)) {
           try {
             wait();

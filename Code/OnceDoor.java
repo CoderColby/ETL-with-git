@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import javax.swing.ImageIcon;
 
 
 public class OnceDoor extends AbstractWall {
@@ -12,11 +13,11 @@ public class OnceDoor extends AbstractWall {
 
 
   public OnceDoor() {
-    super(OnceDoor.TAG + ":" + OnceDoor.DEFAULT, new GridCell(), AbstractWall.initializeLabel(new GridCell(), Data.Images.Wall.onceDoor(OnceDoor.DEFAULT), (byte) 0), (byte) 0);
+    super(OnceDoor.TAG + ":" + OnceDoor.DEFAULT, Data.Images.Wall.onceDoor(OnceDoor.DEFAULT));
   }
 
   public OnceDoor(GridCell gridCell, byte startCondition, byte orientation) {
-    super(OnceDoor.TAG + ":" + startCondition, gridCell, AbstractWall.initializeLabel(gridCell, Data.Images.Wall.onceDoor(startCondition), orientation), orientation);
+    super(OnceDoor.TAG + ":" + startCondition, gridCell, Data.Images.Wall.onceDoor(startCondition), orientation);
     isOpen = startCondition == OnceDoor.OPEN;
   }
 
@@ -48,7 +49,7 @@ public class OnceDoor extends AbstractWall {
 
 
   public void transform(byte transformationType) {
-    super.setImage(Data.Images.Wall.onceDoor(transformationType).getImage());
+    super.setImage(new ImageIcon(Data.Images.Wall.onceDoor(transformationType)).getImage());
     // super.gridCell.getGameBoard().repaint();
   }
 

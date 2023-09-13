@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import javax.swing.ImageIcon;
 
 
 public class Wall extends AbstractWall {
@@ -8,11 +9,11 @@ public class Wall extends AbstractWall {
 
 
   public Wall() {
-    super(Wall.TAG + ":" + Wall.DEFAULT, new GridCell(), AbstractWall.initializeLabel(new GridCell(), Data.Images.Wall.wall, (byte) 0), (byte) 0);
+    super(Wall.TAG + ":" + Wall.DEFAULT, Data.Images.Wall.wall);
   }
 
   public Wall(GridCell gridCell, byte startCondition, byte orientation) {
-    super(Wall.TAG + ":" + startCondition, gridCell, AbstractWall.initializeLabel(gridCell, Data.Images.Wall.wall, orientation), orientation);
+    super(Wall.TAG + ":" + startCondition, gridCell, Data.Images.Wall.wall, orientation);
   }
 
   public ArrayList<Animation> getAnimations(String entityTag, int delay) {

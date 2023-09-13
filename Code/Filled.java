@@ -1,4 +1,4 @@
-
+import javax.swing.ImageIcon;
 
 
 public class Filled extends AbstractRoomType {
@@ -8,11 +8,11 @@ public class Filled extends AbstractRoomType {
 
   
   public Filled() {
-    super(Filled.TAG + ":" + Filled.DEFAULT, new GridCell(), AbstractItem.initializeLabel(new GridCell(), Data.Images.RoomType.filled));
+    super(Filled.TAG + ":" + Filled.DEFAULT, Data.Images.RoomType.filled);
   }
   
   public Filled(GridCell gridCell, byte startCondition) {
-    super(Filled.TAG + ":" + startCondition, gridCell, AbstractRoomType.initializeLabel(gridCell, Data.Images.RoomType.filled));
+    super(Filled.TAG + ":" + startCondition, gridCell, Data.Images.RoomType.filled);
   }
 
   public void cycleOptions() {

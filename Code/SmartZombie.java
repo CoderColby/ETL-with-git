@@ -1,6 +1,8 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.lang.Comparable;
+import javax.swing.ImageIcon;
+
 
 public class SmartZombie extends AbstractEntity implements Comparable {
 
@@ -76,16 +78,16 @@ public class SmartZombie extends AbstractEntity implements Comparable {
 
   
   public SmartZombie() {
-    super(SmartZombie.TAG + ":" + SmartZombie.DEFAULT, new GridCell(), AbstractItem.initializeLabel(new GridCell(), Data.Images.Entity.smartZombie(SmartZombie.DEFAULT)), Data.Animation.smartZombieTravelTime);
+    super(SmartZombie.TAG + ":" + SmartZombie.DEFAULT, Data.Images.Entity.smartZombie(SmartZombie.DEFAULT));
   }
   
   public SmartZombie(GridCell gridCell, byte startCondition) {
-    super(SmartZombie.TAG + ":" + startCondition, gridCell, AbstractEntity.initializeLabel(gridCell, Data.Images.Entity.smartZombie(startCondition)), Data.Animation.smartZombieTravelTime);
+    super(SmartZombie.TAG + ":" + startCondition, gridCell, Data.Images.Entity.smartZombie(startCondition), Data.Animation.smartZombieTravelTime);
     this.startCondition = startCondition;
   }
 
   public void turn(byte direction) {
-    super.setImage(Data.Images.Entity.smartZombie(direction).getImage());
+    super.setImage(new ImageIcon(Data.Images.Entity.smartZombie(direction)).getImage());
     super.gridCell.getGameBoard().repaint();
   }
 
@@ -168,7 +170,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
 
   public void cycleOptions() {
     startCondition = (byte) (++startCondition % 4);
-    super.setImage(Data.Images.Entity.smartZombie(startCondition).getImage());
+    super.setImage(new ImageIcon(Data.Images.Entity.smartZombie(startCondition)).getImage());
     super.identifier = SmartZombie.TAG + ":" + startCondition;
   }
 }

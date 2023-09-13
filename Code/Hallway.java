@@ -9,11 +9,11 @@ public class Hallway extends AbstractWall {
 
 
   public Hallway() {
-    super(Hallway.TAG + ":" + Hallway.DEFAULT, new GridCell(), AbstractWall.initializeLabel(new GridCell(), new ImageIcon(), (byte) 0), (byte) 0);
+    super(Hallway.TAG + ":" + Hallway.DEFAULT, Data.Images.Wall.hallway);
   }
 
   public Hallway(GridCell gridCell, byte startCondition, byte orientation) {
-    super(Hallway.TAG + ":" + startCondition, gridCell, AbstractWall.initializeLabel(gridCell, new ImageIcon(), orientation), orientation);
+    super(Hallway.TAG + ":" + startCondition, gridCell, Data.Images.Wall.hallway, orientation);
   }
 
   public ArrayList<Animation> getAnimations(String entityTag, int delay) {

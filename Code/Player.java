@@ -9,26 +9,26 @@ public class Player extends AbstractEntity {
   public static final String TAG = "Player";
   public static final byte DEFAULT = 0;
   public static final byte HEALTHY = 0;
-  public static final byte INFECTED = 1;
+  public static final byte INFECTED = 5;
 
   private int movementDelayInMillis;
 
   
   public Player() {
-    super(Player.TAG + ":" + Player.DEFAULT, new GridCell(), AbstractItem.initializeLabel(new GridCell(), Data.Images.Entity.player(Player.DEFAULT)), Data.Animation.playerTravelTime);
+    super(Player.TAG + ":" + Player.DEFAULT, Data.Images.Entity.player(Player.DEFAULT));
   }
   
   public Player(GridCell gridCell, byte startCondition) {
-    super(Player.TAG + ":" + startCondition, gridCell, AbstractEntity.initializeLabel(gridCell, Data.Images.Entity.player(Player.HEALTHY)), Data.Animation.playerTravelTime);
+    super(Player.TAG + ":" + startCondition, gridCell, Data.Images.Entity.player(Player.HEALTHY), Data.Animation.playerTravelTime);
   }
 
   public void turn(byte direction) {
-    super.setImage(Data.Images.Entity.player(direction).getImage());
+    super.setImage(new ImageIcon(Data.Images.Entity.player(direction)).getImage());
     // super.gridCell.getGameBoard().repaint();
   }
 
   public void infect() {
-    super.setImage(Data.Images.Entity.player(Player.INFECTED).getImage());
+    super.setImage(new ImageIcon(Data.Images.Entity.player(Player.INFECTED)).getImage());
     // super.gridCell.getGameBoard().repaint();
   }
 
