@@ -12,6 +12,7 @@ public class Player extends AbstractEntity {
   public static final byte INFECTED = 5;
 
   private int movementDelayInMillis;
+  private byte startCondition;
 
   
   public Player() {
@@ -20,10 +21,11 @@ public class Player extends AbstractEntity {
   
   public Player(GridCell gridCell, byte startCondition) {
     super(Player.TAG + ":" + startCondition, gridCell, Data.Images.Entity.player(Player.HEALTHY), Data.Animation.playerTravelTime);
+    this.startCondition = startCondition;
   }
 
   public void turn(byte direction) {
-    super.setImage(new ImageIcon(Data.Images.Entity.player(direction)).getImage());
+    super.initializeLabel(new ImageIcon(Data.Images.Entity.player(direction)));
     // super.gridCell.getGameBoard().repaint();
   }
 
@@ -94,6 +96,8 @@ public class Player extends AbstractEntity {
   }
 
   public void cycleOptions() {
-    // Nothing
+    startCondition = (byte) (++startCondition % 4);
+    turn(startCondition);
+    super.identifier = Player.TAG + ":" + startCondition;
   }
 }

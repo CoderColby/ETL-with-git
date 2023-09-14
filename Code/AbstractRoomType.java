@@ -16,11 +16,11 @@ public abstract class AbstractRoomType extends AbstractGameObject {
   }
 
   protected AbstractRoomType(String tag, GridCell gridCell, String imagePath) {
-    super(tag, gridCell, AbstractRoomType.TYPE, imagePath, new Dimension(AbstractItem.DIMENSION, AbstractItem.DIMENSION), new Point(AbstractRoomType.POSITION, AbstractRoomType.POSITION));
+    super(tag, gridCell, AbstractRoomType.TYPE, imagePath, new Dimension(AbstractRoomType.DIMENSION, AbstractRoomType.DIMENSION), new Point(AbstractRoomType.POSITION, AbstractRoomType.POSITION));
   }
 
   public void addSelf(GridCell gridCell, byte modifier) {
-    gridCell.setRoomType(AbstractRoomType.getRoomTypeByTag(this.getIdentifier(), gridCell));
+    gridCell.setRoomType(AbstractRoomType.getRoomTypeByTag(super.identifier, gridCell));
   }
 
   // protected static JLabel initializeLabel(GridCell gridCell, ImageIcon image) {

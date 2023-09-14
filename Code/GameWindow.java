@@ -36,6 +36,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 
 import java.awt.Dimension;
+import java.awt.Point;
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.Font;
@@ -224,11 +225,13 @@ public class GameWindow extends JFrame {
 
       @Override
       protected void paintComponent(Graphics g) {
-        ImageIcon[] images = new ImageIcon[] {gridCell.getRoomType(), gridCell.getItem(), gridCell.getEntity()};
+        AbstractGameObject[] images = new AbstractGameObject[] {gridCell.getRoomType(), gridCell.getItem(), gridCell.getEntity()};
         super.paintComponent(g);
-        for (ImageIcon image : images) {
-          if (image != null)
-            g.drawImage(image.getImage(), 0, 0, null);
+        for (AbstractGameObject image : images) {
+          if (image != null) {
+            Point position = image.getGridCellPosition();
+            g.drawImage(image.getImage(), (int) Math.round(position.getX()), (int) Math.round(position.getY()), null);
+          }
         }
       }
     }
@@ -248,7 +251,11 @@ public class GameWindow extends JFrame {
           object.addSelf(super.gridCell, orientation);
         else
           return;
-        super.repaint();
+        // System.out.println(super.gridCell.getWall(orientation).getIdentifier() + " " + Integer.toString(orientation));
+        
+        // LevelDesigner.this.jlbl_selectedItem.setIcon(super.gridCell.getWall(orientation));
+        super.setIcon(super.gridCell.getWall(orientation));
+        // super.repaint();
       }
 
       public void cycleOptions() {
@@ -256,11 +263,11 @@ public class GameWindow extends JFrame {
         super.repaint();
       }
 
-      @Override
-      protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-          g.drawImage(super.gridCell.getWall(orientation).getImage(), 0, 0, null);
-      }
+      // @Override
+      // protected void paintComponent(Graphics g) {
+      //   super.paintComponent(g);
+      //     g.drawImage(super.gridCell.getWall(orientation).getImage(), 0, 0, null);
+      // }
     }
 
     // Read load-in file
@@ -301,12 +308,14 @@ public class GameWindow extends JFrame {
       jlbl_selectedItem.setBounds(780, 30, 90, 90);
       jlbl_selectedItem.setBackground(new Color(150, 150, 150));
       jlbl_selectedItem.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+      jlbl_selectedItem.setHorizontalAlignment(SwingConstants.CENTER);
   
       // Panel for selecting items
       JPanel jpnl_gameItems = new JPanel();
       jpnl_gameItems.setBounds(700, 160, 250, 270);
       jpnl_gameItems.setBackground(new Color(150, 150, 150));
       jpnl_gameItems.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+      jpnl_gameItems.setLayout(null);
   
       // For displaying game objects to select
       AbstractWall[] walls = new AbstractWall[] {new Wall(), new Door(), new PowerDoor(), new OnceDoor(), new AirlockDoor(), new DetectionDoor(), new LockedDoor()};
@@ -445,27 +454,30 @@ public class GameWindow extends JFrame {
       jbtn_save.setBackground(Data.Colors.buttonBackground);
       jbtn_save.setFont(Data.Fonts.menuButton);
       jbtn_save.addActionListener(e -> {
-        
-        String filename = JOptionPane.showInputDialog(this, "Filename:");
-        if (filename == null || filename.trim().isEmpty())
-          return;
-        filename = filename.trim();
-        if (!filename.matches(".*\\.txt$"))
-          filename = filename.concat(".txt");
-
-        File tempLevelFile = null;
-        File[] levelFiles = Data.Utilities.getAllRegFilesInDirectory(new File(Data.Utilities.customLevelDirectory));
-        for (int i = 0; i < levelFiles.length; i++) {
-          if (levelFiles[i].getName().equals(filename)) {
-            tempLevelFile = levelFiles[i];
-            break;
+        if (LevelDesigner.this.levelBoard.isValidLayout()) {
+          String filename = JOptionPane.showInputDialog(this, "Filename:");
+          if (filename == null || filename.trim().isEmpty())
+            return;
+          filename = filename.trim();
+          if (!filename.matches(".*\\.txt$"))
+            filename = filename.concat(".txt");
+  
+          File tempLevelFile = null;
+          File[] levelFiles = Data.Utilities.getAllRegFilesInDirectory(new File(Data.Utilities.customLevelDirectory));
+          for (int i = 0; i < levelFiles.length; i++) {
+            if (levelFiles[i].getName().equals(filename)) {
+              tempLevelFile = levelFiles[i];
+              break;
+            }
           }
-        }
-        if (tempLevelFile == null || (tempLevelFile.getParentFile().getName().equals(GameWindow.this.currentUser.getUsername()) && JOptionPane.showConfirmDialog(this, "One of your custom levels already has this file name, would you like to overwrite it?") == JOptionPane.YES_OPTION)) {
-          LevelDesigner.this.writeToFile(new File(Data.Utilities.customLevelDirectory + GameWindow.this.currentUser.getUsername() + "/" + filename));
-        } else if (!tempLevelFile.getParentFile().getName().equals(GameWindow.this.currentUser.getUsername())) {
-          JOptionPane.showMessageDialog(GameWindow.this, "This filename is already being used by someone else. Please choose a different name.");
-        }
+          if (tempLevelFile == null || (tempLevelFile.getParentFile().getName().equals(GameWindow.this.currentUser.getUsername()) && JOptionPane.showConfirmDialog(this, "One of your custom levels already has this file name, would you like to overwrite it?") == JOptionPane.YES_OPTION)) {
+            LevelDesigner.this.writeToFile(new File(Data.Utilities.customLevelDirectory + GameWindow.this.currentUser.getUsername() + "/" + filename));
+          } else if (!tempLevelFile.getParentFile().getName().equals(GameWindow.this.currentUser.getUsername())) {
+            JOptionPane.showMessageDialog(GameWindow.this, "This filename is already being used by someone else. Please choose a different name.");
+          }
+        } else
+          JOptionPane.showMessageDialog(GameWindow.this, "This level is missing some essential parts that make it unplayable.");
+          
       });
 
       // Button to return home

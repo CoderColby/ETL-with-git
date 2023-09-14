@@ -29,6 +29,8 @@ public class Level extends JPanel {
   private User currentUser;
   private boolean isCustom;
 
+  class InvalidLevelException extends RuntimeException {};
+
   
   public Level(File levelFile, boolean isCustom, User currentUser, GameWindow window) {
     Level.returnToMenu = false;
@@ -56,6 +58,8 @@ public class Level extends JPanel {
     fileIn.close();
     
     levelBoard = new GameBoard(boardData, Integer.parseInt(startEnergy), this);
+    if (!levelBoard.isValidLayout())
+      throw new InvalidLevelException();
     // levelBoard.setBounds(/*???*/);
 
     // Base panel

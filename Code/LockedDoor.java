@@ -63,7 +63,7 @@ public class LockedDoor extends AbstractWall {
 
   public void cycleOptions() {
     ID = (byte) (++ID % 10);
-    super.setImage(new ImageIcon(Data.Images.Wall.lockedDoor(ID)).getImage());
+    super.initializeLabel(new ImageIcon(Data.Images.Wall.lockedDoor(ID)));
     super.identifier = LockedDoor.TAG + ":" + ID;
   }
 }

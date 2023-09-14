@@ -24,7 +24,7 @@ public class Key extends AbstractItem {
 
   public void cycleOptions() {
     ID = (byte) (++ID % 10);
-    super.setImage(new ImageIcon(Data.Images.Item.key(ID)).getImage());
+    super.initializeLabel(new ImageIcon(Data.Images.Item.key(ID)));
     super.identifier = Key.TAG + ":" + ID;
   }
 }

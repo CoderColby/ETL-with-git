@@ -2,6 +2,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import java.awt.Image;
 import java.awt.Dimension;
+import java.awt.image.BufferedImage;
 import java.awt.Point;
 
 
@@ -12,7 +13,8 @@ public abstract class AbstractGameObject extends ImageIcon {
   protected GridCell gridCell;
   protected JLabel label;
   protected Dimension dimensions;
-  protected Point position;
+  protected Point gridCellPosition;
+  protected Point gameBoardPosition;
 
   protected AbstractGameObject(String identifier, String imagePath, String type, Dimension dimensions) {
     super((new ImageIcon(imagePath)).getImage().getScaledInstance((int) Math.round(dimensions.getWidth()), (int) Math.round(dimensions.getHeight()), Image.SCALE_FAST));
@@ -24,14 +26,14 @@ public abstract class AbstractGameObject extends ImageIcon {
   }
 
   protected AbstractGameObject(String identifier, GridCell gridCell, String type, String imagePath, Dimension dimensions, Point position) {
-    super(imagePath);
+    super();
     this.identifier = identifier;
     this.gridCell = gridCell;
     this.dimensions = dimensions;
-    this.position = position;
-    System.out.println(position);
+    this.gridCellPosition = position;
     this.TYPE = type;
-    initializeLabel();
+    if (type.equals(Data.Utilities.forRoom))
+      initializeLabel(new ImageIcon(imagePath));
   }
 
   public String getType() {
@@ -42,8 +44,8 @@ public abstract class AbstractGameObject extends ImageIcon {
     return label;
   }
 
-  public Point getPosition() {
-    return position;
+  public Point getGridCellPosition() {
+    return gridCellPosition;
   }
 
   public String getIdentifier() {
@@ -54,13 +56,14 @@ public abstract class AbstractGameObject extends ImageIcon {
     return gridCell;
   }
 
-  protected void initializeLabel() {
+  protected void initializeLabel(ImageIcon thisImage) {
+    super.setImage(thisImage.getImage().getScaledInstance((int) Math.round(dimensions.getWidth()), (int) Math.round(dimensions.getHeight()), Image.SCALE_FAST));
     this.label = new JLabel(this);
     int[] offset = gridCell.getPixelOffset();
-    this.position.translate(offset[0], offset[1]);
-    label.setLocation(this.position);
+    this.gameBoardPosition = new Point(this.gridCellPosition);
+    this.gameBoardPosition.translate(offset[0], offset[1]);
+    label.setLocation(this.gameBoardPosition);
     label.setSize(this.dimensions);
-    // gridCell.getGameBoard().add(label, GameBoard.ENTITY_LAYER);
   }
 
   // protected static ImageIcon setScale(ImageIcon image, int dimension) {

@@ -28,8 +28,8 @@ public class Zombie extends AbstractEntity implements Comparable {
   }
 
   public void turn(byte direction) {
-    super.setImage(new ImageIcon(Data.Images.Entity.zombie(direction)).getImage());
-    super.gridCell.getGameBoard().repaint();
+    super.initializeLabel(new ImageIcon(Data.Images.Entity.zombie(direction)));
+    // super.gridCell.getGameBoard().repaint();
   }
 
   public boolean canMove(byte direction) {
@@ -96,7 +96,7 @@ public class Zombie extends AbstractEntity implements Comparable {
 
   public void cycleOptions() {
     startCondition = (byte) (++startCondition % 4);
-    super.setImage(new ImageIcon(Data.Images.Entity.zombie(startCondition)).getImage());
+    turn(startCondition);
     super.identifier = Zombie.TAG + ":" + startCondition;
   }
 }

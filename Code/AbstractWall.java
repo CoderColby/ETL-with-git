@@ -1,9 +1,14 @@
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.imageio.ImageIO;
 import java.awt.Image;
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.io.File;
+import java.io.IOException;
 
 
 public abstract class AbstractWall extends AbstractGameObject {
@@ -20,6 +25,17 @@ public abstract class AbstractWall extends AbstractGameObject {
   protected AbstractWall(String tag, GridCell gridCell, String imagePath, byte orientation) {
     super(tag, gridCell, AbstractWall.TYPE, imagePath, new Dimension((orientation == 0)? GameBoard.WALL_THICKNESS : GameBoard.ROOM_HEIGHT, (orientation == 1)? GameBoard.WALL_THICKNESS : GameBoard.ROOM_HEIGHT), new Point((1 - orientation) * GameBoard.ROOM_HEIGHT, orientation * GameBoard.ROOM_HEIGHT));
     this.orientation = orientation;
+    try {
+      initializeLabel(ImageIO.read(new File(imagePath)));
+    } catch (IOException e) {
+      // nothing
+    }
+  }
+
+  protected void initializeLabel(BufferedImage thisImage) {
+    if (orientation == (byte) 1)
+      thisImage = Data.Images.rotateIcon(thisImage);
+    super.initializeLabel(new ImageIcon(thisImage));
   }
 
   public abstract ArrayList<Animation> getAnimations(String entityTag, int delay);
@@ -35,7 +51,7 @@ public abstract class AbstractWall extends AbstractGameObject {
   public abstract void transform(byte transformationType);
 
   public void addSelf(GridCell gridCell, byte modifier) {
-    gridCell.setWall(AbstractWall.getWallByTag(this.getIdentifier(), gridCell, modifier), modifier);
+    gridCell.setWall(AbstractWall.getWallByTag(super.identifier, gridCell, modifier), modifier);
   }
 
   // protected static JLabel initializeLabel(GridCell gridCell, ImageIcon image, byte orientation) {

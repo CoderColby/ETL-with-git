@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
-// import javax.swing.ImageIcon;
 import javax.swing.Timer;
 import java.lang.IndexOutOfBoundsException;
 import java.awt.Rectangle;
@@ -39,6 +38,8 @@ public class GameBoard extends JLayeredPane {
   private String[][] fileContents;
   private GridCell[][] board;
   private Player player;
+  private Player[] players;
+  private Elevator[] elevators;
   private Zombie[] zombies;
   private SmartZombie[] smartZombies;
   private Target[] targets;
@@ -64,45 +65,9 @@ public class GameBoard extends JLayeredPane {
 
   
   public void reset() {
-    ArrayList<Zombie> zombieTracker = new ArrayList<>();
-    ArrayList<SmartZombie> smartZombieTracker = new ArrayList<>();
-    ArrayList<Target> targetTracker = new ArrayList<>();
-    ArrayList<LockedDoor> lockedDoorTracker = new ArrayList<>();
-    ArrayList<Star> starTracker = new ArrayList<>();
-    
-    for (int i = 0; i < 100; i++) {
-      GridCell temp = new GridCell(fileContents[i], i, this);
-      
-      if (temp.hasEntity(Zombie.TAG))
-        zombieTracker.add((Zombie) temp.getEntity());
-      else if (temp.hasEntity(SmartZombie.TAG))
-        smartZombieTracker.add((SmartZombie) temp.getEntity());
-      else if (temp.hasEntity(Player.TAG))
-        player = (Player) temp.getEntity();
-
-      if (temp.hasRoomType(Target.TAG))
-        targetTracker.add((Target) temp.getRoomType());
-      else if (temp.hasRoomType(Star.TAG))
-        starTracker.add((Star) temp.getRoomType());
-
-      for (byte wallNum = 0; wallNum < 2; wallNum++) {
-        if (temp.hasWall(wallNum, LockedDoor.TAG))
-          lockedDoorTracker.add((LockedDoor) temp.getWall(wallNum));
-      }
-      
-      board[i/10][i%10] = temp;
-    }
-
-    if (!zombieTracker.isEmpty())
-      zombieTracker.toArray(zombies);
-    if (!smartZombieTracker.isEmpty())
-      smartZombieTracker.toArray(smartZombies);
-    if (!targetTracker.isEmpty())
-      targetTracker.toArray(targets);
-    if (!lockedDoorTracker.isEmpty())
-      lockedDoorTracker.toArray(lockedDoors);
-    if (!starTracker.isEmpty())
-      starTracker.toArray(stars);
+    for (int i = 0; i < 100; i++)
+      board[i/10][i%10] = new GridCell(fileContents[i], i, this);
+    scanGridCells();
     remainingEnergy = startEnergy;
     hasWon = false;
     hasLost = false;
@@ -116,6 +81,69 @@ public class GameBoard extends JLayeredPane {
     //   if (i / 10 < 9)
     //     super.add(new JLabel(board[i/10][i%10].getWall((byte) 1)), WALL_LAYER);
     // }
+    
+  }
+
+  private void scanGridCells() {
+    ArrayList<Player> playerTracker = new ArrayList<>();
+    ArrayList<Elevator> elevatorTracker = new ArrayList<>();
+    ArrayList<Zombie> zombieTracker = new ArrayList<>();
+    ArrayList<SmartZombie> smartZombieTracker = new ArrayList<>();
+    ArrayList<Target> targetTracker = new ArrayList<>();
+    ArrayList<LockedDoor> lockedDoorTracker = new ArrayList<>();
+    ArrayList<Star> starTracker = new ArrayList<>();
+    player = null;
+    players = new Player[0];
+    elevators = new Elevator[0];
+    zombies = new Zombie[0];
+    smartZombies = new SmartZombie[0];
+    targets = new Target[0];
+    lockedDoors = new LockedDoor[0];
+    stars = new Star[0];
+    
+    
+    for (int i = 0; i < 100; i++) {
+      GridCell temp = board[i/10][i%10];
+      
+      if (temp.hasEntity(Zombie.TAG))
+        zombieTracker.add((Zombie) temp.getEntity());
+      else if (temp.hasEntity(SmartZombie.TAG))
+        smartZombieTracker.add((SmartZombie) temp.getEntity());
+      else if (temp.hasEntity(Player.TAG))
+        playerTracker.add((Player) temp.getEntity());
+
+      if (temp.hasRoomType(Target.TAG))
+        targetTracker.add((Target) temp.getRoomType());
+      else if (temp.hasRoomType(Star.TAG))
+        starTracker.add((Star) temp.getRoomType());
+      else if (temp.hasRoomType(Elevator.TAG))
+        elevatorTracker.add((Elevator) temp.getRoomType());
+
+      for (byte wallNum = 0; wallNum < 2; wallNum++) {
+        if (temp.hasWall(wallNum, LockedDoor.TAG))
+          lockedDoorTracker.add((LockedDoor) temp.getWall(wallNum));
+      }
+      
+      board[i/10][i%10] = temp;
+    }
+
+    // if (!playerTracker.isEmpty())
+      players = playerTracker.toArray(players);
+    // if (!zombieTracker.isEmpty())
+      zombies = zombieTracker.toArray(zombies);
+    // if (!smartZombieTracker.isEmpty())
+      smartZombies = smartZombieTracker.toArray(smartZombies);
+    // if (!targetTracker.isEmpty())
+      targets = targetTracker.toArray(targets);
+    // if (!lockedDoorTracker.isEmpty())
+      lockedDoors = lockedDoorTracker.toArray(lockedDoors);
+    // if (!starTracker.isEmpty())
+      stars = starTracker.toArray(stars);
+    // if (!elevatorTracker.isEmpty())
+      elevators = elevatorTracker.toArray(elevators);
+
+    if (!playerTracker.isEmpty())
+      player = playerTracker.get(0);
     
   }
 
@@ -315,6 +343,17 @@ public class GameBoard extends JLayeredPane {
     stars = (Star[]) otherStars.toArray();
     super.repaint();
   }
+
+
+  public boolean isValidLayout() {
+    scanGridCells();
+    boolean isEdgeWalls = true;
+    for (int i = 0; i < 10 && isEdgeWalls; i++)
+      isEdgeWalls = board[i][9].hasWall((byte) 0, Wall.TAG);
+    for (int i = 0; i < 10 && isEdgeWalls; i++)
+      isEdgeWalls = board[9][i].hasWall((byte) 1, Wall.TAG);
+    return isEdgeWalls && players.length == 1 && elevators.length == 1 && targets.length >= 1 && elevators[0].getGridCell().getItem() == null && elevators[0].getGridCell() == players[0].getGridCell();
+  } /////////////////////////// Make a separate function that relocates things in all of the updated gridCells, similar to 'reset' but without the fileContents
 
 
   public String[] stringify() {

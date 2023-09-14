@@ -9,7 +9,7 @@ import java.util.ArrayList;
 public abstract class AbstractEntity extends AbstractGameObject {
 
   public static final String TYPE = Data.Utilities.forRoom;
-  public static final int DIMENSION = GameBoard.ROOM_HEIGHT - 5;
+  public static final int DIMENSION = GameBoard.ROOM_HEIGHT - 10;
   public static final int POSITION = (GameBoard.ROOM_HEIGHT - AbstractEntity.DIMENSION) / 2;
 
   private final int AnimationDuration;
@@ -39,7 +39,7 @@ public abstract class AbstractEntity extends AbstractGameObject {
   }
 
   public void addSelf(GridCell gridCell, byte modifier) {
-    gridCell.setEntity(AbstractEntity.getEntityByTag(this.getIdentifier(), gridCell));
+    gridCell.setEntity(AbstractEntity.getEntityByTag(super.identifier, gridCell));
   }
 
   // protected static JLabel initializeLabel(GridCell gridCell, ImageIcon image) {

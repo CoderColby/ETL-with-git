@@ -8,7 +8,7 @@ import java.awt.Point;
 public abstract class AbstractItem extends AbstractGameObject {
 
   public static final String TYPE = Data.Utilities.forRoom;
-  public static final int DIMENSION = GameBoard.ROOM_HEIGHT - 10;
+  public static final int DIMENSION = GameBoard.ROOM_HEIGHT - 20;
   public static final int POSITION = (GameBoard.ROOM_HEIGHT - AbstractItem.DIMENSION) / 2;
 
   protected AbstractItem(String tag, String imagePath) {
@@ -20,7 +20,7 @@ public abstract class AbstractItem extends AbstractGameObject {
   }
 
   public void addSelf(GridCell gridCell, byte modifier) {
-    gridCell.setItem(AbstractItem.getItemByTag(this.getIdentifier(), gridCell));
+    gridCell.setItem(AbstractItem.getItemByTag(super.identifier, gridCell));
   }
 
   // protected static JLabel initializeLabel(GridCell gridCell, ImageIcon image) {

@@ -87,8 +87,8 @@ public class SmartZombie extends AbstractEntity implements Comparable {
   }
 
   public void turn(byte direction) {
-    super.setImage(new ImageIcon(Data.Images.Entity.smartZombie(direction)).getImage());
-    super.gridCell.getGameBoard().repaint();
+    super.initializeLabel(new ImageIcon(Data.Images.Entity.smartZombie(direction)));
+    // super.gridCell.getGameBoard().repaint();
   }
 
 
@@ -170,7 +170,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
 
   public void cycleOptions() {
     startCondition = (byte) (++startCondition % 4);
-    super.setImage(new ImageIcon(Data.Images.Entity.smartZombie(startCondition)).getImage());
+    turn(startCondition);
     super.identifier = SmartZombie.TAG + ":" + startCondition;
   }
 }
