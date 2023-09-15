@@ -18,4 +18,11 @@ public class Filled extends AbstractRoomType {
   public void cycleOptions() {
     // nothing
   }
+
+  @Override
+  public void addSelf(GridCell gridCell, byte modifier) {
+    super.addSelf(gridCell, modifier);
+    for (byte i = 0; i < 4; i++)
+      gridCell.setWall(AbstractWall.getWallByTag(Wall.TAG + ":" + Wall.DEFAULT, gridCell, (byte) (i % 2)), i);
+  }
 }

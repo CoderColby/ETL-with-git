@@ -1,5 +1,6 @@
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane; // remove
 import java.awt.Image;
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
@@ -64,6 +65,11 @@ public abstract class AbstractGameObject extends ImageIcon {
     this.gameBoardPosition.translate(offset[0], offset[1]);
     label.setLocation(this.gameBoardPosition);
     label.setSize(this.dimensions);
+
+    // if (TYPE == Data.Utilities.forWall)
+    //   JOptionPane.showMessageDialog(null, "first", "Icon", JOptionPane.INFORMATION_MESSAGE, thisImage);
+    //   JOptionPane.showMessageDialog(null, "second", "Icon", JOptionPane.INFORMATION_MESSAGE, this);
+
   }
 
   // protected static ImageIcon setScale(ImageIcon image, int dimension) {

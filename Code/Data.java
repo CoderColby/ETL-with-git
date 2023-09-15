@@ -105,50 +105,27 @@ public class Data {
       public static final String logo = "./GameAssets/Images/Other/ETLogo.png";
       public static final String lock = "./GameAssets/Images/Other/Lock.png";
     }
+    
 
+    public static ImageIcon rotateIcon(ImageIcon icon) {
+      int width = icon.getIconWidth();
+      int height = icon.getIconHeight();
+  
+      Image image = icon.getImage();
+      BufferedImage bufferedImage = new BufferedImage(height, width, BufferedImage.TYPE_INT_ARGB);
+  
+      Graphics2D g2d = bufferedImage.createGraphics();
+      g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+  
+      AffineTransform transform = new AffineTransform();
+      transform.rotate(Math.toRadians(-90), width / 2.0, width / 2.0);
 
-    public static BufferedImage rotateIcon(BufferedImage img) {
-      int width = img.getWidth();
-      int height = img.getHeight();
+      g2d.drawImage(image, transform, null);
   
-      BufferedImage newImage = new BufferedImage(height, width, img.getType());
+      g2d.dispose();
   
-      Graphics2D g2 = newImage.createGraphics();
-  
-      g2.rotate(Math.toRadians(-90), width / 2.0, width / 2.0);
-      g2.drawImage(img, null, 0, 0);
-  
-      return newImage;
+      return new ImageIcon(bufferedImage);
     }
-
-    // public static ImageIcon rotateIcon(ImageIcon icon, double angle) {
-    //   int width = icon.getIconWidth();
-    //   int height = icon.getIconHeight();
-    //   System.out.println(width + " " + height);
-  
-    //   Image image = icon.getImage();
-    //   BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-  
-    //   Graphics2D g2d = bufferedImage.createGraphics();
-    //   g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-  
-    //   AffineTransform transform = new AffineTransform();
-  
-    //   // Translate to the center of the image
-    //   transform.setToTranslation(width / 2.0, height / 2.0);
-      
-    //   // Rotate around the center
-    //   transform.rotate(Math.toRadians(angle));
-  
-    //   // Translate back to the top-left corner
-    //   transform.translate(-width / 2.0, -height / 2.0);
-  
-    //   g2d.drawImage(image, transform, null);
-  
-    //   g2d.dispose();
-  
-    //   return new ImageIcon(bufferedImage);
-    // }
   
   }
 

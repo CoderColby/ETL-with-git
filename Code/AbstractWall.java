@@ -1,6 +1,5 @@
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.imageio.ImageIO;
 import java.awt.Image;
 import java.awt.Dimension;
@@ -25,17 +24,13 @@ public abstract class AbstractWall extends AbstractGameObject {
   protected AbstractWall(String tag, GridCell gridCell, String imagePath, byte orientation) {
     super(tag, gridCell, AbstractWall.TYPE, imagePath, new Dimension((orientation == 0)? GameBoard.WALL_THICKNESS : GameBoard.ROOM_HEIGHT, (orientation == 1)? GameBoard.WALL_THICKNESS : GameBoard.ROOM_HEIGHT), new Point((1 - orientation) * GameBoard.ROOM_HEIGHT, orientation * GameBoard.ROOM_HEIGHT));
     this.orientation = orientation;
-    try {
-      initializeLabel(ImageIO.read(new File(imagePath)));
-    } catch (IOException e) {
-      // nothing
-    }
+    initializeLabel(new ImageIcon(imagePath));
   }
 
-  protected void initializeLabel(BufferedImage thisImage) {
+  protected void initializeLabel(ImageIcon image) {
     if (orientation == (byte) 1)
-      thisImage = Data.Images.rotateIcon(thisImage);
-    super.initializeLabel(new ImageIcon(thisImage));
+      image = Data.Images.rotateIcon(image);
+    super.initializeLabel(image);
   }
 
   public abstract ArrayList<Animation> getAnimations(String entityTag, int delay);

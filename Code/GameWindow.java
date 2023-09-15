@@ -30,7 +30,6 @@ import javax.swing.ImageIcon;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.BorderFactory;
-import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -242,6 +241,7 @@ public class GameWindow extends JFrame {
       public WallButton(GridCell gridCell, byte orientation) {
         super(gridCell);
         this.orientation = orientation;
+        repaint();
       }
 
       public void setObject(AbstractGameObject object) {
@@ -251,11 +251,7 @@ public class GameWindow extends JFrame {
           object.addSelf(super.gridCell, orientation);
         else
           return;
-        // System.out.println(super.gridCell.getWall(orientation).getIdentifier() + " " + Integer.toString(orientation));
-        
-        // LevelDesigner.this.jlbl_selectedItem.setIcon(super.gridCell.getWall(orientation));
-        super.setIcon(super.gridCell.getWall(orientation));
-        // super.repaint();
+        repaint();
       }
 
       public void cycleOptions() {
@@ -263,11 +259,11 @@ public class GameWindow extends JFrame {
         super.repaint();
       }
 
-      // @Override
-      // protected void paintComponent(Graphics g) {
-      //   super.paintComponent(g);
-      //     g.drawImage(super.gridCell.getWall(orientation).getImage(), 0, 0, null);
-      // }
+      @Override
+      protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+          g.drawImage(super.gridCell.getWall(orientation).getImage(), 0, 0, null);
+      }
     }
 
     // Read load-in file
@@ -320,7 +316,7 @@ public class GameWindow extends JFrame {
       // For displaying game objects to select
       AbstractWall[] walls = new AbstractWall[] {new Wall(), new Door(), new PowerDoor(), new OnceDoor(), new AirlockDoor(), new DetectionDoor(), new LockedDoor()};
       AbstractRoomType[] roomTypes = new AbstractRoomType[] {new Elevator(), new Target(), new Filled(), new Star()};
-      AbstractItem[] items = new AbstractItem[] {new Key(), new Battery()};
+      AbstractItem[] items = new AbstractItem[] {new Key(), new Battery(), new Eraser()};
       AbstractEntity[] entities = new AbstractEntity[] {new Zombie(), new SmartZombie()};
       int objectSeparation;
       int startLocation;
@@ -400,7 +396,7 @@ public class GameWindow extends JFrame {
         File[] allCustomLevelFiles = Data.Utilities.getAllRegFilesInDirectory(new File(Data.Utilities.customLevelDirectory));
         // Arrays.sort(allCustomLevelFiles, Comparator.comparingLong(File::lastModified).reversed());
         String filename = JOptionPane.showInputDialog(this, "Please enter the filename of the level you would like to load (remember '.txt' at the end)");
-        if (!filename.isEmpty()) {
+        if (filename != null && !filename.isEmpty()) {
           for (File f : allCustomLevelFiles)
             if (filename.equals(f.getName())) {
               super.remove(levelDisplay);
@@ -432,20 +428,24 @@ public class GameWindow extends JFrame {
       jbtn_demo.setBackground(Data.Colors.buttonBackground);
       jbtn_demo.setFont(Data.Fonts.menuButton);
       jbtn_demo.addActionListener(e -> {
-        LevelDesigner.this.levelFile = new File(Data.Utilities.temporaryDemoFile);
-        LevelDesigner.this.writeToFile(LevelDesigner.this.levelFile);
-
-        Level level = new Level(LevelDesigner.this.levelFile, true, currentUser, GameWindow.this);
-        
-        GameWindow.this.add(level);
-        while (!(Level.goToNextLevel || Level.returnToMenu)) {
-          try {
-            wait();
-          } catch (InterruptedException f) {
-            // nothing
+        if (levelBoard.isValidLayout()) {
+          LevelDesigner.this.levelFile = new File(Data.Utilities.temporaryDemoFile);
+          LevelDesigner.this.writeToFile(LevelDesigner.this.levelFile);
+  
+          Level level = new Level(LevelDesigner.this.levelFile, true, currentUser, GameWindow.this);
+          
+          GameWindow.this.add(level);
+          while (!(Level.goToNextLevel || Level.returnToMenu)) {
+            try {
+              wait();
+            } catch (InterruptedException f) {
+              // nothing
+            }
           }
-        }
-        GameWindow.this.remove(level);
+          GameWindow.this.remove(level);
+        } else
+          JOptionPane.showMessageDialog(GameWindow.this, "This level is missing some essential parts that make it unplayable.");
+
       });
 
       // Button to save construction
@@ -521,7 +521,7 @@ public class GameWindow extends JFrame {
       ArrayList<DesignerButton> buttons = new ArrayList<>(280);
 
       for (int i = 0; i < 100; i++) {
-        GridCell gridCell = levelBoard.getGridCell(new int[] {i % 10, i / 10});
+        GridCell gridCell = levelBoard.getGridCell(new int[] {i / 10, i % 10});
         RoomButton rb = new RoomButton(gridCell);
         rb.setBounds(GameBoard.WALL_THICKNESS + (i % 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.WALL_THICKNESS + (i / 10) * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.ROOM_HEIGHT, GameBoard.ROOM_HEIGHT);
         buttons.add(rb);
@@ -549,6 +549,7 @@ public class GameWindow extends JFrame {
             if (SwingUtilities.isLeftMouseButton(e)) {
               if (currentObject != null)
               ((DesignerButton) e.getSource()).setObject(currentObject);
+              LevelDesigner.this.levelDisplay.repaint();
             } else if (SwingUtilities.isRightMouseButton(e))
               ((DesignerButton) e.getSource()).cycleOptions();
           }

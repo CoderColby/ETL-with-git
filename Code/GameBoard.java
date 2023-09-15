@@ -19,6 +19,7 @@ import java.util.Comparator;
 import java.util.Scanner;
 import java.lang.Thread;
 
+
 public class GameBoard extends JLayeredPane {
   
   public static final byte MOVE_RIGHT = 0;
@@ -242,8 +243,8 @@ public class GameBoard extends JLayeredPane {
   ////////////////////////////////////////////////////////////////////////////////////////// Setters and Getters
   
 
-  public GridCell getGridCell(int[] rowColumn) throws IndexOutOfBoundsException {
-    return board[rowColumn[0]][rowColumn[1]];
+  public GridCell getGridCell(int[] firstSecond) throws IndexOutOfBoundsException {
+    return board[firstSecond[0]][firstSecond[1]];
   }
 
   public int getRemainingEnergy() {
@@ -377,30 +378,26 @@ class GridCell {
   public static final byte LEFT_WALL = 2;
   public static final byte TOP_WALL = 3;
 
-  // private static final int[] EntityXYPos = new int[] {}; /////////// What position is entity pic?
-  // private static final int[] ItemXYPos = new int[] {}; /////////// What position is item pic?
-  // private static final int[] RoomTypeXYPos = new int[] {}; /////////// What position is roomtype pic?
-  // private static final int[] WallXYPos = new int[] {}; /////////// What position is wall pic? can swap index 0 with 1 for walls 0 and 1
-
-
-
   private AbstractRoomType roomType;
   private AbstractItem item;
   private AbstractEntity entity;
   private AbstractWall[] walls;
-  private int[] rowColumn;
+  private int[] firstSecond;
   private GameBoard board;
-
-  public GridCell() {
-    System.out.println("HIE");
-  }
+  
 
   public GridCell(String[] fileContents, int coordinates, GameBoard board) {
-    rowColumn = new int[] {coordinates / 10, coordinates % 10};
+    firstSecond = new int[] {coordinates / 10, coordinates % 10};
     this.board = board;
     walls = new AbstractWall[2];
-    walls[0] = AbstractWall.getWallByTag(fileContents[0], this, (byte) 0);
-    walls[1] = AbstractWall.getWallByTag(fileContents[1], this, (byte) 1);
+    if (firstSecond[1] == 9)
+      walls[0] = AbstractWall.getWallByTag(Wall.TAG + ":" + Wall.DEFAULT, this, (byte) 0);
+    else
+      walls[0] = AbstractWall.getWallByTag(fileContents[0], this, (byte) 0);
+    if (firstSecond[0] == 9)
+      walls[1] = AbstractWall.getWallByTag(Wall.TAG + ":" + Wall.DEFAULT, this, (byte) 1);
+    else
+      walls[1] = AbstractWall.getWallByTag(fileContents[1], this, (byte) 1);
     roomType = AbstractRoomType.getRoomTypeByTag(fileContents[2], this);
     item = AbstractItem.getItemByTag(fileContents[3], this);
     entity = AbstractEntity.getEntityByTag(fileContents[4], this);
@@ -450,7 +447,7 @@ class GridCell {
   }
 
   public int[] getPixelOffset() {
-    return new int[] {rowColumn[0] * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), rowColumn[1] * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS)};
+    return new int[] {firstSecond[1] * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), firstSecond[0] * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS)};
   }
 
   public void setRoomType(AbstractRoomType roomType) {
@@ -475,13 +472,13 @@ class GridCell {
   }
 
   public GridCell getNeighbor(byte direction) throws IndexOutOfBoundsException {
-    int rowShift = 1 - direction + 2 * (direction / 3); // 0:1; 1:0; 2:-1; 3:0
-    int columnShift = 2 - direction - 2 * ((5 - direction) / 5); // 0:0; 1:1; 2:0; 3:-1
-    return board.getGridCell(new int[] {rowColumn[0] + rowShift, rowColumn[1] + columnShift});
+    int secondShift = 1 - direction + 2 * (direction / 3); // 0:1; 1:0; 2:-1; 3:0
+    int firstShift = 2 - direction - 2 * ((5 - direction) / 5); // 0:0; 1:1; 2:0; 3:-1
+    return board.getGridCell(new int[] {firstSecond[0] + firstShift, firstSecond[1] + secondShift});
   }
 
   public int[] getCoordinates() {
-    return rowColumn;
+    return firstSecond;
   }
 
   public GameBoard getGameBoard() {
