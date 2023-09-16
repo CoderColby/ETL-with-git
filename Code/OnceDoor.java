@@ -56,4 +56,8 @@ public class OnceDoor extends AbstractWall {
   public void cycleOptions() {
     // nothing
   }
+
+  public String getInfo() {
+    return "Once something goes through this door, it closes for the rest of the level, acting as a wall.";
+  }
 }

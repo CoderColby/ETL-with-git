@@ -27,4 +27,8 @@ public class Key extends AbstractItem {
     super.initializeLabel(new ImageIcon(Data.Images.Item.key(ID)));
     super.identifier = Key.TAG + ":" + ID;
   }
+
+  public String getInfo() {
+    return "This is used to open a locked door of the same color.";
+  }
 }

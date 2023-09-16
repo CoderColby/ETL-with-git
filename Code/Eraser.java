@@ -14,4 +14,8 @@ public class Eraser extends AbstractItem {
   public void cycleOptions() {
     // nothing
   }
+
+  public String getInfo() {
+    return "This can be used to remove level elements such as walls and mobile entities.";
+  }
 }

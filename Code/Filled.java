@@ -25,4 +25,8 @@ public class Filled extends AbstractRoomType {
     for (byte i = 0; i < 4; i++)
       gridCell.setWall(AbstractWall.getWallByTag(Wall.TAG + ":" + Wall.DEFAULT, gridCell, (byte) (i % 2)), i);
   }
+
+  public String getInfo() {
+    return "This fills a room so that it is no longer part of the level; nothing can go inside of it.";
+  }
 }

@@ -60,4 +60,8 @@ public class DetectionDoor extends AbstractWall {
   public void cycleOptions() {
     // nothing
   }
+
+  public String getInfo() {
+    return "This is a door acts similar to a once-door but only torwards zombies. The player has no effect on the door, but it will permanently close once a zombie passes through.";
+  }
 }

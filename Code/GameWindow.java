@@ -22,6 +22,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.JTextArea;
+import javax.swing.JScrollPane;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
@@ -33,6 +34,7 @@ import javax.swing.BorderFactory;
 import javax.swing.KeyStroke;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.SwingWorker;
 
 import java.awt.Dimension;
 import java.awt.Point;
@@ -41,6 +43,7 @@ import java.awt.Rectangle;
 import java.awt.Font;
 import java.awt.Image;
 import java.awt.Graphics;
+import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.KeyEvent;
@@ -213,10 +216,10 @@ public class GameWindow extends JFrame {
       }
 
       public void cycleOptions() {
-        if (super.gridCell.getItem() != null)
-          super.gridCell.getItem().cycleOptions();
-        else if (super.gridCell.getEntity() != null)
+        if (super.gridCell.getEntity() != null)
           super.gridCell.getEntity().cycleOptions();
+        else if (super.gridCell.getItem() != null)
+          super.gridCell.getItem().cycleOptions();
         else if (super.gridCell.getRoomType() != null)
           super.gridCell.getRoomType().cycleOptions();
         super.repaint();
@@ -359,10 +362,28 @@ public class GameWindow extends JFrame {
       }
 
       for (JDataButton j : buttons) {
-        j.addActionListener(e -> {
-          currentObject = ((JDataButton) e.getSource()).getObject();
-          jlbl_selectedItem.setIcon(currentObject);
-          // super.repaint();
+        j.setBackground(Data.Colors.roomBackground);
+        j.addMouseListener(new MouseAdapter() {
+          @Override
+          public void mouseClicked(MouseEvent e) {
+            if (SwingUtilities.isLeftMouseButton(e)) {
+              // if (currentObject != null)
+              // ((DesignerButton) e.getSource()).setObject(currentObject);
+              currentObject = ((JDataButton) e.getSource()).getObject();
+              jlbl_selectedItem.setIcon(currentObject);
+              // super.repaint();
+              LevelDesigner.this.levelDisplay.repaint();
+            } else if (SwingUtilities.isRightMouseButton(e)) {
+              JTextArea ta = new JTextArea(((JDataButton) e.getSource()).getObject().getInfo());
+              ta.setWrapStyleWord(true);
+              ta.setLineWrap(true);
+              ta.setOpaque(false);
+              ta.setEditable(false);
+              JScrollPane sp = new JScrollPane(ta);
+              sp.setPreferredSize(new Dimension(300, 80));
+             JOptionPane.showMessageDialog(LevelDesigner.this, sp, ((JDataButton) e.getSource()).getObject().getIdentifier().split(":")[0], JOptionPane.INFORMATION_MESSAGE); 
+            }
+          }
         });
         jpnl_gameItems.add(j);
       }
@@ -395,8 +416,10 @@ public class GameWindow extends JFrame {
       jbtn_load.addActionListener(e -> {
         File[] allCustomLevelFiles = Data.Utilities.getAllRegFilesInDirectory(new File(Data.Utilities.customLevelDirectory));
         // Arrays.sort(allCustomLevelFiles, Comparator.comparingLong(File::lastModified).reversed());
-        String filename = JOptionPane.showInputDialog(this, "Please enter the filename of the level you would like to load (remember '.txt' at the end)");
+        String filename = JOptionPane.showInputDialog(this, "Filename:");
         if (filename != null && !filename.isEmpty()) {
+          if (!filename.matches(".*\\.txt$"))
+            filename = filename.concat(".txt");
           for (File f : allCustomLevelFiles)
             if (filename.equals(f.getName())) {
               super.remove(levelDisplay);
@@ -429,20 +452,34 @@ public class GameWindow extends JFrame {
       jbtn_demo.setFont(Data.Fonts.menuButton);
       jbtn_demo.addActionListener(e -> {
         if (levelBoard.isValidLayout()) {
-          LevelDesigner.this.levelFile = new File(Data.Utilities.temporaryDemoFile);
+          LevelDesigner.this.levelFile = new File(Data.Utilities.customLevelDirectory + GameWindow.this.currentUser.getUsername() + "/.temp");
           LevelDesigner.this.writeToFile(LevelDesigner.this.levelFile);
+
+          SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+            
+            @Override
+            protected Void doInBackground() throws Exception {
+              GameWindow.this.replace(new Level(LevelDesigner.this.levelFile, true, GameWindow.this));
   
-          Level level = new Level(LevelDesigner.this.levelFile, true, currentUser, GameWindow.this);
-          
-          GameWindow.this.add(level);
-          while (!(Level.goToNextLevel || Level.returnToMenu)) {
-            try {
-              wait();
-            } catch (InterruptedException f) {
-              // nothing
+              while (!(Level.goToNextLevel || Level.returnToMenu)) {
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException f) {
+                    // nothing
+                }
+              }
+  
+              return null;
             }
-          }
-          GameWindow.this.remove(level);
+    
+            @Override
+            protected void done() {
+              GameWindow.this.replace(new LevelDesigner(LevelDesigner.this.levelFile, LevelDesigner.this.window));
+              LevelDesigner.this.levelFile.delete();
+            }
+          };
+      
+          worker.execute();
         } else
           JOptionPane.showMessageDialog(GameWindow.this, "This level is missing some essential parts that make it unplayable.");
 
@@ -767,6 +804,29 @@ public class GameWindow extends JFrame {
     root.add(jtxf_signupName);
     root.add(jbtn_signupButton);
 
+    jtxf_loginUsername.setNextFocusableComponent(jtxf_loginPassword);
+    jtxf_loginPassword.setNextFocusableComponent(jbtn_loginButton);
+    jbtn_loginButton.setNextFocusableComponent(jtxf_signupUsername);
+    jtxf_signupUsername.setNextFocusableComponent(jtxf_signupPassword);
+    jtxf_signupPassword.setNextFocusableComponent(jtxf_signupConfirmPassword);
+    jtxf_signupConfirmPassword.setNextFocusableComponent(jtxf_signupName);
+    jtxf_signupName.setNextFocusableComponent(jbtn_signupButton);
+
+    /////////////////////////
+    JButton jbtn_shortcut = new JButton("Guest");
+    jbtn_shortcut.setBounds(50, 50, 80, 30);
+    jbtn_shortcut.addActionListener(e -> {
+      try {
+        currentUser = new User(new File(Data.Utilities.getUserFilePath("CoderColby"))); // Make new user
+      } catch (FileNotFoundException f) {
+        // nothing
+      }
+      replace(createMenu(0));
+    });
+    root.add(jbtn_shortcut);
+    /////////////////////////
+    
+
     return root;
     
   } // Login page for new and existing users, creates new user object
@@ -787,32 +847,32 @@ public class GameWindow extends JFrame {
 
     // Label for name
     JLabel jlbl_nameLabel = new JLabel("Name:");
-    jlbl_nameLabel.setBounds(640, 20, 60, 45);
+    jlbl_nameLabel.setBounds(440, 20, 85, 45);
     jlbl_nameLabel.setFont(Data.Fonts.dataLabel);
 
     // Label for completed levels
     JLabel jlbl_completedLabel = new JLabel("Levels Completed:");
-    jlbl_completedLabel.setBounds(640, 65, 205, 45);
+    jlbl_completedLabel.setBounds(440, 65, 205, 45);
     jlbl_completedLabel.setFont(Data.Fonts.dataLabel);
 
     // Label for perfect levels
     JLabel jlbl_perfectLabel = new JLabel("Perfect Levels:");
-    jlbl_perfectLabel.setBounds(640, 110, 185, 45);
+    jlbl_perfectLabel.setBounds(440, 110, 185, 45);
     jlbl_perfectLabel.setFont(Data.Fonts.dataLabel);
 
     // Value for name
     JLabel jlbl_nameField = new JLabel(currentUser.getRealName());
-    jlbl_nameField.setBounds(860, 20, 120, 45);
+    jlbl_nameField.setBounds(660, 20, 300, 45);
     jlbl_nameField.setFont(Data.Fonts.dataLabel);
 
     // Value for completed levels
     JLabel jlbl_completedField = new JLabel((currentUser.getLevels() - 1) + "/" + Data.Utilities.numOfLevels);
-    jlbl_completedField.setBounds(860, 65, 100, 45);
+    jlbl_completedField.setBounds(660, 65, 100, 45);
     jlbl_completedField.setFont(Data.Fonts.dataLabel);
 
     // Value for perfect levels
     JLabel jlbl_perfectField = new JLabel(currentUser.getPerfectLevels().size() + "/" + Data.Utilities.numOfLevels);
-    jlbl_perfectField.setBounds(860, 110, 100, 45);
+    jlbl_perfectField.setBounds(660, 110, 100, 45);
     jlbl_perfectField.setFont(Data.Fonts.dataLabel);
 
     // Add all elements to base panel
@@ -865,6 +925,7 @@ public class GameWindow extends JFrame {
     JButton jbtn_leftArrow = new JButton(new ImageIcon(new ImageIcon(Data.Images.Other.leftNavArrow).getImage().getScaledInstance(100, 180, Image.SCALE_FAST)));
     jbtn_leftArrow.setBounds(50, 335, 100, 180);
     jbtn_leftArrow.setBorderPainted(false);
+    jbtn_leftArrow.setBackground(Color.WHITE);
     jbtn_leftArrow.addActionListener(e -> {
       jpnl_menuLevels.decrementGroupNum();
     });
@@ -873,6 +934,7 @@ public class GameWindow extends JFrame {
     JButton jbtn_rightArrow = new JButton(new ImageIcon(new ImageIcon(Data.Images.Other.rightNavArrow).getImage().getScaledInstance(100, 180, Image.SCALE_FAST)));
     jbtn_rightArrow.setBounds(840, 335, 100, 180);
     jbtn_rightArrow.setBorderPainted(false);
+    jbtn_rightArrow.setBackground(Color.WHITE);
     jbtn_rightArrow.addActionListener(e -> {
       jpnl_menuLevels.incrementGroupNum();
     });
@@ -884,21 +946,39 @@ public class GameWindow extends JFrame {
     return root;
   } // Creates menu with level navigation and user info with custom levels
 
+  private int startingLevel;
   /* √ */
   public void startLevelSequence(int startingLevel) {
-    int level;
-    boolean statusGood = true;
-    for (level = startingLevel; level <= Data.Utilities.numOfLevels && !Level.returnToMenu; level++) {
-      replace(new Level(new File(Data.Utilities.getLevelFilePath(level)), false, currentUser, this));
-      while (!(Level.goToNextLevel || Level.returnToMenu))
-        try {
-          wait();
-        } catch(InterruptedException e) {
-          // nothing
-        }
-    }
+    this.startingLevel = startingLevel;
+    
+    SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+      private int level;
+      
+      @Override
+      protected Void doInBackground() throws Exception {
+        boolean statusGood = true;
+        for (level = GameWindow.this.startingLevel; level <= Data.Utilities.numOfLevels && !Level.returnToMenu; level++) {
+          replace(new Level(new File(Data.Utilities.getLevelFilePath(level)), false, GameWindow.this));
 
-    createMenu((level - 1) / 10);
+          while (!(Level.goToNextLevel || Level.returnToMenu)) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException f) {
+                // nothing
+            }
+          }
+        }
+
+        return null;
+      }
+
+      @Override
+      protected void done() {
+        GameWindow.this.replace(GameWindow.this.createMenu((level - 1) / 10));
+      }
+    };
+
+    worker.execute();
   }
 
 
@@ -1104,6 +1184,7 @@ public class GameWindow extends JFrame {
     JButton jbtn_leftArrow = new JButton(new ImageIcon(new ImageIcon(Data.Images.Other.leftNavArrow).getImage().getScaledInstance(30, 60, Image.SCALE_FAST)));
     jbtn_leftArrow.setBounds(400, 700, 30, 60);
     jbtn_leftArrow.setBorderPainted(false);
+    jbtn_leftArrow.setBackground(Color.WHITE);
     jbtn_leftArrow.addActionListener(e -> {
       GameWindow.this.customPageNum--;
       if (GameWindow.this.customPageNum < 0)
@@ -1120,6 +1201,7 @@ public class GameWindow extends JFrame {
     JButton jbtn_rightArrow = new JButton(new ImageIcon((new ImageIcon(Data.Images.Other.rightNavArrow)).getImage().getScaledInstance(30, 60, Image.SCALE_FAST)));
     jbtn_rightArrow.setBounds(570, 700, 30, 60);
     jbtn_rightArrow.setBorderPainted(false);
+    jbtn_rightArrow.setBackground(Color.WHITE);
     jbtn_rightArrow.addActionListener(e -> {
       GameWindow.this.customPageNum++;
       if (GameWindow.this.customPageNum > ((Data.Utilities.getAllRegFilesInDirectory(new File(Data.Utilities.customLevelDirectory + ((GameWindow.this.jchk_privateOnly.isSelected())? GameWindow.this.currentUser.getUsername() : ""))).length - 1) / 8))
@@ -1162,16 +1244,33 @@ public class GameWindow extends JFrame {
       button.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
       button.setFont(Data.Fonts.customButton);
       button.addActionListener(e -> {
-        GameWindow.this.replace(new Level(((JDataButton) e.getSource()).getFile(), true, GameWindow.this.currentUser, GameWindow.this));
-        while (!(Level.goToNextLevel || Level.returnToMenu)) {
-          try {
-            wait();
-          } catch (InterruptedException f) {
-            // nothing
+        Level level = new Level(((JDataButton) e.getSource()).getFile(), true, GameWindow.this);
+        GameWindow.this.replace(level);
+    
+        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+          @Override
+          protected Void doInBackground() throws Exception {
+
+            while (!(Level.goToNextLevel || Level.returnToMenu)) {
+              try {
+                  Thread.sleep(50);
+              } catch (InterruptedException f) {
+                  // nothing
+              }
+            }
+
+            return null;
           }
-        }
-        GameWindow.this.replace(GameWindow.this.createLevelBrowser());
+  
+          @Override
+          protected void done() {
+            GameWindow.this.replace(GameWindow.this.createLevelBrowser());
+          }
+        };
+    
+        worker.execute();
       });
+
 
       JLabel jlbl_creatorName = new JLabel(levels[i].getParentFile().getName(), SwingConstants.RIGHT);
       jlbl_creatorName.setBounds(0, 0 + i * 75, 185, 75);
@@ -1184,10 +1283,14 @@ public class GameWindow extends JFrame {
     return jpnl_list;
   }
 
+  public User getUser() {
+    return currentUser;
+  }
+
   /* √ */
   public void replace(JPanel newPanel) {
     super.getContentPane().removeAll();
     super.getContentPane().add(newPanel);
-    super.repaint();
+    repaint();
   }
 }

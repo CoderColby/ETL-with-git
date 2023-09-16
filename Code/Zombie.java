@@ -99,4 +99,8 @@ public class Zombie extends AbstractEntity implements Comparable {
     turn(startCondition);
     super.identifier = Zombie.TAG + ":" + startCondition;
   }
+
+  public String getInfo() {
+    return "This zombie will always get as close to the player as possible and never move farther away, even if doing so would allow a direct path to the player. Moves two cells for every player move. If moving horizontally and vertically will both get it equally close to the player, it will always prefer vertical movement first.";
+  }
 }

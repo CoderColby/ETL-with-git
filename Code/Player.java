@@ -20,7 +20,7 @@ public class Player extends AbstractEntity {
   }
   
   public Player(GridCell gridCell, byte startCondition) {
-    super(Player.TAG + ":" + startCondition, gridCell, Data.Images.Entity.player(Player.HEALTHY), Data.Animation.playerTravelTime);
+    super(Player.TAG + ":" + startCondition, gridCell, Data.Images.Entity.player(startCondition), Data.Animation.playerTravelTime);
     this.startCondition = startCondition;
   }
 
@@ -99,5 +99,9 @@ public class Player extends AbstractEntity {
     startCondition = (byte) (++startCondition % 4);
     turn(startCondition);
     super.identifier = Player.TAG + ":" + startCondition;
+  }
+
+  public String getInfo() {
+    return "The thing the player controls.";
   }
 }

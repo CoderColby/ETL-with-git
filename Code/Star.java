@@ -18,4 +18,8 @@ public class Star extends AbstractRoomType {
   public void cycleOptions() {
     // nothing
   }
+
+  public String getInfo() {
+    return "Collecting all of the stars in a level means that the player has mastered that level; acts as a small bonus.";
+  }
 }

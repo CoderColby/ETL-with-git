@@ -47,4 +47,8 @@ public class Wall extends AbstractWall {
   public void cycleOptions() {
     // nothing
   }
+
+  public String getInfo() {
+    return "This is a just a wall, nothing can pass.";
+  }
 }

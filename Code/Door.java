@@ -64,4 +64,8 @@ public class Door extends AbstractWall {
   public void cycleOptions() {
     // nothing
   }
+
+  public String getInfo() {
+    return "This is a normal door that only the player can travel through, using energy.";
+  }
 }

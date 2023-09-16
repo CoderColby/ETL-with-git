@@ -57,7 +57,7 @@ public class GameBoard extends JLayeredPane {
     this.startEnergy = startEnergy;
     this.fileContents = fileContents;
     board = new GridCell[10][10];
-    super.setSize(BOARD_DIMENSION, BOARD_DIMENSION);
+    super.setSize(GameBoard.BOARD_DIMENSION, BOARD_DIMENSION);
     super.setPreferredSize(new Dimension(BOARD_DIMENSION, BOARD_DIMENSION));
     super.setBackground(Data.Colors.levelBackground);
     super.setFocusable(false);
@@ -278,7 +278,6 @@ public class GameBoard extends JLayeredPane {
   public void ToggleTarget() {
     if (Target.isOngoing) {
       Target.isOngoing = false;
-      notifyAll();
       return;
     }
     
@@ -290,7 +289,9 @@ public class GameBoard extends JLayeredPane {
 
     while (Target.isOngoing) {
       try {
-        wait();
+        synchronized (this) {
+          wait();
+        }
       } catch (InterruptedException e) {
         // nothing
       }
@@ -576,7 +577,9 @@ class EntityAnimation extends Animation {
 
     while (timer.isRunning()) {
       try {
-        wait();
+        synchronized (this) {
+          wait();
+        }
       } catch (InterruptedException e) {
         // nothing
       }

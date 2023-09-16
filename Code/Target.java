@@ -50,9 +50,12 @@ public class Target extends AbstractRoomType {
       Target.this.isGood = true;
       Target.super.setImage(new ImageIcon(Data.Images.RoomType.target(Target.GOOD)).getImage());
       Target.isOngoing = false;
-      notifyAll();
     });
 
     return root;
+  }
+
+  public String getInfo() {
+    return "The player will need to activate all of these before they can return to the elevator. Smart Zombies try to turn these off when they can.";
   }
 }

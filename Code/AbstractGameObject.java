@@ -80,4 +80,6 @@ public abstract class AbstractGameObject extends ImageIcon {
   public abstract void addSelf(GridCell gridCell, byte modifier);
 
   public abstract void cycleOptions();
+
+  public abstract String getInfo();
 }

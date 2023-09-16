@@ -61,4 +61,8 @@ public class AirlockDoor extends AbstractWall {
     super.initializeLabel(new ImageIcon(Data.Images.Wall.airlockDoor((isOpen)? AirlockDoor.OPEN : AirlockDoor.CLOSED)));
     super.identifier = Target.TAG + ":" + ((isOpen)? AirlockDoor.OPEN : AirlockDoor.CLOSED);
   }
+
+  public String getInfo() {
+    return "This is a door with a toggleable state that requires energy to open but remains open until something passes through";
+  }
 }

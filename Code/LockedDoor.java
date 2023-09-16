@@ -66,4 +66,8 @@ public class LockedDoor extends AbstractWall {
     super.initializeLabel(new ImageIcon(Data.Images.Wall.lockedDoor(ID)));
     super.identifier = LockedDoor.TAG + ":" + ID;
   }
+
+  public String getInfo() {
+    return "This door can only be opened after obtaining the corresponding key, which then effectively turns it into a hallway.";
+  }
 }

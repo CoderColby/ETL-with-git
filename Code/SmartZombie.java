@@ -117,7 +117,11 @@ public class SmartZombie extends AbstractEntity implements Comparable {
         sentinels.addAll(s.seek());
 
       for (Sentinel s : sentinels)
-        if (s.gridCell.hasEntity(Player.TAG) || (s.gridCell.hasRoomType(Target.TAG) && ((Target) s.gridCell.getRoomType()).isGood()))
+        if (s.gridCell.hasEntity(Player.TAG))
+          return s;
+
+      for (Sentinel s : sentinels)
+        if (s.gridCell.hasRoomType(Target.TAG) && ((Target) s.gridCell.getRoomType()).isGood())
           return s;
     }
     return new ArrayList<Byte>();
@@ -172,5 +176,9 @@ public class SmartZombie extends AbstractEntity implements Comparable {
     startCondition = (byte) (++startCondition % 4);
     turn(startCondition);
     super.identifier = SmartZombie.TAG + ":" + startCondition;
+  }
+
+  public String getInfo() {
+    return "This zombie will navigate to the player and targets. Moves one cell for every player move.";
   }
 }

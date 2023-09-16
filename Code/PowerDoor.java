@@ -56,4 +56,8 @@ public class PowerDoor extends AbstractWall {
   public void cycleOptions() {
     // nothing
   }
+
+  public String getInfo() {
+    return "This door only opens when all of the targets have been activated, and allows anything through.";
+  }
 }

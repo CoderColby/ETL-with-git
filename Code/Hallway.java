@@ -47,4 +47,8 @@ public class Hallway extends AbstractWall {
   public void cycleOptions() {
     // nothing
   }
+
+  public String getInfo() {
+    return "This is hallway.";
+  }
 }

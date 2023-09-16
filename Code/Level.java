@@ -32,10 +32,10 @@ public class Level extends JPanel {
   class InvalidLevelException extends RuntimeException {};
 
   
-  public Level(File levelFile, boolean isCustom, User currentUser, GameWindow window) {
+  public Level(File levelFile, boolean isCustom, GameWindow window) {
     Level.returnToMenu = false;
     Level.goToNextLevel = false;
-    this.currentUser = currentUser;
+    this.currentUser = window.getUser();
     this.levelFile = levelFile;
     this.isCustom = isCustom;
     super.setFocusable(true);
@@ -60,7 +60,8 @@ public class Level extends JPanel {
     levelBoard = new GameBoard(boardData, Integer.parseInt(startEnergy), this);
     if (!levelBoard.isValidLayout())
       throw new InvalidLevelException();
-    // levelBoard.setBounds(/*???*/);
+    levelBoard.setLocation(300, 100);
+    levelBoard.setVisible(true);
 
     // Base panel
     super.setLayout(null);
@@ -73,7 +74,7 @@ public class Level extends JPanel {
     jlbl_levelTitle.setFont(Data.Fonts.header2);
 
     // Label for level name
-    String levelDesc = (isCustom) ? "made by " + currentUser.getUsername() : levelFile.getName().substring("level".length(), levelFile.getName().indexOf('.'));
+    String levelDesc = (isCustom) ? "made by " + levelFile.getParentFile().getName() : levelFile.getName().substring("level".length(), levelFile.getName().indexOf('.'));
     JLabel jlbl_levelName = new JLabel("Level " + levelDesc, SwingConstants.CENTER);
     jlbl_levelName.setBounds(0, 130, 350, 50);
     jlbl_levelName.setFont(Data.Fonts.dataLabel);
@@ -96,21 +97,19 @@ public class Level extends JPanel {
 
     // Label for num of generators
     JLabel jlbl_genLabel = new JLabel("Generators Active:", SwingConstants.CENTER);
-    // jlbl_genLabel.setBounds(0, 300, 350, 30);
     jlbl_genLabel.setFont(Data.Fonts.dataLabel);
 
     // Value for num of generators
     jlbl_genNum = new JLabel(Integer.toString(levelBoard.getNumOfGoodTargets()), SwingConstants.CENTER);
-    // jlbl_genNum.setBounds(0, 330, 350, 30); // FIX ME
     jlbl_genNum.setFont(Data.Fonts.dataLabel);
 
     // Label for total num of generators
-    JLabel jlbl_genTotal = new JLabel("/" + levelBoard.getNumOfTargets(), SwingConstants.CENTER);
-    // jlbl_genTotal.setBounds(0, 330, 350, 30); // FIX ME
+    JLabel jlbl_genTotal = new JLabel("/ " + levelBoard.getNumOfTargets(), SwingConstants.CENTER);
     jlbl_genTotal.setFont(Data.Fonts.dataLabel);
 
     JPanel jpnl_genLabels = new JPanel();
     jpnl_genLabels.setBounds(0, 330, 350, 30);
+    jpnl_genLabels.setOpaque(false);
     jpnl_genLabels.add(jlbl_genLabel);
     jpnl_genLabels.add(jlbl_genNum);
     jpnl_genLabels.add(jlbl_genTotal);
@@ -131,7 +130,6 @@ public class Level extends JPanel {
     jbtn_menu.setFont(Data.Fonts.menuButton);
     jbtn_menu.addActionListener(e -> {
       returnToMenu = true;
-      notifyAll();
     });
 
     // JLabel note = new JLabel("<html>" + fileContents[0] + "</html>", SwingConstants.CENTER);
@@ -227,10 +225,9 @@ public class Level extends JPanel {
     Level.goToNextLevel = false;
     
     levelBoard.reset();
-
     jlbl_energyAmt.setText(startEnergy);
-
     jlbl_genNum.setText("0");
+    super.repaint();
   }
 
   public GameBoard getGameBoard() {
