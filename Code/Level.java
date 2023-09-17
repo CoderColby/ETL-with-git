@@ -3,7 +3,8 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.event.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
@@ -22,11 +23,10 @@ public class Level extends JPanel {
   private JLabel jlbl_genNum;
   
   private String startEnergy;
+  private GameWindow window;
   private GameBoard levelBoard;
   private String levelTitle;
   private File levelFile;
-
-  private User currentUser;
   private boolean isCustom;
 
   class InvalidLevelException extends RuntimeException {};
@@ -35,8 +35,8 @@ public class Level extends JPanel {
   public Level(File levelFile, boolean isCustom, GameWindow window) {
     Level.returnToMenu = false;
     Level.goToNextLevel = false;
-    this.currentUser = window.getUser();
     this.levelFile = levelFile;
+    this.window = window;
     this.isCustom = isCustom;
     super.setFocusable(true);
     super.requestFocus();
@@ -60,7 +60,7 @@ public class Level extends JPanel {
     levelBoard = new GameBoard(boardData, Integer.parseInt(startEnergy), this);
     if (!levelBoard.isValidLayout())
       throw new InvalidLevelException();
-    levelBoard.setLocation(300, 100);
+    levelBoard.setLocation(350, 100);
     levelBoard.setVisible(true);
 
     // Base panel
@@ -129,7 +129,7 @@ public class Level extends JPanel {
     jbtn_menu.setBackground(Data.Colors.buttonBackground);
     jbtn_menu.setFont(Data.Fonts.menuButton);
     jbtn_menu.addActionListener(e -> {
-      returnToMenu = true;
+      Level.returnToMenu = true;
     });
 
     // JLabel note = new JLabel("<html>" + fileContents[0] + "</html>", SwingConstants.CENTER);
@@ -149,45 +149,34 @@ public class Level extends JPanel {
     // root.add(note);
 
     super.add(levelBoard);
+    jpnl_genLabels.revalidate();
+    super.repaint();
 
     /////////////////////////////////////////// i fukin dunno wutz aftur dis
 
-    // Human human = new Human(floorGrid);
-    KeyListener kl = new KeyAdapter() {
-      public void keyPressed(KeyEvent event) {
-        System.out.println(event.getKeyChar());
+    super.addKeyListener(new KeyAdapter() {
+      @Override
+      public void keyPressed(KeyEvent e) {
+
+        switch (e.getKeyCode()) {
+          case KeyEvent.VK_RIGHT:
+            Level.this.levelBoard.move((byte) 0);
+            break;
+          case KeyEvent.VK_DOWN:
+            Level.this.levelBoard.move((byte) 1);
+            break;
+          case KeyEvent.VK_LEFT:
+            Level.this.levelBoard.move((byte) 2);
+            break;
+          case KeyEvent.VK_UP:
+            Level.this.levelBoard.move((byte) 3);
+            break;
+          case KeyEvent.VK_NUMPAD0:
+            Level.this.levelBoard.toggleTarget();
+            break;
+        }
       }
-    };
-
-    /*
-    root.addKeyListener(kl);
-
-    class keyAction extends AbstractAction {
-
-      private int direction;
-      
-      public keyAction(int keyPressed) {
-        this.direction = keyPressed - 35;
-      }
-
-      public void actionPerformed(ActionEvent e) {
-        levelBoard.move(direction - 4 * (direction / 2));
-      }
-    }
-
-    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("UP"), MOVE_UP);
-    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("DOWN"), MOVE_DOWN);
-    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("LEFT"), MOVE_LEFT);
-    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("RIGHT"), MOVE_RIGHT);
-    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("SPACE"), ACTIVATE_GEN);
-    root.getInputMap(IFW).put(KeyStroke.getKeyStroke("NUMPAD0"), ACTIVATE_GEN);
-
-    root.getActionMap().put(MOVE_UP, new keyAction(3));
-    root.getActionMap().put(MOVE_DOWN, new keyAction(1));
-    root.getActionMap().put(MOVE_LEFT, new keyAction(2));
-    root.getActionMap().put(MOVE_RIGHT, new keyAction(0));
-    root.getActionMap().put(ACTIVATE_GEN, new keyAction(4));
-    */
+    });
     
   }
 
@@ -213,7 +202,7 @@ public class Level extends JPanel {
   }
 
   public User getUser() {
-    return currentUser;
+    return window.getUser();
   }
 
   public String getTitle() {
@@ -227,6 +216,7 @@ public class Level extends JPanel {
     levelBoard.reset();
     jlbl_energyAmt.setText(startEnergy);
     jlbl_genNum.setText("0");
+    super.revalidate();
     super.repaint();
   }
 

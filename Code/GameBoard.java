@@ -1,23 +1,32 @@
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.ObjectInputStream;
-import java.io.FileInputStream;
-import javax.swing.JLayeredPane;
-import javax.swing.JPanel;
-import javax.swing.JLabel;
-import javax.swing.Timer;
-import java.lang.IndexOutOfBoundsException;
-import java.awt.Rectangle;
-import java.awt.Dimension;
-import java.awt.Point;
-import java.awt.Graphics;
-import java.awt.event.ActionEvent;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.PriorityQueue;
 import java.util.Comparator;
 import java.util.Scanner;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.ObjectInputStream;
+import java.io.FileInputStream;
+
+import java.lang.IndexOutOfBoundsException;
 import java.lang.Thread;
+
+import javax.swing.JLayeredPane;
+import javax.swing.JPanel;
+import javax.swing.JLabel;
+import javax.swing.ImageIcon;
+import javax.swing.Timer;
+import javax.swing.BorderFactory;
+import javax.swing.SwingWorker;
+
+import java.awt.Rectangle;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Graphics;
+import java.awt.Color;
+import java.awt.Image;
+import java.awt.event.ActionEvent;
 
 
 public class GameBoard extends JLayeredPane {
@@ -29,10 +38,11 @@ public class GameBoard extends JLayeredPane {
   public static final int ROOM_HEIGHT = 49;
   public static final int WALL_THICKNESS = 10;
   public static final int BOARD_DIMENSION = 10 * ROOM_HEIGHT + 11 * WALL_THICKNESS;
-  public static final byte ROOMTYPE_LAYER = 0;
-  public static final byte ITEM_LAYER = 1;
-  public static final byte ENTITY_LAYER = 2;
-  public static final byte WALL_LAYER = 3;
+  public static final byte BASE_LAYER = 4;
+  public static final byte ROOMTYPE_LAYER = 3;
+  public static final byte ITEM_LAYER = 2;
+  public static final byte ENTITY_LAYER = 1;
+  public static final byte WALL_LAYER = 0;
 
   private Level level;
 
@@ -60,6 +70,8 @@ public class GameBoard extends JLayeredPane {
     super.setSize(GameBoard.BOARD_DIMENSION, BOARD_DIMENSION);
     super.setPreferredSize(new Dimension(BOARD_DIMENSION, BOARD_DIMENSION));
     super.setBackground(Data.Colors.levelBackground);
+    super.setBorder(BorderFactory.createLineBorder(Color.BLACK, GameBoard.WALL_THICKNESS));
+    super.setOpaque(true);
     super.setFocusable(false);
     reset();
   }
@@ -73,15 +85,8 @@ public class GameBoard extends JLayeredPane {
     hasWon = false;
     hasLost = false;
 
-    // for (int i = 0; i < 100; i++) {
-    //   super.add(new JLabel(board[i/10][i%10].getRoomType()), ROOMTYPE_LAYER);
-    //   super.add(new JLabel(board[i/10][i%10].getItem()), ITEM_LAYER);
-    //   super.add(new JLabel(board[i/10][i%10].getEntity()), ENTITY_LAYER);
-    //   if (i % 10 < 9)
-    //     super.add(new JLabel(board[i/10][i%10].getWall((byte) 0)), WALL_LAYER);
-    //   if (i / 10 < 9)
-    //     super.add(new JLabel(board[i/10][i%10].getWall((byte) 1)), WALL_LAYER);
-    // }
+    for (int i = 0; i < 100; i++)
+      board[i/10][i%10].draw();
     
   }
 
@@ -153,14 +158,14 @@ public class GameBoard extends JLayeredPane {
 
     ArrayList<Animation> animations = new ArrayList<>();
 
-    int timer = 0;
+    int delay = 0;
 
     player.turn(direction);
 
     if (player.canMove(direction)) {
 
       animations.addAll(player.move(direction));
-      timer = player.getTimeOfMovement();
+      delay = player.getTimeOfMovement();
   
       if (hasWon) {
         Level.goToNextLevel = true;
@@ -172,15 +177,15 @@ public class GameBoard extends JLayeredPane {
   
         Arrays.sort(zombies);
         for (Zombie z : zombies)
-          animations.addAll(z.move(getPlayerLocation(), timer));
+          animations.addAll(z.move(getPlayerLocation(), delay));
     
         Arrays.sort(smartZombies);
         for (SmartZombie s : smartZombies)
-          animations.addAll(s.move(timer));
+          animations.addAll(s.move(delay));
     
         Arrays.sort(zombies);
         for (Zombie z : zombies)
-          animations.addAll(z.move(getPlayerLocation(), timer));
+          animations.addAll(z.move(getPlayerLocation(), delay));
       }
     }
 
@@ -228,18 +233,6 @@ public class GameBoard extends JLayeredPane {
   }
 
 
-
-
-
-
-
-
-
-
-
-
-  
-
   ////////////////////////////////////////////////////////////////////////////////////////// Setters and Getters
   
 
@@ -275,7 +268,7 @@ public class GameBoard extends JLayeredPane {
 
   private JPanel targetPanel;
 
-  public void ToggleTarget() {
+  public void toggleTarget() {
     if (Target.isOngoing) {
       Target.isOngoing = false;
       return;
@@ -284,26 +277,38 @@ public class GameBoard extends JLayeredPane {
     if (!player.getGridCell().hasRoomType(Target.TAG) || ((Target) player.getGridCell().getRoomType()).isGood())
       return;
 
-    targetPanel = ((Target) player.getGridCell().getRoomType()).fixPanel();
-    level.add(targetPanel);
+    SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+      
+      @Override
+      protected Void doInBackground() throws Exception {
+        targetPanel = ((Target) player.getGridCell().getRoomType()).fixPanel();
+        level.add(targetPanel);
 
-    while (Target.isOngoing) {
-      try {
-        synchronized (this) {
-          wait();
+        while (Target.isOngoing) {
+          try {
+              Thread.sleep(50);
+          } catch (InterruptedException f) {
+              // nothing
+          }
         }
-      } catch (InterruptedException e) {
-        // nothing
+        return null;
       }
-    }
 
-    level.remove(targetPanel);
+      @Override
+      protected void done() {
+        level.remove(targetPanel);
 
-    boolean targetsGood = true;
-    for (int i = 0; i < targets.length && targetsGood; i++)
-      targetsGood = targets[i].isGood();
-    if (targetsGood)
-      playAnimations(new PriorityQueue<Animation>(setPower(true, 0)));
+        level.requestFocusInWindow();
+
+        boolean targetsGood = true;
+        for (int i = 0; i < targets.length && targetsGood; i++)
+          targetsGood = targets[i].isGood();
+        if (targetsGood)
+          playAnimations(new PriorityQueue<Animation>(setPower(true, 0)));
+      }
+    };
+
+    worker.execute();
   }
 
   public ArrayList<Animation> setPower(boolean isPowered, int delay) {
@@ -448,7 +453,7 @@ class GridCell {
   }
 
   public int[] getPixelOffset() {
-    return new int[] {firstSecond[1] * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), firstSecond[0] * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS)};
+    return new int[] {GameBoard.WALL_THICKNESS + firstSecond[1] * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), GameBoard.WALL_THICKNESS + firstSecond[0] * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS)};
   }
 
   public void setRoomType(AbstractRoomType roomType) {
@@ -484,6 +489,26 @@ class GridCell {
 
   public GameBoard getGameBoard() {
     return board;
+  }
+
+  public void draw() {
+    JLabel room = new JLabel();
+    room.setBackground(Data.Colors.roomBackground);
+    int[] offset = getPixelOffset();
+    room.setBounds(offset[0], offset[1], AbstractRoomType.DIMENSION, AbstractRoomType.DIMENSION);
+    room.setOpaque(true);
+    board.add(room, GameBoard.BASE_LAYER);
+    
+    if (roomType != null)
+      board.add(roomType.getLabel(), GameBoard.ROOMTYPE_LAYER);
+    if (this.item != null)
+      board.add(item.getLabel(), GameBoard.ITEM_LAYER);
+    if (entity != null)
+      board.add(entity.getLabel(), GameBoard.ENTITY_LAYER);
+    if (firstSecond[1] < 9)
+      board.add(walls[0].getLabel(), (hasWall((byte) 0, Hallway.TAG)? GameBoard.BASE_LAYER : GameBoard.WALL_LAYER));
+    if (firstSecond[0] < 9)
+      board.add(walls[1].getLabel(), (hasWall((byte) 1, Hallway.TAG)? GameBoard.BASE_LAYER : GameBoard.WALL_LAYER));
   }
 
   public String stringify() {
@@ -532,7 +557,7 @@ abstract class Animation implements Runnable, Comparable {
 
 class EntityAnimation extends Animation {
 
-  private static final int timeBetweenTicksInMillis = 20;
+  private static final int timeBetweenTicksInMillis = 100;
 
   private AbstractEntity entity;
   private byte direction;
@@ -552,13 +577,20 @@ class EntityAnimation extends Animation {
 
   public void run() {
     startPosition = new int[] {entity.getLabel().getX(), entity.getLabel().getY()};
-    int rowShift = 1 - direction + 2 * (direction / 3); // 0:1; 1:0; 2:-1; 3:0
-    int columnShift = 2 - direction - 2 * ((5 - direction) / 5); // 0:0; 1:1; 2:0; 3:-1
-    endPosition = new int[] {startPosition[0] + rowShift * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), startPosition[1] + columnShift * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS)};
+    int secondShift = 1 - direction + 2 * (direction / 3); // 0:1; 1:0; 2:-1; 3:0
+    int firstShift = 2 - direction - 2 * ((5 - direction) / 5); // 0:0; 1:1; 2:0; 3:-1
+    endPosition = new int[] {startPosition[0] + secondShift * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS), startPosition[1] + firstShift * (GameBoard.ROOM_HEIGHT + GameBoard.WALL_THICKNESS)};
     
     currentPosition = new float[] {startPosition[0], startPosition[1]};
     distancePerTick = new float[] {(endPosition[0] - currentPosition[0]) / (entity.getAnimationDuration() / timeBetweenTicksInMillis), (endPosition[1] - currentPosition[1]) / (entity.getAnimationDuration() / timeBetweenTicksInMillis)};
     timeElapsedInMillis = 0;
+
+    // System.out.println();
+    System.out.println(entity.getIdentifier() + " " + Arrays.toString(startPosition));
+    System.out.println(entity.getIdentifier() + " " + Arrays.toString(currentPosition));
+    System.out.println(entity.getIdentifier() + " " + Arrays.toString(distancePerTick));
+    System.out.println(entity.getIdentifier() + " " + Arrays.toString(endPosition));
+    System.out.println();
     
     timer = new Timer(timeBetweenTicksInMillis, event -> {
       EntityAnimation.this.currentPosition[0] += EntityAnimation.this.distancePerTick[0];
@@ -566,28 +598,38 @@ class EntityAnimation extends Animation {
       EntityAnimation.this.entity.getLabel().setLocation(Math.round(EntityAnimation.this.currentPosition[0]), Math.round(EntityAnimation.this.currentPosition[1]));
 
       EntityAnimation.this.timeElapsedInMillis += EntityAnimation.timeBetweenTicksInMillis;
-      if (EntityAnimation.this.timeElapsedInMillis >= EntityAnimation.this.entity.getAnimationDuration()) {
+      if (EntityAnimation.this.timeElapsedInMillis >= EntityAnimation.this.entity.getAnimationDuration())
         EntityAnimation.this.timer.stop();
-        notifyAll();
-      }
 
       EntityAnimation.this.entity.getGridCell().getGameBoard().repaint();
     });
-    timer.start();
 
-    while (timer.isRunning()) {
-      try {
-        synchronized (this) {
-          wait();
+    SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+      
+      @Override
+      protected Void doInBackground() throws Exception {
+        
+        timer.start();
+
+        while (timer.isRunning()) {
+          try {
+              Thread.sleep(timeBetweenTicksInMillis);
+          } catch (InterruptedException f) {
+              // nothing
+          }
         }
-      } catch (InterruptedException e) {
-        // nothing
+        return null;
       }
-    }
 
-    entity.getLabel().setLocation(endPosition[0], endPosition[1]);
-    
-    entity.getGridCell().getGameBoard().repaint();
+      @Override
+      protected void done() {
+        System.out.println("end");
+        entity.getLabel().setLocation(endPosition[0], endPosition[1]);
+        entity.getGridCell().getGameBoard().repaint();
+      }
+    };
+
+    worker.execute();
   }
 }
 

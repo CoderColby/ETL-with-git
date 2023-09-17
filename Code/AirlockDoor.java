@@ -52,7 +52,7 @@ public class AirlockDoor extends AbstractWall {
 
 
   public void transform(byte transformationType) {
-    super.setImage(new ImageIcon(Data.Images.Wall.airlockDoor(transformationType)).getImage());
+    super.initializeLabel(new ImageIcon(Data.Images.Wall.airlockDoor(transformationType)));
     // super.gridCell.getGameBoard().repaint();
   }
 

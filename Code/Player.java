@@ -8,7 +8,6 @@ public class Player extends AbstractEntity {
 
   public static final String TAG = "Player";
   public static final byte DEFAULT = 0;
-  public static final byte HEALTHY = 0;
   public static final byte INFECTED = 5;
 
   private int movementDelayInMillis;

@@ -37,8 +37,8 @@ public class Data {
     public static final Color perfectBorder = new Color(127, 96, 0);
     public static final Color standardLevel = new Color(200, 200, 200);
 
-    public static final Color levelBackground = new Color(100, 100, 100);
-    public static final Color roomBackground = new Color(200, 200, 200);
+    public static final Color levelBackground = new Color(89, 89, 89);
+    public static final Color roomBackground = new Color(191, 191, 191);
   }
 
   public static class Images {
@@ -90,6 +90,7 @@ public class Data {
     }
 
     public static class RoomType {
+      public static final String emptyRoom = ".GameAssets/Images/RoomType/Empty.png";
       public static final String star = "./GameAssets/Images/RoomType/Star.png";
       public static final String filled = "./GameAssets/Images/RoomType/Filled.png";
       public static final String elevator = "./GameAssets/Images/RoomType/Elevator.png";

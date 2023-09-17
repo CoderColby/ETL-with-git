@@ -53,7 +53,7 @@ public class DetectionDoor extends AbstractWall {
 
 
   public void transform(byte transformationType) {
-    super.setImage(new ImageIcon(Data.Images.Wall.detectionDoor(transformationType)).getImage());
+    super.initializeLabel(new ImageIcon(Data.Images.Wall.detectionDoor(transformationType)));
     // super.gridCell.getGameBoard().repaint();
   }
 

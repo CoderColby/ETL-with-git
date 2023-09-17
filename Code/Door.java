@@ -57,7 +57,7 @@ public class Door extends AbstractWall {
 
 
   public void transform(byte transformationType) {
-    super.setImage(new ImageIcon(Data.Images.Wall.door(transformationType)).getImage());
+    super.initializeLabel(new ImageIcon(Data.Images.Wall.door(transformationType)));
     // super.gridCell.getGameBoard().repaint();
   }
 

@@ -216,10 +216,10 @@ public class GameWindow extends JFrame {
       }
 
       public void cycleOptions() {
-        if (super.gridCell.getEntity() != null)
-          super.gridCell.getEntity().cycleOptions();
-        else if (super.gridCell.getItem() != null)
+        if (super.gridCell.getItem() != null)
           super.gridCell.getItem().cycleOptions();
+        else if (super.gridCell.getEntity() != null)
+          super.gridCell.getEntity().cycleOptions();
         else if (super.gridCell.getRoomType() != null)
           super.gridCell.getRoomType().cycleOptions();
         super.repaint();
@@ -227,7 +227,7 @@ public class GameWindow extends JFrame {
 
       @Override
       protected void paintComponent(Graphics g) {
-        AbstractGameObject[] images = new AbstractGameObject[] {gridCell.getRoomType(), gridCell.getItem(), gridCell.getEntity()};
+        AbstractGameObject[] images = new AbstractGameObject[] {gridCell.getRoomType(), gridCell.getEntity(), gridCell.getItem()};
         super.paintComponent(g);
         for (AbstractGameObject image : images) {
           if (image != null) {
@@ -459,7 +459,10 @@ public class GameWindow extends JFrame {
             
             @Override
             protected Void doInBackground() throws Exception {
-              GameWindow.this.replace(new Level(LevelDesigner.this.levelFile, true, GameWindow.this));
+              Level level = new Level(LevelDesigner.this.levelFile, true, GameWindow.this);
+              GameWindow.this.replace(level);
+              level.setFocusable(true);
+              level.requestFocusInWindow();
   
               while (!(Level.goToNextLevel || Level.returnToMenu)) {
                 try {
@@ -952,13 +955,15 @@ public class GameWindow extends JFrame {
     this.startingLevel = startingLevel;
     
     SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-      private int level;
+      private int levelNum;
       
       @Override
       protected Void doInBackground() throws Exception {
-        boolean statusGood = true;
-        for (level = GameWindow.this.startingLevel; level <= Data.Utilities.numOfLevels && !Level.returnToMenu; level++) {
-          replace(new Level(new File(Data.Utilities.getLevelFilePath(level)), false, GameWindow.this));
+        for (levelNum = GameWindow.this.startingLevel; levelNum <= Data.Utilities.numOfLevels && !Level.returnToMenu; levelNum++) {
+          Level level = new Level(new File(Data.Utilities.getLevelFilePath(levelNum)), false, GameWindow.this);
+          GameWindow.this.replace(level);
+          level.setFocusable(true);
+          level.requestFocusInWindow();
 
           while (!(Level.goToNextLevel || Level.returnToMenu)) {
             try {
@@ -968,13 +973,12 @@ public class GameWindow extends JFrame {
             }
           }
         }
-
         return null;
       }
 
       @Override
       protected void done() {
-        GameWindow.this.replace(GameWindow.this.createMenu((level - 1) / 10));
+        GameWindow.this.replace(GameWindow.this.createMenu((levelNum - 1) / 10));
       }
     };
 
@@ -1246,6 +1250,8 @@ public class GameWindow extends JFrame {
       button.addActionListener(e -> {
         Level level = new Level(((JDataButton) e.getSource()).getFile(), true, GameWindow.this);
         GameWindow.this.replace(level);
+        level.setFocusable(true);
+        level.requestFocusInWindow();
     
         SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
           @Override
