@@ -33,6 +33,14 @@ public abstract class AbstractWall extends AbstractGameObject {
     super.initializeLabel(image);
   }
 
+  
+  @Override
+  public void setImage(Image image) {
+    if (orientation == (byte) 1)
+      image = Data.Images.rotateIcon(new ImageIcon(image)).getImage();
+    super.setImage(image);
+  }
+
   public abstract ArrayList<Animation> getAnimations(String entityTag, int delay);
 
   public abstract ArrayList<Animation> setPower(boolean isPowered, int delay);

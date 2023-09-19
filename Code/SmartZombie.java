@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.PriorityQueue;
+import java.util.Collections;
 import java.lang.Comparable;
 import javax.swing.ImageIcon;
 
@@ -46,11 +48,19 @@ public class SmartZombie extends AbstractEntity implements Comparable {
     
     public ArrayList<Byte> scan() {
       ArrayList<Byte> viableDirections = new ArrayList<>();
+      
+      for (byte b = 0; b < 4; b++)
+        if (gridCell.getWall(b).canPass(SmartZombie.TAG) && !illegalDirections.contains(b) &&
+           !gridCell.getNeighbor(b).hasEntity(SmartZombie.TAG) && !gridCell.getNeighbor(b).hasEntity(Zombie.TAG))
+          viableDirections.add(b);
 
-      for (byte i = 0; i < 4; i++)
-        if (gridCell.getWall(i).canPass(SmartZombie.TAG) && !illegalDirections.contains(i) &&
-           !gridCell.getNeighbor(i).hasEntity(SmartZombie.TAG) && !gridCell.getNeighbor(i).hasEntity(Zombie.TAG))
-          viableDirections.add(i);
+      for (byte i = (byte) (viableDirections.size() - 2); i >= 0; i--) {
+        byte b = i;
+        while (b + 1 < viableDirections.size() && gridCell.getNeighbor(viableDirections.get(b)).getDistanceFromPlayer() > gridCell.getNeighbor(viableDirections.get(b + 1)).getDistanceFromPlayer()) {
+          Collections.swap(viableDirections, b, b + 1);
+          b++;
+        }
+      }
 
       return viableDirections;
     }
@@ -87,7 +97,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
   }
 
   public void turn(byte direction) {
-    super.initializeLabel(new ImageIcon(Data.Images.Entity.smartZombie(direction)));
+    super.setImage(new ImageIcon(Data.Images.Entity.smartZombie(direction)).getImage());
     // super.gridCell.getGameBoard().repaint();
   }
 
@@ -119,6 +129,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
       for (Sentinel s : sentinels)
         if (s.gridCell.hasEntity(Player.TAG))
           return s;
+        
 
       for (Sentinel s : sentinels)
         if (s.gridCell.hasRoomType(Target.TAG) && ((Target) s.gridCell.getRoomType()).isGood())
@@ -140,8 +151,19 @@ public class SmartZombie extends AbstractEntity implements Comparable {
     byte direction = calculateDirection();
     ArrayList<Animation> animations = new ArrayList<>();
 
-    if (direction < 0)
-      return animations;
+    if (direction < 0) {
+      
+      boolean viableDirection = false;
+      int[] playerLocation = super.gridCell.getGameBoard().getPlayerLocation();
+      int firstDifference = playerLocation[0] - super.gridCell.getCoordinates()[0];
+      int secondDifference = playerLocation[1] - super.gridCell.getCoordinates()[1];
+      for (int i = 0; i < 2 && !viableDirection && (i == 0 || firstDifference * secondDifference != 0); i++) {
+        direction = (byte) ((Math.abs(secondDifference) > Math.abs(firstDifference) ^ i != 0) ? 1 - Math.signum(secondDifference) : 2 - Math.signum(firstDifference));
+        viableDirection = super.gridCell.getWall(direction).canPass(SmartZombie.TAG) && !super.gridCell.getNeighbor(direction).hasEntity(SmartZombie.TAG) && !super.gridCell.getNeighbor(direction).hasEntity(Zombie.TAG);
+      }
+      if (!viableDirection)
+        return animations;
+    }
     
     turn(direction);
       

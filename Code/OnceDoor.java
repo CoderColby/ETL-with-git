@@ -49,7 +49,7 @@ public class OnceDoor extends AbstractWall {
 
 
   public void transform(byte transformationType) {
-    super.initializeLabel(new ImageIcon(Data.Images.Wall.onceDoor(transformationType)));
+    super.setImage(new ImageIcon(Data.Images.Wall.onceDoor(transformationType)).getImage());
     // super.gridCell.getGameBoard().repaint();
   }
 

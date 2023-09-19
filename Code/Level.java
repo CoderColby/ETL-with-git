@@ -190,6 +190,11 @@ public class Level extends JPanel {
   }
 
   public void playerDeath() {
+    System.out.println("DEAD");
+    JLabel cover = new JLabel();
+    cover.setBackground(new Color(60, 60, 180, 60));
+    cover.setBounds(levelBoard.getBounds());
+    super.add(cover);
     // Disable key press events and display message "YOU DIED" over floor with floor still visible
   }
 
@@ -218,6 +223,8 @@ public class Level extends JPanel {
     jlbl_genNum.setText("0");
     super.revalidate();
     super.repaint();
+
+    super.requestFocusInWindow();
   }
 
   public GameBoard getGameBoard() {

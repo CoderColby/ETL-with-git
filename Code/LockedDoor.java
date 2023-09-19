@@ -50,20 +50,23 @@ public class LockedDoor extends AbstractWall {
 
   public ArrayList<Animation> openWithKey(Key key, int delay) {
     ArrayList<Animation> animations = new ArrayList<>();
-    if (this.ID == key.getID())
+    if (this.ID == key.getID()) {
       animations.add(new WallAnimation(delay, this, LockedDoor.OPEN));
+      super.gridCell.getGameBoard().setLayer(super.label, GameBoard.BASE_LAYER);
+      isOpen = true;
+    }
     return animations;
   }
 
 
   public void transform(byte transformationType) {
-    super.initializeLabel(new ImageIcon(Data.Images.Wall.lockedDoor(transformationType)));
+    super.setImage(new ImageIcon(Data.Images.Wall.lockedDoor(transformationType)).getImage());
     // super.gridCell.getGameBoard().repaint();
   }
 
   public void cycleOptions() {
     ID = (byte) (++ID % 10);
-    super.initializeLabel(new ImageIcon(Data.Images.Wall.lockedDoor(ID)));
+    super.setImage(new ImageIcon(Data.Images.Wall.lockedDoor(ID)).getImage());
     super.identifier = LockedDoor.TAG + ":" + ID;
   }
 

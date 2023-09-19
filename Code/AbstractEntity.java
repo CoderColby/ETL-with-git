@@ -32,12 +32,6 @@ public abstract class AbstractEntity extends AbstractGameObject {
     return AnimationDuration;
   }
 
-  protected double getDistanceFromPlayer() {
-    int[] hereCoords = gridCell.getCoordinates();
-    int[] playerCoords = gridCell.getGameBoard().getPlayerLocation();
-    return Math.sqrt(Math.pow(hereCoords[0] - playerCoords[0], 2) + Math.pow(hereCoords[1] - playerCoords[1], 2));
-  }
-
   public void addSelf(GridCell gridCell, byte modifier) {
     gridCell.setEntity(AbstractEntity.getEntityByTag(super.identifier, gridCell));
   }

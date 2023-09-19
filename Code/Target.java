@@ -35,7 +35,7 @@ public class Target extends AbstractRoomType {
 
   public void cycleOptions() {
     isGood = !isGood;
-    super.initializeLabel(new ImageIcon(Data.Images.RoomType.target((isGood)? Target.GOOD : Target.BAD)));
+    super.setImage(new ImageIcon(Data.Images.RoomType.target((isGood)? Target.GOOD : Target.BAD)).getImage());
     super.identifier = Target.TAG + ":" + ((isGood)? Target.GOOD : Target.BAD);
   }
 

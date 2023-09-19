@@ -49,6 +49,10 @@ public abstract class AbstractGameObject extends ImageIcon {
     return gridCellPosition;
   }
 
+  public Point getGameBoardPosition() {
+    return gameBoardPosition;
+  }
+
   public String getIdentifier() {
     return identifier;
   }
@@ -65,11 +69,12 @@ public abstract class AbstractGameObject extends ImageIcon {
     this.gameBoardPosition.translate(offset[0], offset[1]);
     label.setLocation(this.gameBoardPosition);
     label.setSize(this.dimensions);
+  }
 
-    // if (TYPE == Data.Utilities.forWall)
-    //   JOptionPane.showMessageDialog(null, "first", "Icon", JOptionPane.INFORMATION_MESSAGE, thisImage);
-    //   JOptionPane.showMessageDialog(null, "second", "Icon", JOptionPane.INFORMATION_MESSAGE, this);
-
+  @Override
+  public void setImage(Image image) {
+    super.setImage(image.getScaledInstance((int) Math.round(dimensions.getWidth()), (int) Math.round(dimensions.getHeight()), Image.SCALE_FAST));
+    label.setIcon(this);
   }
 
   // protected static ImageIcon setScale(ImageIcon image, int dimension) {

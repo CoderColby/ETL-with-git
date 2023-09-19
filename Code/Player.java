@@ -24,7 +24,7 @@ public class Player extends AbstractEntity {
   }
 
   public void turn(byte direction) {
-    super.initializeLabel(new ImageIcon(Data.Images.Entity.player(direction)));
+    super.setImage(new ImageIcon(Data.Images.Entity.player(direction)).getImage());
     // super.gridCell.getGameBoard().repaint();
   }
 

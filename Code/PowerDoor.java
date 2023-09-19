@@ -49,7 +49,7 @@ public class PowerDoor extends AbstractWall {
 
 
   public void transform(byte transformationType) {
-    super.initializeLabel(new ImageIcon(Data.Images.Wall.powerDoor(transformationType)));
+    super.setImage(new ImageIcon(Data.Images.Wall.powerDoor(transformationType)).getImage());
     // super.gridCell.getGameBoard().repaint();
   }
 

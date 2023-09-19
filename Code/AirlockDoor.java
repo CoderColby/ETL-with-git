@@ -52,13 +52,13 @@ public class AirlockDoor extends AbstractWall {
 
 
   public void transform(byte transformationType) {
-    super.initializeLabel(new ImageIcon(Data.Images.Wall.airlockDoor(transformationType)));
+    super.setImage(new ImageIcon(Data.Images.Wall.airlockDoor(transformationType)).getImage());
     // super.gridCell.getGameBoard().repaint();
   }
 
   public void cycleOptions() {
     isOpen = !isOpen;
-    super.initializeLabel(new ImageIcon(Data.Images.Wall.airlockDoor((isOpen)? AirlockDoor.OPEN : AirlockDoor.CLOSED)));
+    super.setImage(new ImageIcon(Data.Images.Wall.airlockDoor((isOpen)? AirlockDoor.OPEN : AirlockDoor.CLOSED)).getImage());
     super.identifier = Target.TAG + ":" + ((isOpen)? AirlockDoor.OPEN : AirlockDoor.CLOSED);
   }
 
