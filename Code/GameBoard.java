@@ -28,6 +28,8 @@ import java.awt.Color;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 
+import javax.swing.JOptionPane;
+
 
 public class GameBoard extends JLayeredPane {
   
@@ -171,14 +173,7 @@ public class GameBoard extends JLayeredPane {
       animations.addAll(player.move(direction));
       delay = player.getTimeOfMovement();
   
-      if (hasWon) {
-        Level.goToNextLevel = true;
-        if (level.isCustom()) {
-          level.getUser().incrementLevels();
-          if (stars.length == 0 && !level.isCustom())
-            level.getUser().addPerfectLevel(level.getNum());
-        }
-      } else {
+      if (!hasWon) {
   
         Arrays.sort(zombies);
         for (Zombie z : zombies)
@@ -195,12 +190,23 @@ public class GameBoard extends JLayeredPane {
     }
 
     playAnimations(new PriorityQueue(animations));
+  }
+
+
+  private void evaluatePlayer() {
+    if (hasWon) {
+      Level.goToNextLevel = true;
+      if (!level.isCustom()) {
+        level.getUser().setLevels(Integer.parseInt(level.getLevelFile().getName().substring("level".length(), level.getLevelFile().getName().indexOf('.'))));
+        if (stars.length == 0 && !level.isCustom())
+          level.getUser().addPerfectLevel(level.getNum());
+      }
+    }
 
     if (hasLost) {
       player.infect();
       level.playerDeath();
     }
-    
   }
 
 
@@ -254,6 +260,7 @@ public class GameBoard extends JLayeredPane {
       @Override
       protected void done() {
         Animation.isOngoing = false;
+        evaluatePlayer();
       }
     };
 
@@ -296,8 +303,6 @@ public class GameBoard extends JLayeredPane {
     for (Target t : targets)
       hasWon = hasWon && t.isGood();
   }
-
-  ////////////////////////////////////////////////////////////////////////////////////////// Core Functionality
   
 
   private JPanel targetPanel;
@@ -317,12 +322,15 @@ public class GameBoard extends JLayeredPane {
       protected Void doInBackground() throws Exception {
         targetPanel = ((Target) player.getGridCell().getRoomType()).fixPanel();
         level.add(targetPanel);
+        level.setComponentZOrder(targetPanel, 0);
+        level.repaint();
+        targetPanel.requestFocusInWindow();
 
         while (Target.isOngoing) {
           try {
               Thread.sleep(50);
           } catch (InterruptedException f) {
-              // nothing
+            Target.isOngoing = false;
           }
         }
         return null;
@@ -331,8 +339,9 @@ public class GameBoard extends JLayeredPane {
       @Override
       protected void done() {
         level.remove(targetPanel);
-
         level.requestFocusInWindow();
+        level.setGenNum(getNumOfGoodTargets());
+        level.repaint();
 
         boolean targetsGood = true;
         for (int i = 0; i < targets.length && targetsGood; i++)
@@ -344,6 +353,7 @@ public class GameBoard extends JLayeredPane {
 
     worker.execute();
   }
+  
 
   public ArrayList<Animation> setPower(boolean isPowered, int delay) {
     ArrayList<Animation> animations = new ArrayList<>();
@@ -355,6 +365,7 @@ public class GameBoard extends JLayeredPane {
 
     return animations;
   }
+  
 
   public ArrayList<Animation> unlockDoorsWithKey(Key key, int delay) {
     ArrayList<Animation> animations = new ArrayList<>();
@@ -364,10 +375,12 @@ public class GameBoard extends JLayeredPane {
 
     return animations;
   }
+  
 
   public int getNumOfTargets() {
     return targets.length;
   }
+  
 
   public int getNumOfGoodTargets() {
     int count = 0;
@@ -376,6 +389,7 @@ public class GameBoard extends JLayeredPane {
         count++;
     return count;
   }
+  
 
   public void removeStar(Star star) {
     super.remove(star.getLabel());
@@ -612,7 +626,7 @@ abstract class Animation implements Runnable, Comparable {
 
 class EntityAnimation extends Animation {
 
-  private static final int timeBetweenTicksInMillis = 100;
+  public static final int timeBetweenTicksInMillis = 100;
 
   private AbstractEntity entity;
   private byte direction;

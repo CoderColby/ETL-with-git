@@ -28,6 +28,7 @@ public class Level extends JPanel {
   private String levelTitle;
   private File levelFile;
   private boolean isCustom;
+  private boolean enableInputs;
 
   class InvalidLevelException extends RuntimeException {};
 
@@ -38,6 +39,7 @@ public class Level extends JPanel {
     this.levelFile = levelFile;
     this.window = window;
     this.isCustom = isCustom;
+    this.enableInputs = true;
     super.setFocusable(true);
     super.requestFocus();
 
@@ -158,22 +160,24 @@ public class Level extends JPanel {
       @Override
       public void keyPressed(KeyEvent e) {
 
-        switch (e.getKeyCode()) {
-          case KeyEvent.VK_RIGHT:
-            Level.this.levelBoard.move((byte) 0);
-            break;
-          case KeyEvent.VK_DOWN:
-            Level.this.levelBoard.move((byte) 1);
-            break;
-          case KeyEvent.VK_LEFT:
-            Level.this.levelBoard.move((byte) 2);
-            break;
-          case KeyEvent.VK_UP:
-            Level.this.levelBoard.move((byte) 3);
-            break;
-          case KeyEvent.VK_NUMPAD0:
-            Level.this.levelBoard.toggleTarget();
-            break;
+        if (Level.this.enableInputs) {
+          switch (e.getKeyCode()) {
+            case KeyEvent.VK_RIGHT:
+              Level.this.levelBoard.move((byte) 0);
+              break;
+            case KeyEvent.VK_DOWN:
+              Level.this.levelBoard.move((byte) 1);
+              break;
+            case KeyEvent.VK_LEFT:
+              Level.this.levelBoard.move((byte) 2);
+              break;
+            case KeyEvent.VK_UP:
+              Level.this.levelBoard.move((byte) 3);
+              break;
+            case KeyEvent.VK_NUMPAD0:
+              Level.this.levelBoard.toggleTarget();
+              break;
+          }
         }
       }
     });
@@ -189,13 +193,20 @@ public class Level extends JPanel {
     jlbl_genNum.setText(Integer.toString(genNum));
   }
 
+  private JLabel cover;
+  
   public void playerDeath() {
-    System.out.println("DEAD");
-    JLabel cover = new JLabel();
+    cover = new JLabel("You were caught!", SwingConstants.CENTER);
+    cover.setFont(Data.Fonts.header1);
+    cover.setForeground(Color.WHITE);
     cover.setBackground(new Color(60, 60, 180, 60));
     cover.setBounds(levelBoard.getBounds());
+    cover.setOpaque(true);
     super.add(cover);
-    // Disable key press events and display message "YOU DIED" over floor with floor still visible
+    super.setComponentZOrder(cover, 0);
+    this.enableInputs = false;
+    super.repaint();
+    levelBoard.repaint();
   }
 
   public boolean isCustom() {
@@ -210,6 +221,10 @@ public class Level extends JPanel {
     return window.getUser();
   }
 
+  public File getLevelFile() {
+    return levelFile;
+  }
+
   public String getTitle() {
     return levelTitle;
   }
@@ -217,10 +232,12 @@ public class Level extends JPanel {
   private void reset() {
     Level.returnToMenu = false;
     Level.goToNextLevel = false;
+    this.enableInputs = true;
     
     levelBoard.reset();
+    super.remove(cover);
     jlbl_energyAmt.setText(startEnergy);
-    jlbl_genNum.setText("0");
+    jlbl_genNum.setText(Integer.toString(levelBoard.getNumOfGoodTargets()));
     super.revalidate();
     super.repaint();
 

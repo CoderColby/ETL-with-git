@@ -74,6 +74,7 @@ public class GameWindow extends JFrame {
         super.setFont(Data.Fonts.menuLevelButton);
         super.addActionListener(e -> {
           Main.mainWindow.startLevelSequence(this.ID);
+          System.out.println(ID);
         });
       } else {
         super.setText(null);
@@ -149,7 +150,7 @@ public class GameWindow extends JFrame {
       super.removeAll();
       for (int row = 0; row < 3; row++) {
         int selector = row / 2;
-        for (int column = selector, levelID = this.groupNum * 10 + 4 * row; column < 4 - selector && levelID <= Data.Utilities.numOfLevels; column++, levelID++) {
+        for (int column = selector, levelID = this.groupNum * 10 + 4 * row + 1; column < 4 - selector && levelID <= Data.Utilities.numOfLevels; column++, levelID++) {
           JDataButton button = new JDataButton(levelID, currentUser.getLevels() >= levelID, currentUser.getPerfectLevels().contains(levelID), column, row);
           button.addActionListener(e -> {
             startLevelSequence(((JDataButton) e.getSource()).getID());
@@ -949,6 +950,7 @@ public class GameWindow extends JFrame {
     return root;
   } // Creates menu with level navigation and user info with custom levels
 
+  
   private int startingLevel;
   /* √ */
   public void startLevelSequence(int startingLevel) {
@@ -1111,6 +1113,7 @@ public class GameWindow extends JFrame {
     return root;
   } // Sets up settings page for editing and reviewing limited player data
 
+  
   /* √ */
   public void publicizeCustomLevels() {
     File ownerDirectory = new File(Data.Utilities.customLevelDirectory + currentUser.getUsername());
@@ -1230,6 +1233,7 @@ public class GameWindow extends JFrame {
     return CLBroot;
   }
 
+  
   /* √ */
   public JPanel levelList() {
     JPanel jpnl_list = new JPanel();
@@ -1289,10 +1293,12 @@ public class GameWindow extends JFrame {
     return jpnl_list;
   }
 
+  
   public User getUser() {
     return currentUser;
   }
 
+  
   /* √ */
   public void replace(JPanel newPanel) {
     super.getContentPane().removeAll();

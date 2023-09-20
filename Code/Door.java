@@ -28,8 +28,10 @@ public class Door extends AbstractWall {
 
   public ArrayList<Animation> getAnimations(String entityTag, int delay) {
     ArrayList<Animation> animations = new ArrayList<>();
-    animations.add(new WallAnimation(delay, this, Door.OPEN));
-    animations.add(new WallAnimation(delay + Data.Animation.playerTravelTime, this, Door.CLOSED));
+    if (!super.isPowered) {
+      animations.add(new WallAnimation(delay, this, Door.OPEN));
+      animations.add(new WallAnimation(delay + Data.Animation.playerTravelTime, this, Door.CLOSED));
+    }
     return animations;
   }
 

@@ -92,9 +92,11 @@ public class User {
 
   // Setters
   
-  public void incrementLevels() {
-    this.unlockedLevels++;
-    updateFile();
+  public void setLevels(int level) {
+    if (level >= unlockedLevels) {
+      this.unlockedLevels = level + 1;
+      updateFile();
+    }
   }
 
   public void setUsername(String username) {
@@ -114,9 +116,11 @@ public class User {
   }
 
   public void addPerfectLevel(int newLevel) {
-    this.perfectLevels.add(newLevel);
-    Collections.sort(this.perfectLevels);
-    updateFile();
+    if (!this.perfectLevels.contains(newLevel)) {
+      this.perfectLevels.add(newLevel);
+      Collections.sort(this.perfectLevels);
+      updateFile();
+    }
   }
 
   // Getters

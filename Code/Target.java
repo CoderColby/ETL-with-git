@@ -44,13 +44,18 @@ public class Target extends AbstractRoomType {
     Target.isOngoing = true;
     JPanel root = new JPanel();
     root.setBackground(Color.BLACK);
+    root.setBounds(super.gridCell.getGameBoard().getBounds());
+    root.setLayout(null);
 
     JButton b = new JButton("Press me to return");
+    b.setBounds(200, 200, 250, 100);
     b.addActionListener(event -> {
       Target.this.isGood = true;
       Target.super.setImage(new ImageIcon(Data.Images.RoomType.target(Target.GOOD)).getImage());
       Target.isOngoing = false;
     });
+
+    root.add(b);
 
     return root;
   }
