@@ -28,8 +28,6 @@ import java.awt.Color;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 
-import javax.swing.JOptionPane;
-
 
 public class GameBoard extends JLayeredPane {
   
@@ -76,11 +74,15 @@ public class GameBoard extends JLayeredPane {
     super.setOpaque(true);
     super.setFocusable(false);
     reset();
+
   }
 
   
   public void reset() {
     super.removeAll();
+    if (targetPanel != null)
+      level.remove(targetPanel);
+    Target.isOngoing = false;
     for (int i = 0; i < 100; i++)
       board[i/10][i%10] = new GridCell(fileContents[i], i, this);
     scanGridCells();
@@ -90,6 +92,9 @@ public class GameBoard extends JLayeredPane {
 
     for (int i = 0; i < 100; i++)
       board[i/10][i%10].draw();
+
+    if (getNumOfTargets() == getNumOfGoodTargets())
+      playAnimations(new PriorityQueue<Animation>(setPower(true, 0)));
   }
 
   
@@ -194,14 +199,8 @@ public class GameBoard extends JLayeredPane {
 
 
   private void evaluatePlayer() {
-    if (hasWon) {
-      Level.goToNextLevel = true;
-      if (!level.isCustom()) {
-        level.getUser().setLevels(Integer.parseInt(level.getLevelFile().getName().substring("level".length(), level.getLevelFile().getName().indexOf('.'))));
-        if (stars.length == 0 && !level.isCustom())
-          level.getUser().addPerfectLevel(level.getNum());
-      }
-    }
+    if (hasWon)
+      level.playerWon(stars.length == 0);
 
     if (hasLost) {
       player.infect();
@@ -340,13 +339,10 @@ public class GameBoard extends JLayeredPane {
       protected void done() {
         level.remove(targetPanel);
         level.requestFocusInWindow();
-        level.setGenNum(getNumOfGoodTargets());
+        updateTargets();
         level.repaint();
 
-        boolean targetsGood = true;
-        for (int i = 0; i < targets.length && targetsGood; i++)
-          targetsGood = targets[i].isGood();
-        if (targetsGood)
+        if (getNumOfTargets() == getNumOfGoodTargets())
           playAnimations(new PriorityQueue<Animation>(setPower(true, 0)));
       }
     };
@@ -389,6 +385,11 @@ public class GameBoard extends JLayeredPane {
         count++;
     return count;
   }
+
+
+  public void updateTargets() {
+    level.setGenNum(getNumOfGoodTargets());
+  }
   
 
   public void removeStar(Star star) {
@@ -408,7 +409,7 @@ public class GameBoard extends JLayeredPane {
       isEdgeWalls = board[i][9].hasWall((byte) 0, Wall.TAG);
     for (int i = 0; i < 10 && isEdgeWalls; i++)
       isEdgeWalls = board[9][i].hasWall((byte) 1, Wall.TAG);
-    return isEdgeWalls && players.length == 1 && elevators.length == 1 && targets.length >= 1 && elevators[0].getGridCell().getItem() == null && elevators[0].getGridCell() == players[0].getGridCell();
+    return isEdgeWalls && players.length == 1 && elevators.length == 1 && targets.length >= 1 && elevators[0].getGridCell().getItem() == null/* && elevators[0].getGridCell() == players[0].getGridCell()*/;
   } /////////////////////////// Make a separate function that relocates things in all of the updated gridCells, similar to 'reset' but without the fileContents
 
 
@@ -649,6 +650,7 @@ class EntityAnimation extends Animation {
   }
 
   public void run() {
+    entity.turn(direction);
     startPosition = new Point(entity.getGameBoardPosition());
     int secondShift = 1 - direction + 2 * (direction / 3); // 0:1; 1:0; 2:-1; 3:0
     int firstShift = 2 - direction - 2 * ((5 - direction) / 5); // 0:0; 1:1; 2:0; 3:-1

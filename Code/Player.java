@@ -7,7 +7,7 @@ import java.util.ArrayList;
 public class Player extends AbstractEntity {
 
   public static final String TAG = "Player";
-  public static final byte DEFAULT = 0;
+  public static final byte DEFAULT = 1;
   public static final byte INFECTED = 5;
 
   private int movementDelayInMillis;
@@ -25,12 +25,12 @@ public class Player extends AbstractEntity {
 
   public void turn(byte direction) {
     super.setImage(new ImageIcon(Data.Images.Entity.player(direction)).getImage());
-    // super.gridCell.getGameBoard().repaint();
+    super.gridCell.getGameBoard().repaint();
   }
 
   public void infect() {
     super.setImage(new ImageIcon(Data.Images.Entity.player(Player.INFECTED)).getImage());
-    // super.gridCell.getGameBoard().repaint();
+    super.gridCell.getGameBoard().repaint();
   }
 
   public boolean canMove(byte direction) {
@@ -76,6 +76,7 @@ public class Player extends AbstractEntity {
 
     if (super.gridCell.hasItem(Key.TAG)) {
       animations.addAll(thisGameBoard.unlockDoorsWithKey((Key) super.gridCell.getItem(), movementDelayInMillis + Data.Animation.playerTravelTime));
+      super.gridCell.getGameBoard().remove(((Key) super.gridCell.getItem()).getLabel());
       super.gridCell.setItem(null);
     } else if (super.gridCell.hasItem(Battery.TAG)) {
       super.gridCell.getGameBoard().addEnergy(((Battery) super.gridCell.getItem()).getEnergy());

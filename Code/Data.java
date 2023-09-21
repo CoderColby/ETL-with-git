@@ -90,7 +90,7 @@ public class Data {
     }
 
     public static class RoomType {
-      public static final String emptyRoom = ".GameAssets/Images/RoomType/Empty.png";
+      public static final String emptyRoom = "./GameAssets/Images/RoomType/Empty.png";
       public static final String star = "./GameAssets/Images/RoomType/Star.png";
       public static final String filled = "./GameAssets/Images/RoomType/Filled.png";
       public static final String elevator = "./GameAssets/Images/RoomType/Elevator.png";

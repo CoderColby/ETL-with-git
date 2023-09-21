@@ -98,12 +98,14 @@ public class SmartZombie extends AbstractEntity implements Comparable {
 
   public void turn(byte direction) {
     super.setImage(new ImageIcon(Data.Images.Entity.smartZombie(direction)).getImage());
-    // super.gridCell.getGameBoard().repaint();
+    super.gridCell.getGameBoard().repaint();
   }
 
 
   public int compareTo(Object other) {
-    return Integer.compare(this.getMovesToTarget(), ((SmartZombie) other).getMovesToTarget());
+    if (this.getMovesToTarget() != ((SmartZombie) other).getMovesToTarget())
+      return Integer.compare(this.getMovesToTarget(), ((SmartZombie) other).getMovesToTarget());
+    return Double.compare(super.gridCell.getDistanceFromPlayer(), ((SmartZombie) other).gridCell.getDistanceFromPlayer());
   }
 
 
@@ -165,7 +167,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
         return animations;
     }
     
-    turn(direction);
+    // turn(direction);
       
     AbstractWall passWall = super.gridCell.getWall(direction);
     GameBoard thisGameBoard = super.gridCell.getGameBoard();
@@ -186,6 +188,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
     if (neighborCell.hasRoomType(Target.TAG) && ((Target) neighborCell.getRoomType()).isGood()) {
       ((Target) neighborCell.getRoomType()).setBad();
       animations.addAll(thisGameBoard.setPower(false, movementDelay));
+      super.gridCell.getGameBoard().updateTargets();
     }
     
     animations.add(new EntityAnimation(movementDelay, this, direction));

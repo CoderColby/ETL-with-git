@@ -19,11 +19,11 @@ public class Elevator extends AbstractRoomType {
     // nothing
   }
 
-  @Override
-  public void addSelf(GridCell gridCell, byte modifier) {
-    super.addSelf(gridCell, modifier);
-    gridCell.setEntity(AbstractEntity.getEntityByTag(Player.TAG + ":" + 1, gridCell));
-  }
+  // @Override
+  // public void addSelf(GridCell gridCell, byte modifier) {
+  //   super.addSelf(gridCell, modifier);
+  //   gridCell.setEntity(AbstractEntity.getEntityByTag(Player.TAG + ":" + 1, gridCell));
+  // }
 
   public String getInfo() {
     return "This is entry and exit point for the player to finish the level after activating all targets.";

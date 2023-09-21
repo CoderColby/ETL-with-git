@@ -65,20 +65,16 @@ public class GameWindow extends JFrame {
     private AbstractGameObject object;
     
     public JDataButton(int ID, boolean levelUnlocked, boolean levelPerfect, int column, int row) { // This constructor is for buttons shown in the main menu
-  
       this.ID = ID;
       super.setBounds(column * 150, row * 150, 150, 150);
       
       if (levelUnlocked) {
         super.setText(Integer.toString(ID));
         super.setFont(Data.Fonts.menuLevelButton);
-        super.addActionListener(e -> {
-          Main.mainWindow.startLevelSequence(this.ID);
-          System.out.println(ID);
-        });
       } else {
         super.setText(null);
         super.setIcon(new ImageIcon(new ImageIcon(Data.Images.Other.lock).getImage().getScaledInstance(100, 100, Image.SCALE_FAST)));
+        super.setDisabledIcon(new ImageIcon(new ImageIcon(Data.Images.Other.lock).getImage().getScaledInstance(100, 100, Image.SCALE_FAST)));
         super.setEnabled(false);
       }
   
@@ -321,7 +317,7 @@ public class GameWindow extends JFrame {
       AbstractWall[] walls = new AbstractWall[] {new Wall(), new Door(), new PowerDoor(), new OnceDoor(), new AirlockDoor(), new DetectionDoor(), new LockedDoor()};
       AbstractRoomType[] roomTypes = new AbstractRoomType[] {new Elevator(), new Target(), new Filled(), new Star()};
       AbstractItem[] items = new AbstractItem[] {new Key(), new Battery(), new Eraser()};
-      AbstractEntity[] entities = new AbstractEntity[] {new Zombie(), new SmartZombie()};
+      AbstractEntity[] entities = new AbstractEntity[] {new Player(), new Zombie(), new SmartZombie()};
       int objectSeparation;
       int startLocation;
   
@@ -460,7 +456,7 @@ public class GameWindow extends JFrame {
             
             @Override
             protected Void doInBackground() throws Exception {
-              Level level = new Level(LevelDesigner.this.levelFile, true, GameWindow.this);
+              Level level = new Level(LevelDesigner.this.levelFile, true, GameWindow.this, 0);
               GameWindow.this.replace(level);
               level.setFocusable(true);
               level.requestFocusInWindow();
@@ -961,8 +957,10 @@ public class GameWindow extends JFrame {
       
       @Override
       protected Void doInBackground() throws Exception {
+        Level.goToNextLevel = false;
+        Level.returnToMenu = false;
         for (levelNum = GameWindow.this.startingLevel; levelNum <= Data.Utilities.numOfLevels && !Level.returnToMenu; levelNum++) {
-          Level level = new Level(new File(Data.Utilities.getLevelFilePath(levelNum)), false, GameWindow.this);
+          Level level = new Level(new File(Data.Utilities.getLevelFilePath(levelNum)), false, GameWindow.this, levelNum);
           GameWindow.this.replace(level);
           level.setFocusable(true);
           level.requestFocusInWindow();
@@ -1252,7 +1250,7 @@ public class GameWindow extends JFrame {
       button.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
       button.setFont(Data.Fonts.customButton);
       button.addActionListener(e -> {
-        Level level = new Level(((JDataButton) e.getSource()).getFile(), true, GameWindow.this);
+        Level level = new Level(((JDataButton) e.getSource()).getFile(), true, GameWindow.this, 0);
         GameWindow.this.replace(level);
         level.setFocusable(true);
         level.requestFocusInWindow();

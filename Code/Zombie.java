@@ -27,7 +27,7 @@ public class Zombie extends AbstractEntity implements Comparable {
 
   public void turn(byte direction) {
     super.setImage(new ImageIcon(Data.Images.Entity.zombie(direction)).getImage());
-    // super.gridCell.getGameBoard().repaint();
+    super.gridCell.getGameBoard().repaint();
   }
 
   public boolean canMove(byte direction) {
@@ -64,7 +64,7 @@ public class Zombie extends AbstractEntity implements Comparable {
     if (!viableDirection)
       return animations;
 
-    turn(direction);
+    // turn(direction);
       
     AbstractWall passWall = super.gridCell.getWall(direction);
     GameBoard thisGameBoard = super.gridCell.getGameBoard();

@@ -3,16 +3,19 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.Image;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JButton;
+import javax.swing.ImageIcon;
 import javax.swing.SwingConstants;
 import javax.swing.AbstractAction;
 import java.util.Scanner;
 
+import javax.swing.JOptionPane;
 
 public class Level extends JPanel {
 
@@ -21,24 +24,27 @@ public class Level extends JPanel {
 
   private JLabel jlbl_energyAmt;
   private JLabel jlbl_genNum;
+  private JButton jbtn_next;
   
   private String startEnergy;
   private GameWindow window;
   private GameBoard levelBoard;
   private String levelTitle;
   private File levelFile;
+  private int levelID;
   private boolean isCustom;
   private boolean enableInputs;
 
   class InvalidLevelException extends RuntimeException {};
 
   
-  public Level(File levelFile, boolean isCustom, GameWindow window) {
+  public Level(File levelFile, boolean isCustom, GameWindow window, int levelID) {
     Level.returnToMenu = false;
     Level.goToNextLevel = false;
     this.levelFile = levelFile;
     this.window = window;
     this.isCustom = isCustom;
+    this.levelID = levelID;
     this.enableInputs = true;
     super.setFocusable(true);
     super.requestFocus();
@@ -76,7 +82,7 @@ public class Level extends JPanel {
     jlbl_levelTitle.setFont(Data.Fonts.header2);
 
     // Label for level name
-    String levelDesc = (isCustom) ? "made by " + levelFile.getParentFile().getName() : levelFile.getName().substring("level".length(), levelFile.getName().indexOf('.'));
+    String levelDesc = (isCustom) ? "made by " + levelFile.getParentFile().getName() : Integer.toString(levelID);
     JLabel jlbl_levelName = new JLabel("Level " + levelDesc, SwingConstants.CENTER);
     jlbl_levelName.setBounds(0, 130, 350, 50);
     jlbl_levelName.setFont(Data.Fonts.dataLabel);
@@ -110,7 +116,7 @@ public class Level extends JPanel {
     jlbl_genTotal.setFont(Data.Fonts.dataLabel);
 
     JPanel jpnl_genLabels = new JPanel();
-    jpnl_genLabels.setBounds(0, 330, 350, 30);
+    jpnl_genLabels.setBounds(30, 330, 290, 30);
     jpnl_genLabels.setOpaque(false);
     jpnl_genLabels.add(jlbl_genLabel);
     jpnl_genLabels.add(jlbl_genNum);
@@ -134,6 +140,26 @@ public class Level extends JPanel {
       Level.returnToMenu = true;
     });
 
+    // Button to next level
+    if (!isCustom) {
+      jbtn_next = new JButton();
+      jbtn_next.setHorizontalAlignment(SwingConstants.CENTER);
+      if (window.getUser().getLevels() > levelID)
+        jbtn_next.setText("Next Level");
+      else {
+        jbtn_next.setIcon(new ImageIcon(new ImageIcon(Data.Images.Other.lock).getImage().getScaledInstance(40, 40, Image.SCALE_FAST)));
+        jbtn_next.setDisabledIcon(new ImageIcon(new ImageIcon(Data.Images.Other.lock).getImage().getScaledInstance(40, 40, Image.SCALE_FAST)));
+        jbtn_next.setEnabled(false);
+      }
+      jbtn_next.setBounds(20, 570, 310, 50);
+      jbtn_next.setBackground(Data.Colors.buttonBackground);
+      jbtn_next.setFont(Data.Fonts.menuButton);
+      jbtn_next.addActionListener(e -> {
+        Level.goToNextLevel = true;
+      });
+      super.add(jbtn_next);
+    }
+      
     // JLabel note = new JLabel("<html>" + fileContents[0] + "</html>", SwingConstants.CENTER);
     // note.setBounds(10, 580, 330, 150);
     // note.setFont(new Font("Monospace", Font.ITALIC, 20));
@@ -205,8 +231,32 @@ public class Level extends JPanel {
     super.add(cover);
     super.setComponentZOrder(cover, 0);
     this.enableInputs = false;
-    super.repaint();
     levelBoard.repaint();
+    super.repaint();
+  }
+
+  public void playerWon(boolean wasPerfect) {
+    cover = new JLabel("You escaped" + ((wasPerfect) ? " perfectly" : "") + "!", SwingConstants.CENTER);
+    cover.setFont(Data.Fonts.header1);
+    cover.setForeground(Color.WHITE);
+    cover.setBackground(new Color(60, 60, 180, 60));
+    cover.setBounds(levelBoard.getBounds());
+    cover.setOpaque(true);
+    super.add(cover);
+    super.setComponentZOrder(cover, 0);
+    this.enableInputs = false;
+    
+    if (!isCustom) {
+      jbtn_next.setIcon(null);
+      jbtn_next.setText("Next Level");
+      jbtn_next.setEnabled(true);
+      window.getUser().setLevels(levelID);
+      if (wasPerfect)
+        window.getUser().addPerfectLevel(levelID);
+    }
+    
+    levelBoard.repaint();
+    super.repaint();
   }
 
   public boolean isCustom() {
@@ -217,9 +267,9 @@ public class Level extends JPanel {
     return Integer.parseInt(levelFile.getName().substring("level".length(), levelFile.getName().length() - ".txt".length()));
   }
 
-  public User getUser() {
-    return window.getUser();
-  }
+  // public User getUser() {
+  //   return window.getUser();
+  // }
 
   public File getLevelFile() {
     return levelFile;
@@ -232,10 +282,12 @@ public class Level extends JPanel {
   private void reset() {
     Level.returnToMenu = false;
     Level.goToNextLevel = false;
+    Animation.isOngoing = false;
     this.enableInputs = true;
     
     levelBoard.reset();
-    super.remove(cover);
+    if (cover != null)
+      super.remove(cover);
     jlbl_energyAmt.setText(startEnergy);
     jlbl_genNum.setText(Integer.toString(levelBoard.getNumOfGoodTargets()));
     super.revalidate();

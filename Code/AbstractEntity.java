@@ -36,6 +36,8 @@ public abstract class AbstractEntity extends AbstractGameObject {
     gridCell.setEntity(AbstractEntity.getEntityByTag(super.identifier, gridCell));
   }
 
+  public abstract void turn(byte direction);
+
   // protected static JLabel initializeLabel(GridCell gridCell, ImageIcon image) {
   //   JLabel label = new JLabel(AbstractGameObject.setScale(image, AbstractEntity.DIMENSION));
   //   int[] rowColumnOff = gridCell.getPixelOffset();
