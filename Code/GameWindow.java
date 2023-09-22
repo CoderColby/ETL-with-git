@@ -1242,7 +1242,7 @@ public class GameWindow extends JFrame {
     String path = Data.Utilities.customLevelDirectory + ((jchk_privateOnly.isSelected())? currentUser.getUsername() : "");
     File[] levels = Data.Utilities.getAllRegFilesInDirectory(new File(path));
     Arrays.sort(levels, Comparator.comparingLong(File::lastModified).reversed());
-    for (int i = customPageNum * 8, position = 0; i < levels.length; i++, position++) {
+    for (int i = customPageNum * 8, position = 0; i < levels.length && position < 8; i++, position++) {
       
       JDataButton button = new JDataButton(levels[i]);
       button.setBounds(200, 0 + position * 75, 640, 75);
@@ -1279,9 +1279,8 @@ public class GameWindow extends JFrame {
         worker.execute();
       });
 
-
       JLabel jlbl_creatorName = new JLabel(levels[i].getParentFile().getName(), SwingConstants.RIGHT);
-      jlbl_creatorName.setBounds(0, 0 + i * 75, 185, 75);
+      jlbl_creatorName.setBounds(0, 0 + position * 75, 185, 75);
       jlbl_creatorName.setFont(Data.Fonts.dataLabel);
 
       jpnl_list.add(button);

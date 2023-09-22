@@ -16,6 +16,7 @@ public class Data {
     public static final int playerTravelTime = 500;
     public static final int zombieTravelTime = 400;
     public static final int smartZombieTravelTime = 500;
+    public static final int animationMoveSpeed = 100;
   }
 
   public static class Fonts {

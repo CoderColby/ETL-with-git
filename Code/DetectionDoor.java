@@ -29,7 +29,7 @@ public class DetectionDoor extends AbstractWall {
   public ArrayList<Animation> getAnimations(String entityTag, int delay) {
     ArrayList<Animation> animations = new ArrayList<>();
     if (!entityTag.equals(Player.TAG)) {
-      animations.add(new WallAnimation(delay + Data.Animation.zombieTravelTime, this, DetectionDoor.CLOSED));
+      animations.add(new WallAnimation(delay + Data.Animation.playerTravelTime, this, DetectionDoor.CLOSED));
       isOpen = !isOpen;
     }
     return animations;

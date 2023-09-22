@@ -68,11 +68,15 @@ public class Player extends AbstractEntity {
 
     ArrayList<Animation> animations = new ArrayList<>();
 
-    animations.addAll(passWall.getAnimations(Player.TAG, (byte) 0));
+    animations.addAll(passWall.getAnimations(Player.TAG, 0));
     movementDelayInMillis = passWall.addDelayInMillis();
 
     animations.add(new EntityAnimation(movementDelayInMillis, this, direction));
     super.gridCell = neighborCell;
+
+    if (super.gridCell.hasItem(Key.TAG)) {
+      animations.addAll(super.gridCell.getGameBoard().unlockDoorsWithKey((Key) super.gridCell.getItem(), movementDelayInMillis + Data.Animation.playerTravelTime));
+    }
 
     if (super.gridCell.hasRoomType(Elevator.TAG))
       super.gridCell.getGameBoard().hasReturned();
@@ -97,7 +101,6 @@ public class Player extends AbstractEntity {
   public ArrayList<Animation> evaluatePosition(int startTime) {
     ArrayList<Animation> animations = new ArrayList<>();
     if (super.gridCell.hasItem(Key.TAG)) {
-      animations.addAll(super.gridCell.getGameBoard().unlockDoorsWithKey((Key) super.gridCell.getItem(), startTime));
       super.gridCell.getGameBoard().remove(((Key) super.gridCell.getItem()).getLabel());
       super.gridCell.setItem(null);
     } else if (super.gridCell.hasItem(Battery.TAG)) {

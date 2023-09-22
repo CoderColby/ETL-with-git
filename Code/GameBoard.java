@@ -270,7 +270,7 @@ public class GameBoard extends JLayeredPane {
               for (int i = 0; i < allPlayedAnimations.size() && !stillAnimating; i++)
                 stillAnimating = !allPlayedAnimations.get(i).isDone();
               try {
-                Thread.sleep(EntityAnimation.timeBetweenTicksInMillis);
+                Thread.sleep(Data.Animation.animationMoveSpeed);
               } catch (InterruptedException e) {
                 // nothing
               }
@@ -334,6 +334,10 @@ public class GameBoard extends JLayeredPane {
   private JPanel targetPanel;
 
   public void toggleTarget() {
+    
+    if (Animation.isOngoing)
+      return;
+    
     if (Target.isOngoing) {
       Target.isOngoing = false;
       return;
@@ -664,8 +668,6 @@ abstract class Animation implements Runnable, Comparable {
 
 class EntityAnimation extends Animation {
 
-  public static final int timeBetweenTicksInMillis = 100;
-
   private AbstractEntity entity;
   private byte direction;
   private Point startPosition;
@@ -695,15 +697,15 @@ class EntityAnimation extends Animation {
     endPosition = new Point(entity.getGameBoardPosition());
     
     currentPosition = new double[] {startPosition.getX(), startPosition.getY()};
-    distancePerTick = new double[] {(endPosition.getX() - startPosition.getX()) / (entity.getAnimationDuration() / timeBetweenTicksInMillis), (endPosition.getY() - startPosition.getY()) / (entity.getAnimationDuration() / timeBetweenTicksInMillis)};
+    distancePerTick = new double[] {(endPosition.getX() - startPosition.getX()) / (entity.getAnimationDuration() / Data.Animation.animationMoveSpeed), (endPosition.getY() - startPosition.getY()) / (entity.getAnimationDuration() / Data.Animation.animationMoveSpeed)};
     timeElapsedInMillis = 0;
     
-    timer = new Timer(timeBetweenTicksInMillis, event -> {
+    timer = new Timer(Data.Animation.animationMoveSpeed, event -> {
       EntityAnimation.this.currentPosition[0] += EntityAnimation.this.distancePerTick[0];
       EntityAnimation.this.currentPosition[1] += EntityAnimation.this.distancePerTick[1];
       EntityAnimation.this.entity.getLabel().setLocation((int) Math.round(currentPosition[0]), (int) Math.round(currentPosition[1]));
 
-      EntityAnimation.this.timeElapsedInMillis += EntityAnimation.timeBetweenTicksInMillis;
+      EntityAnimation.this.timeElapsedInMillis += Data.Animation.animationMoveSpeed;
       if (EntityAnimation.this.timeElapsedInMillis >= EntityAnimation.this.entity.getAnimationDuration())
         EntityAnimation.this.timer.stop();
 
@@ -719,7 +721,7 @@ class EntityAnimation extends Animation {
 
         while (timer.isRunning()) {
           try {
-              Thread.sleep(timeBetweenTicksInMillis);
+              Thread.sleep(Data.Animation.animationMoveSpeed);
           } catch (InterruptedException f) {
               // nothing
           }

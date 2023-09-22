@@ -29,14 +29,14 @@ public class AirlockDoor extends AbstractWall {
 
   public ArrayList<Animation> getAnimations(String entityTag, int delay) {
     ArrayList<Animation> animations = new ArrayList<>();
-    animations.add(new WallAnimation(delay + ((isOpen)? 0 : Data.Animation.playerTravelTime), this, (isOpen)? AirlockDoor.CLOSED : AirlockDoor.OPEN));
+    animations.add(new WallAnimation(delay + ((isOpen)? Data.Animation.playerTravelTime : 0), this, (isOpen)? AirlockDoor.CLOSED : AirlockDoor.OPEN));
     isOpen = !isOpen;
     return animations;
   }
 
 
   public int addDelayInMillis() {
-    return (isOpen)? 0 : 100;
+    return (isOpen)? 100 : 0;
   }
 
 

@@ -48,7 +48,8 @@ public class Zombie extends AbstractEntity implements Comparable {
       return false;
     return true;
   }
-
+  
+  private int firstMoveDelay;
   
   public ArrayList<Animation> move(int[] playerLocation, int movementDelay, boolean isFirstMove) {
     ArrayList<Animation> animations = new ArrayList<>();
@@ -78,8 +79,12 @@ public class Zombie extends AbstractEntity implements Comparable {
     neighborCell.setEntity(this);
     super.gridCell.setEntity(null);
 
-    if (!isFirstMove)
-      movementDelay += movementDelay + Data.Animation.zombieTravelTime;
+    // movementDelay += Data.Animation.zombieTravelTime;
+
+    if (isFirstMove)
+      firstMoveDelay = movementDelay + Data.Animation.zombieTravelTime + passWall.addDelayInMillis();
+    else
+      movementDelay += firstMoveDelay;
 
     animations.addAll(passWall.getAnimations(Zombie.TAG, movementDelay));
     movementDelay += passWall.addDelayInMillis();
