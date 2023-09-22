@@ -38,6 +38,8 @@ public abstract class AbstractEntity extends AbstractGameObject {
 
   public abstract void turn(byte direction);
 
+  public abstract ArrayList<Animation> evaluatePosition(int endOfAnimation);
+
   // protected static JLabel initializeLabel(GridCell gridCell, ImageIcon image) {
   //   JLabel label = new JLabel(AbstractGameObject.setScale(image, AbstractEntity.DIMENSION));
   //   int[] rowColumnOff = gridCell.getPixelOffset();

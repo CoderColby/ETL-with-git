@@ -56,13 +56,16 @@ public class GameBoard extends JLayeredPane {
   private Target[] targets;
   private LockedDoor[] lockedDoors;
   private Star[] stars;
+  private PriorityQueue<Animation> animations;
   private int startEnergy;
   private int remainingEnergy;
   private boolean hasLost;
   private boolean hasWon;
+  private boolean inDesign;
   
 
-  public GameBoard(String[][] fileContents, int startEnergy, Level level) { // For reading level file
+  public GameBoard(String[][] fileContents, int startEnergy, Level level, boolean inDesign) { // For reading level file
+    this.inDesign = inDesign;
     this.level = level;
     this.startEnergy = startEnergy;
     this.fileContents = fileContents;
@@ -87,14 +90,17 @@ public class GameBoard extends JLayeredPane {
       board[i/10][i%10] = new GridCell(fileContents[i], i, this);
     scanGridCells();
     remainingEnergy = startEnergy;
+    animations = new PriorityQueue<Animation>();
     hasWon = false;
     hasLost = false;
 
     for (int i = 0; i < 100; i++)
       board[i/10][i%10].draw();
 
-    if (getNumOfTargets() == getNumOfGoodTargets())
-      playAnimations(new PriorityQueue<Animation>(setPower(true, 0)));
+    if (getNumOfTargets() == getNumOfGoodTargets() && !inDesign) {
+      animations.addAll(setPower(true, 0));
+      playAnimations();
+    }
   }
 
   
@@ -167,7 +173,7 @@ public class GameBoard extends JLayeredPane {
     if (Animation.isOngoing)
       return;
 
-    ArrayList<Animation> animations = new ArrayList<>();
+    animations = new PriorityQueue<Animation>();
 
     int delay = 0;
 
@@ -194,11 +200,11 @@ public class GameBoard extends JLayeredPane {
       }
     }
 
-    playAnimations(new PriorityQueue(animations));
+    playAnimations();
   }
 
 
-  private void evaluatePlayer() {
+  public void evaluatePlayer() {
     if (hasWon)
       level.playerWon(stars.length == 0);
 
@@ -209,15 +215,24 @@ public class GameBoard extends JLayeredPane {
   }
 
 
-  private PriorityQueue queue;
-  private Animation animation;
+  public void addAnimations(ArrayList<Animation> a) {
+    synchronized (animations) {
+      animations.addAll(a);
+    }
+    allPlayedAnimations.addAll(a);
+  }
+
+
+  // private PriorityQueue queue;
+  private ArrayList<Animation> allPlayedAnimations;
+  private Animation currentAnimation;
   private long animationStartTime;
   private long timeUntilAnimationStart;
   private long endOfAnimation;
   
-  public void playAnimations(PriorityQueue<Animation> queue) {
-    this.queue = queue;
+  public void playAnimations() {
     final long baseTime = System.currentTimeMillis();
+    allPlayedAnimations = new ArrayList<Animation>(animations);
 
     SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
       
@@ -225,12 +240,14 @@ public class GameBoard extends JLayeredPane {
       protected Void doInBackground() throws Exception {
         Animation.isOngoing = true;
 
-        while (!queue.isEmpty()) {
-          animation = queue.poll();
-          animationStartTime = baseTime + animation.getStartTime();
+        while (!animations.isEmpty()) {
+          synchronized (animations) {
+            currentAnimation = animations.poll();
+          }
+          animationStartTime = baseTime + currentAnimation.getStartTime();
 
-          if (animation.getClass() == EntityAnimation.class && animationStartTime + ((EntityAnimation) animation).getEntity().getAnimationDuration() > endOfAnimation)
-            endOfAnimation = animationStartTime + ((EntityAnimation) animation).getEntity().getAnimationDuration();
+          // if (currentAnimation.getFinishTime() + baseTime > endOfAnimation)
+          //   endOfAnimation = currentAnimation.getFinishTime() + baseTime;
     
           timeUntilAnimationStart = animationStartTime - System.currentTimeMillis();
     
@@ -243,15 +260,25 @@ public class GameBoard extends JLayeredPane {
             }
           }
   
-          Thread animationThread = new Thread(animation::run);
+          Thread animationThread = new Thread(currentAnimation::run);
           animationThread.start();
+
+          if (animations.isEmpty()) {
+            boolean stillAnimating;
+            do {
+              stillAnimating = false;
+              for (int i = 0; i < allPlayedAnimations.size() && !stillAnimating; i++)
+                stillAnimating = !allPlayedAnimations.get(i).isDone();
+              try {
+                Thread.sleep(EntityAnimation.timeBetweenTicksInMillis);
+              } catch (InterruptedException e) {
+                // nothing
+              }
+            } while (stillAnimating && animations.isEmpty());
+          }
         }
 
-        try {
-          Thread.sleep(endOfAnimation - System.currentTimeMillis()); // Sleep until animation is done
-        } catch (InterruptedException e) {
-          // nothing
-        }
+        
         
         return null;
       }
@@ -342,8 +369,10 @@ public class GameBoard extends JLayeredPane {
         updateTargets();
         level.repaint();
 
-        if (getNumOfTargets() == getNumOfGoodTargets())
-          playAnimations(new PriorityQueue<Animation>(setPower(true, 0)));
+        if (getNumOfTargets() == getNumOfGoodTargets()) {
+          animations.addAll(setPower(true, 0));
+          playAnimations();
+        }
       }
     };
 
@@ -602,9 +631,11 @@ abstract class Animation implements Runnable, Comparable {
   public static boolean isOngoing = false;
   
   protected int startTimeInMillis;
+  protected boolean isDone;
 
   protected Animation(int startTimeInMillis) {
     this.startTimeInMillis = startTimeInMillis;
+    isDone = false;
   }
 
   public int compareTo(Object other) {
@@ -613,8 +644,14 @@ abstract class Animation implements Runnable, Comparable {
 
   public abstract void run();
 
+  public abstract int getFinishTime();
+
   public int getStartTime() {
     return startTimeInMillis;
+  }
+
+  public boolean isDone() {
+    return isDone;
   }
 }
 
@@ -693,11 +730,17 @@ class EntityAnimation extends Animation {
       @Override
       protected void done() {
         entity.getLabel().setLocation(endPosition);
+        entity.getGridCell().getGameBoard().addAnimations(entity.evaluatePosition(getFinishTime()));
         entity.getGridCell().getGameBoard().repaint();
+        EntityAnimation.this.isDone = true;
       }
     };
 
     worker.execute();
+  }
+
+  public int getFinishTime() {
+    return super.startTimeInMillis + entity.getAnimationDuration();
   }
 }
 
@@ -721,5 +764,10 @@ class WallAnimation extends Animation {
   public void run() {
     wall.transform(transformationType);
     wall.getGridCell().getGameBoard().repaint();
+    super.isDone = true;
+  }
+
+  public int getFinishTime() {
+    return super.startTimeInMillis;
   }
 }

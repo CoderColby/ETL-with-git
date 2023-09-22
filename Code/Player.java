@@ -74,19 +74,39 @@ public class Player extends AbstractEntity {
     animations.add(new EntityAnimation(movementDelayInMillis, this, direction));
     super.gridCell = neighborCell;
 
+    if (super.gridCell.hasRoomType(Elevator.TAG))
+      super.gridCell.getGameBoard().hasReturned();
+
+    // if (super.gridCell.hasItem(Key.TAG)) {
+    //   animations.addAll(thisGameBoard.unlockDoorsWithKey((Key) super.gridCell.getItem(), movementDelayInMillis + Data.Animation.playerTravelTime));
+    //   super.gridCell.getGameBoard().remove(((Key) super.gridCell.getItem()).getLabel());
+    //   super.gridCell.setItem(null);
+    // } else if (super.gridCell.hasItem(Battery.TAG)) {
+    //   super.gridCell.getGameBoard().addEnergy(((Battery) super.gridCell.getItem()).getEnergy());
+    //   super.gridCell.setItem(null);
+    // }
+    // if (super.gridCell.hasRoomType(Elevator.TAG))
+    //   super.gridCell.getGameBoard().hasReturned();
+    // else if (super.gridCell.hasRoomType(Star.TAG))
+    //   super.gridCell.getGameBoard().removeStar((Star) super.gridCell.getRoomType());
+    
+    return animations;
+  }
+
+
+  public ArrayList<Animation> evaluatePosition(int startTime) {
+    ArrayList<Animation> animations = new ArrayList<>();
     if (super.gridCell.hasItem(Key.TAG)) {
-      animations.addAll(thisGameBoard.unlockDoorsWithKey((Key) super.gridCell.getItem(), movementDelayInMillis + Data.Animation.playerTravelTime));
+      animations.addAll(super.gridCell.getGameBoard().unlockDoorsWithKey((Key) super.gridCell.getItem(), startTime));
       super.gridCell.getGameBoard().remove(((Key) super.gridCell.getItem()).getLabel());
       super.gridCell.setItem(null);
     } else if (super.gridCell.hasItem(Battery.TAG)) {
       super.gridCell.getGameBoard().addEnergy(((Battery) super.gridCell.getItem()).getEnergy());
+      super.gridCell.getGameBoard().remove(((Battery) super.gridCell.getItem()).getLabel());
       super.gridCell.setItem(null);
     }
-    if (super.gridCell.hasRoomType(Elevator.TAG))
-      super.gridCell.getGameBoard().hasReturned();
-    else if (super.gridCell.hasRoomType(Star.TAG))
+    if (super.gridCell.hasRoomType(Star.TAG))
       super.gridCell.getGameBoard().removeStar((Star) super.gridCell.getRoomType());
-    
     return animations;
   }
 

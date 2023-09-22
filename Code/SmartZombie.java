@@ -14,7 +14,7 @@ public class SmartZombie extends AbstractEntity implements Comparable {
   private ArrayList<Sentinel> sentinels;
   private byte startCondition;
 
-  private class Sentinel extends ArrayList<Byte> {
+  private class Sentinel extends ArrayList<Byte> implements Comparable {
     private GridCell gridCell;
     private SmartZombie host;
     private ArrayList<Byte> illegalDirections;
@@ -40,6 +40,9 @@ public class SmartZombie extends AbstractEntity implements Comparable {
       return ((Sentinel) other).gridCell == this.gridCell;
     }
 
+    public int compareTo(Object other) {
+      return Double.compare(gridCell.getDistanceFromPlayer(), ((Sentinel) other).gridCell.getDistanceFromPlayer());
+    }
 
     public boolean hasFoundPlayer(int[] playerLocation) {
       return Arrays.equals(gridCell.getCoordinates(), playerLocation);
@@ -54,20 +57,20 @@ public class SmartZombie extends AbstractEntity implements Comparable {
            !gridCell.getNeighbor(b).hasEntity(SmartZombie.TAG) && !gridCell.getNeighbor(b).hasEntity(Zombie.TAG))
           viableDirections.add(b);
 
-      for (byte i = (byte) (viableDirections.size() - 2); i >= 0; i--) {
-        byte b = i;
-        while (b + 1 < viableDirections.size() && gridCell.getNeighbor(viableDirections.get(b)).getDistanceFromPlayer() > gridCell.getNeighbor(viableDirections.get(b + 1)).getDistanceFromPlayer()) {
-          Collections.swap(viableDirections, b, b + 1);
-          b++;
-        }
-      }
+      // for (byte i = (byte) (viableDirections.size() - 2); i >= 0; i--) {
+      //   byte b = i;
+      //   while (b + 1 < viableDirections.size() && gridCell.getNeighbor(viableDirections.get(b)).getDistanceFromPlayer() > gridCell.getNeighbor(viableDirections.get(b + 1)).getDistanceFromPlayer()) {
+      //     Collections.swap(viableDirections, b, b + 1);
+      //     b++;
+      //   }
+      // }
+
 
       return viableDirections;
     }
 
     
-    public ArrayList<Sentinel> seek() {
-      ArrayList<Byte> viableDirections = scan();
+    public ArrayList<Sentinel> seek(ArrayList<Byte> viableDirections) {
       ArrayList<Sentinel> sentinels = new ArrayList<>();
       
       if (viableDirections.isEmpty())
@@ -118,6 +121,16 @@ public class SmartZombie extends AbstractEntity implements Comparable {
 
 
   public ArrayList<Byte> calculatePath() {
+    // ArrayList<Byte> viableDirections = start.scan();
+
+    // for (byte i = (byte) (viableDirections.size() - 2); i >= 0; i--) {
+    //   byte b = i;
+    //   while (b + 1 < viableDirections.size() && gridCell.getNeighbor(viableDirections.get(b)).getDistanceFromPlayer() > gridCell.getNeighbor(viableDirections.get(b + 1)).getDistanceFromPlayer()) {
+    //     Collections.swap(viableDirections, b, b + 1);
+    //     b++;
+    //   }
+    // }
+    
     sentinels = new ArrayList<Sentinel>();
     sentinels.add(new Sentinel(super.gridCell, new ArrayList<Byte>(), this, (byte) -1));
 
@@ -126,7 +139,9 @@ public class SmartZombie extends AbstractEntity implements Comparable {
       sentinels = new ArrayList<Sentinel>();
       
       for (Sentinel s : previousSentinels)
-        sentinels.addAll(s.seek());
+        sentinels.addAll(s.seek(s.scan()));
+
+      sentinels.sort(null);
 
       for (Sentinel s : sentinels)
         if (s.gridCell.hasEntity(Player.TAG))
@@ -185,15 +200,25 @@ public class SmartZombie extends AbstractEntity implements Comparable {
     animations.addAll(passWall.getAnimations(SmartZombie.TAG, movementDelay));
     movementDelay += passWall.addDelayInMillis();
 
-    if (neighborCell.hasRoomType(Target.TAG) && ((Target) neighborCell.getRoomType()).isGood()) {
-      ((Target) neighborCell.getRoomType()).setBad();
-      animations.addAll(thisGameBoard.setPower(false, movementDelay));
-      super.gridCell.getGameBoard().updateTargets();
-    }
+    // if (neighborCell.hasRoomType(Target.TAG) && ((Target) neighborCell.getRoomType()).isGood()) {
+    //   ((Target) neighborCell.getRoomType()).setBad();
+    //   animations.addAll(thisGameBoard.setPower(false, movementDelay));
+    //   super.gridCell.getGameBoard().updateTargets();
+    // }
     
     animations.add(new EntityAnimation(movementDelay, this, direction));
     super.gridCell = neighborCell;
 
+    return animations;
+  }
+
+  public ArrayList<Animation> evaluatePosition(int startTime) {
+    ArrayList<Animation> animations = new ArrayList<>();
+    if (super.gridCell.hasRoomType(Target.TAG) && ((Target) super.gridCell.getRoomType()).isGood()) {
+      ((Target) super.gridCell.getRoomType()).setBad();
+      animations.addAll(super.gridCell.getGameBoard().setPower(false, startTime));
+      super.gridCell.getGameBoard().updateTargets();
+    }
     return animations;
   }
 

@@ -90,6 +90,10 @@ public class Zombie extends AbstractEntity implements Comparable {
     return animations;
   }
 
+  public ArrayList<Animation> evaluatePosition(int startTime) {
+    return new ArrayList<Animation>();
+  }
+
   public void cycleOptions() {
     startCondition = (byte) (++startCondition % 4);
     turn(startCondition);

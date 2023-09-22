@@ -65,7 +65,7 @@ public class Level extends JPanel {
       boardData[i] = fileIn.nextLine().split(" ");
     fileIn.close();
     
-    levelBoard = new GameBoard(boardData, Integer.parseInt(startEnergy), this);
+    levelBoard = new GameBoard(boardData, Integer.parseInt(startEnergy), this, false);
     if (!levelBoard.isValidLayout())
       throw new InvalidLevelException();
     levelBoard.setLocation(350, 100);

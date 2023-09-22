@@ -59,7 +59,7 @@ public class AirlockDoor extends AbstractWall {
   public void cycleOptions() {
     isOpen = !isOpen;
     super.setImage(new ImageIcon(Data.Images.Wall.airlockDoor((isOpen)? AirlockDoor.OPEN : AirlockDoor.CLOSED)).getImage());
-    super.identifier = Target.TAG + ":" + ((isOpen)? AirlockDoor.OPEN : AirlockDoor.CLOSED);
+    super.identifier = AirlockDoor.TAG + ":" + ((isOpen)? AirlockDoor.OPEN : AirlockDoor.CLOSED);
   }
 
   public String getInfo() {

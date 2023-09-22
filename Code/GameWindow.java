@@ -548,7 +548,7 @@ public class GameWindow extends JFrame {
         boardData[i] = fileIn.nextLine().split(" ");
       fileIn.close();
       
-      levelBoard = new GameBoard(boardData, 0, null);
+      levelBoard = new GameBoard(boardData, 0, null, true);
       levelDisplay = new JPanel();
       levelDisplay.setLayout(null);
       levelDisplay.setBounds(70, 110, GameBoard.BOARD_DIMENSION, GameBoard.BOARD_DIMENSION);

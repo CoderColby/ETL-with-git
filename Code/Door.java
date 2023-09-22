@@ -54,7 +54,7 @@ public class Door extends AbstractWall {
 
 
   public boolean requiresEnergy() {
-    return true;
+    return !super.isPowered;
   }
 
 
