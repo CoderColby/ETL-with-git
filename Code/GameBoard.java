@@ -205,6 +205,7 @@ public class GameBoard extends JLayeredPane {
 
 
   public void evaluatePlayer() {
+    
     if (hasWon)
       level.playerWon(stars.length == 0);
 
@@ -277,9 +278,6 @@ public class GameBoard extends JLayeredPane {
             } while (stillAnimating && animations.isEmpty());
           }
         }
-
-        
-        
         return null;
       }
 
@@ -358,7 +356,7 @@ public class GameBoard extends JLayeredPane {
 
         while (Target.isOngoing) {
           try {
-              Thread.sleep(50);
+            Thread.sleep(50);
           } catch (InterruptedException f) {
             Target.isOngoing = false;
           }
@@ -379,7 +377,7 @@ public class GameBoard extends JLayeredPane {
         }
       }
     };
-
+    
     worker.execute();
   }
   
@@ -430,7 +428,7 @@ public class GameBoard extends JLayeredPane {
     ArrayList<Star> otherStars = new ArrayList<>(Arrays.asList(stars));
     otherStars.remove(star);
     star.getGridCell().setRoomType(null);
-    stars = otherStars.toArray(stars);
+    stars = otherStars.toArray(new Star[0]);
     super.repaint();
   }
 
@@ -442,7 +440,7 @@ public class GameBoard extends JLayeredPane {
       isEdgeWalls = board[i][9].hasWall((byte) 0, Wall.TAG);
     for (int i = 0; i < 10 && isEdgeWalls; i++)
       isEdgeWalls = board[9][i].hasWall((byte) 1, Wall.TAG);
-    return isEdgeWalls && players.length == 1 && elevators.length == 1 && targets.length >= 1 && elevators[0].getGridCell().getItem() == null/* && elevators[0].getGridCell() == players[0].getGridCell()*/;
+    return isEdgeWalls && players.length == 1 && elevators.length == 1 && targets.length >= 0 && elevators[0].getGridCell().getItem() == null/* && elevators[0].getGridCell() == players[0].getGridCell()*/;
   } /////////////////////////// Make a separate function that relocates things in all of the updated gridCells, similar to 'reset' but without the fileContents
 
 

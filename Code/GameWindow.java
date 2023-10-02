@@ -821,7 +821,9 @@ public class GameWindow extends JFrame {
       } catch (FileNotFoundException f) {
         // nothing
       }
-      replace(createMenu(0));
+      Level newLevel = new Level(new File("./GameAssets/Levels/CustomLevels/CoderColby/.temp"), true, this, 0);
+      replace(newLevel);
+      newLevel.requestFocusInWindow();
     });
     root.add(jbtn_shortcut);
     /////////////////////////
@@ -918,7 +920,7 @@ public class GameWindow extends JFrame {
 
     // Level panel
     jpnl_menuLevels = new LevelPanel();
-    jpnl_menuLevels.setLocation(195, 285);
+    jpnl_menuLevels.setLocation(195, 230);
     root.add(jpnl_menuLevels);
 
     // Button for level navigation 

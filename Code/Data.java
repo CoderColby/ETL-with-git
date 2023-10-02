@@ -40,6 +40,13 @@ public class Data {
 
     public static final Color levelBackground = new Color(89, 89, 89);
     public static final Color roomBackground = new Color(191, 191, 191);
+
+    public static final Color puzzleScreenBackground = new Color(0, 80, 0);
+    public static final Color puzzleScreenForeground = new Color(0, 180, 0);
+    public static final Color puzzleNumpadBackground = new Color(140, 140, 140);
+    public static final Color puzzleNumpadForeground = new Color(255, 255, 255);
+    public static final Color puzzleNumpadBorder = new Color(80, 80, 80);
+    public static final Color puzzleBackground = new Color(0, 0, 0);
   }
 
   public static class Images {
@@ -107,6 +114,34 @@ public class Data {
       public static final String logo = "./GameAssets/Images/Other/ETLogo.png";
       public static final String lock = "./GameAssets/Images/Other/Lock.png";
     }
+
+    public static class Puzzle {
+      public static final String lightNeutral = "./GameAssets/Images/Puzzle/lightNeutral.png";
+      public static final String lightOff = "./GameAssets/Images/Puzzle/lightOff.png";
+      public static final String lightOn = "./GameAssets/Images/Puzzle/lightOn.png";
+      
+      public static final String numpadBackspace = "./GameAssets/Images/Puzzle/numpadBackspace.png";
+      public static final String numpadEnter = "./GameAssets/Images/Puzzle/numpadEnter.png";
+      
+      public static String pipeBlock(PipePuzzle.ConnectionType type, boolean isPowered) {
+        int selector = (isPowered)? 1 : 0;
+        switch (type) {
+          case COUPLING:
+            return "./GameAssets/Images/Puzzle/PipeCoupling" + selector + ".png";
+          case ELBOW:
+            return "./GameAssets/Images/Puzzle/PipeElbow" + selector + ".png";
+          case TEE:
+            return "./GameAssets/Images/Puzzle/PipeTee" + selector + ".png";
+          case CROSS:
+            return "./GameAssets/Images/Puzzle/PipeCross" + selector + ".png";
+          default:
+            return null;
+        }
+      }
+      public static final String energyStart = "./GameAssets/Images/Puzzle/energyStart.png";
+      public static final String energyEndOff = "./GameAssets/Images/Puzzle/energyEndOff.png";
+      public static final String energyEndOn = "./GameAssets/Images/Puzzle/energyEndOn.png";
+    }
     
 
     public static ImageIcon rotateIcon(ImageIcon icon) {
@@ -120,7 +155,9 @@ public class Data {
       g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
   
       AffineTransform transform = new AffineTransform();
-      transform.rotate(Math.toRadians(-90), width / 2.0, width / 2.0);
+      transform.translate(height, 0);
+      transform.rotate(Math.toRadians(90));
+      // transform.translate(height / 2.0, width / 2.0);
 
       g2d.drawImage(image, transform, null);
   
@@ -128,6 +165,27 @@ public class Data {
   
       return new ImageIcon(bufferedImage);
     }
+
+    // public static ImageIcon rotateIcon(ImageIcon icon) {
+    //   int width = icon.getIconWidth();
+    //   int height = icon.getIconHeight();
+  
+    //   Image image = icon.getImage();
+    //   BufferedImage bufferedImage = new BufferedImage(height, width, BufferedImage.TYPE_INT_ARGB);
+  
+    //   Graphics2D g2d = bufferedImage.createGraphics();
+    //   g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+  
+    //   AffineTransform transform = new AffineTransform();
+    //   transform.rotate(0, width / 2.0, width / 2.0);
+    //   // transform.translate(width - height, 0);
+
+    //   g2d.drawImage(image, transform, null);
+  
+    //   g2d.dispose();
+  
+    //   return new ImageIcon(bufferedImage);
+    // }
   
   }
 
