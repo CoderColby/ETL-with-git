@@ -1,0 +1,2 @@
+javac -d ./Classes/ ./Code/*.java
+java -classpath ./Classes/ Main
