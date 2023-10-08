@@ -129,8 +129,7 @@ public class GameWindow extends JFrame {
     }
 
     public void incrementGroupNum() {
-      groupNum++;
-      if (this.groupNum > this.MAX_GROUP_NUM)
+      if (++this.groupNum > this.MAX_GROUP_NUM)
         this.groupNum = 0;
       this.updateLevelGrid();
     }
@@ -154,7 +153,7 @@ public class GameWindow extends JFrame {
           super.add(button);
         }
       }
-      super.revalidate();
+      super.repaint();
     }
   }
   
@@ -322,7 +321,7 @@ public class GameWindow extends JFrame {
       int startLocation;
   
       // Draw wall types
-      ArrayList<JDataButton> buttons = new ArrayList<>(300);
+      ArrayList<JDataButton> buttons = new ArrayList<>(20);
       objectSeparation = (jpnl_gameItems.getWidth() - walls.length * GameBoard.WALL_THICKNESS) / (walls.length + 1);
       startLocation = (jpnl_gameItems.getWidth() - (walls.length * (objectSeparation + GameBoard.WALL_THICKNESS) - objectSeparation)) / 2;
       for (int i = 0; i < walls.length; i++) {
@@ -817,13 +816,11 @@ public class GameWindow extends JFrame {
     jbtn_shortcut.setBounds(50, 50, 80, 30);
     jbtn_shortcut.addActionListener(e -> {
       try {
-        currentUser = new User(new File(Data.Utilities.getUserFilePath("CoderColby"))); // Make new user
+        currentUser = new User(new File(Data.Utilities.getUserFilePath("Guest"))); // Make new user
       } catch (FileNotFoundException f) {
         // nothing
       }
-      Level newLevel = new Level(new File("./GameAssets/Levels/CustomLevels/CoderColby/.temp"), true, this, 0);
-      replace(newLevel);
-      newLevel.requestFocusInWindow();
+      replace(createMenu(0));
     });
     root.add(jbtn_shortcut);
     /////////////////////////
@@ -920,7 +917,7 @@ public class GameWindow extends JFrame {
 
     // Level panel
     jpnl_menuLevels = new LevelPanel();
-    jpnl_menuLevels.setLocation(195, 230);
+    jpnl_menuLevels.setLocation(195, 210);
     root.add(jpnl_menuLevels);
 
     // Button for level navigation 

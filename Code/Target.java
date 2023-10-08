@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
@@ -60,16 +61,6 @@ public class Target extends AbstractRoomType {
     JPanel puzzle = new PipePuzzle(this);
     puzzle.setBounds(super.gridCell.getGameBoard().getBounds());
 
-    // JButton b = new JButton("Press me to return");
-    // b.setBounds(200, 200, 250, 100);
-    // b.addActionListener(event -> {
-    //   Target.this.isGood = true;
-    //   Target.super.setImage(new ImageIcon(Data.Images.RoomType.target(Target.GOOD)).getImage());
-    //   Target.isOngoing = false;
-    // });
-
-    // root.add(b);
-
     puzzle.addKeyListener(new KeyAdapter() {
       @Override
       public void keyPressed(KeyEvent e) {
@@ -103,7 +94,7 @@ class ArithmeticPuzzle extends JPanel {
   private JLabel jlbl_light;
   private JButton[] numpad = new JButton[12];
   private byte numOfDigits;
-  private final char[] possibleOp = new char[] {'+', '-', '×'};
+  private final char[] possibleOp = new char[] {'+', '-', '*'};
   private int randOp;
   private int rand1;
   private int rand2;
@@ -485,16 +476,139 @@ class PipePuzzle extends JPanel {
 
 
 
-class WirePuzzle extends JPanel {
-  private static final int NUM_OF_JUNCTIONS = 3;
-  private static final int NUM_OF_WIRES = 3;
-  private JLabel jlbl_light;
-  private Target host;
+// class WirePuzzle extends JPanel {
+
+//   private class Junction extends JButton {
+//     private Wire wire;
+//     private int value;
+//     private boolean isFixed;
+//     private WirePuzzle puzzleHost;
+
+//     public Junction(int value, boolean isFixed, WirePuzzle puzzleHost) {
+//       this.value = value;
+//       this.isFixed = isFixed;
+//       this.puzzleHost = puzzleHost;
+//       super.setOpaque(false);
+//       super.setBorder(null);
+//       super.setSize(WirePuzzle.JUNCTION_SIZE);
+//     }
+    
+
+//     @Override
+//     protected void paintComponent(Graphics g) {
+//       super.paintComponent(g);
+
+//       g.setColor(Data.Colors.puzzleJunctionDarkGray);
+//       g.fillRect(5, 0, super.getSize().getWidth() - 10, super.getSize().getHeight());
+//       g.setColor(Data.Colors.puzzleJunctionDarkGray);
+//       g.fillRect(8, 3, super.getSize().getWidth() - 16, super.getSize().getHeight() - 6);
+//       g.setColor((this.wire == null)? Color.BLACK : wire.getColor());
+//       g.fillOval(0, 4, 7, 7);
+//       g.setColor((this.wire == null)? Color.BLACK : wire.getColor());
+//       g.fillOval(23, 4, 7, 7);
   
-  public WirePuzzle(Target host) {
-    this.host = host;
+//       if (value != 0) {
+//         g.setFont(new Font("Monospace", Font.BOLD, 10));
+//         g.setColor(Color.BLACK);
+    
+//         // Get the bounds of the text
+//         java.awt.geom.Rectangle2D rect = g.getFontMetrics().getStringBounds(Integer.toString(this.value), g);
+    
+//         // Calculate the x and y coordinates to center the text
+//         int x = (super.getSize().getWidth() - (int) rect.getWidth()) / 2;
+//         int y = (super.getSize().getHeight() - (int) rect.getHeight()) / 2 + g.getFontMetrics().getAscent();
+    
+//         // Draw the text
+//         g.drawString(Integer.toString(this.value), x, y);
+//       }
+//     }
+
+
+//     public boolean acceptWire(Wire wire) {
+      
+//     }
+//   }
+
+//   private class Wire {
+    
+//   }
+  
+//   private static final int NUM_OF_COLUMNS = 3;
+//   private static final int NUM_OF_WIRES = 3;
+//   private static final int NUM_OF_FAKES = 1;
+//   private static final Dimension JUNCTION_SIZE = new Dimension(30, 15);
+//   private JLabel jlbl_light;
+//   private Target host;
+//   private final Color[] wireColors = new Color[] {Color.RED, Color.YELLOW, Color.CYAN, Color.WHITE, Color.PINK, Color.GREEN};
+  
+//   public WirePuzzle(Target host) {
+//     this.host = host;
+
+//     int panelHeight = WirePuzzle.NUM_OF_WIRES * 100;
+//     int junctionSeparation = (panelHieght - WirePuzzle.NUM_OF_WIRES * WirePuzzle.JUNCTION_SIZE.getHeight()) / (wirePuzzle.NUM_OF_WIRES + 1);
+//     int columnSeparation = (600 - WirePuzzle.NUM_OF_COLUMNS * WirePuzzle.JUNCTION_SIZE.getWidth()) / (wirePuzzle.NUM_OF_COLUMNS + 1);
+    
+//     for (int i = 0; i < WirePuzzle.NUM_OF_WIRES; i++) {
+//       Junction startJunction = new Junction();
+//       startJunction.setLocation(startLocation + i * (objectSeparation + GameBoard.WALL_THICKNESS), 15);
+//       buttons.add(newWall);
+//     }
 
     
     
-  }
-}
+//   }
+
+
+//   @Override
+//   public void paintComponent(Graphics g) {
+//     super.paintComponent(g);
+
+//     this.allShapes = ClickIt.getAllShapes();
+//     // System.out.println("rerun");
+
+//     ////////////////////////
+//     for (int x = 0; x < 2; x++) {
+//       for (Shape s : this.allShapes[x]) {
+//         g.setColor(s.getColor());
+//         g.fillOval(s.getRow(), s.getColumn(), s.getSize(), s.getSize());
+//         // g.setColor(Color.BLACK);
+//         // g.fillRect(s.getRow() + s.getSize() / 2 - 5, s.getColumn() + s.getSize() / 2 - 5, 10, 10);
+//       }
+//     }
+//     for (Shape s : this.allShapes[2]) {
+//       g.setColor(s.getColor());
+//       g.fillRect(s.getRow(), s.getColumn(), s.getSize(), s.getSize());
+//     }
+//     ////////////////////////
+//   }
+// }
+
+
+
+
+
+
+
+
+
+// class SliderPuzzle extends JPanel {
+//   private static final int NUM_OF_SLIDERS = 3;
+//   private JLabel jlbl_light;
+//   private Target host;
+  
+//   public SliderPuzzle(Target host) {
+//     this.host = host;
+
+//     for (int i = 0; i < SliderPuzzle.NUM_OF_SLIDERS; i++) {
+//       JSlider slider = new JSlider(JSlider.HORIZONTAL, 4, 16, 8);
+//       slider.setMajorTickSpacing(2);
+//       slider.setMinorTickSpacing(2);
+//       slider.setPaintTicks(true);
+//       slider.setPaintLabels(true);
+//       slider.setSnapToTicks(true);
+//     }
+
+    
+    
+//   }
+// }

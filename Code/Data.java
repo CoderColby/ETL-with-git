@@ -13,10 +13,10 @@ import javax.swing.ImageIcon;
 public class Data {
 
   public static class Animation {
-    public static final int playerTravelTime = 500;
-    public static final int zombieTravelTime = 400;
-    public static final int smartZombieTravelTime = 500;
-    public static final int animationMoveSpeed = 100;
+    public static final int playerTravelTime = 400;
+    public static final int zombieTravelTime = 350;
+    public static final int smartZombieTravelTime = 400;
+    public static final int animationMoveSpeed = 25;
   }
 
   public static class Fonts {
@@ -45,6 +45,8 @@ public class Data {
     public static final Color puzzleScreenForeground = new Color(0, 180, 0);
     public static final Color puzzleNumpadBackground = new Color(140, 140, 140);
     public static final Color puzzleNumpadForeground = new Color(255, 255, 255);
+    public static final Color puzzleJunctionDarkGray = Color.DARK_GRAY;
+    public static final Color puzzleJunctionLightGray = Color.LIGHT_GRAY;
     public static final Color puzzleNumpadBorder = new Color(80, 80, 80);
     public static final Color puzzleBackground = new Color(0, 0, 0);
   }
@@ -53,94 +55,94 @@ public class Data {
 
     public static class Wall { // Change ImageIcons to strings so that object references don't go everywhere; ALSO make objects resize their image using AbstractGameObject.setScale() in empty constructor - figure out how to resize walls correctly
       
-      public static final String wall = "./GameAssets/Images/Wall/Wall.png";
-      public static final String hallway = "./GameAssets/Images/Wall/Hallway.png";
+      public static final String wall = "../GameAssets/Images/Wall/Wall.png";
+      public static final String hallway = "../GameAssets/Images/Wall/Hallway.png";
       public static String door(byte num) {
-        return "./GameAssets/Images/Wall/Door" + num + ".png";
+        return "../GameAssets/Images/Wall/Door" + num + ".png";
       }
       public static String airlockDoor(byte num) {
-        return "./GameAssets/Images/Wall/AirlockDoor" + num + ".png";
+        return "../GameAssets/Images/Wall/AirlockDoor" + num + ".png";
       }
       public static String detectionDoor(byte num) {
-        return "./GameAssets/Images/Wall/DetectionDoor" + num + ".png";
+        return "../GameAssets/Images/Wall/DetectionDoor" + num + ".png";
       }
       public static String onceDoor(byte num) {
-        return "./GameAssets/Images/Wall/OnceDoor" + num + ".png";
+        return "../GameAssets/Images/Wall/OnceDoor" + num + ".png";
       }
       public static String powerDoor(byte num) {
-        return "./GameAssets/Images/Wall/PowerDoor" + num + ".png";
+        return "../GameAssets/Images/Wall/PowerDoor" + num + ".png";
       }
       public static String lockedDoor(byte num) {
-        return "./GameAssets/Images/Wall/LockedDoor" + num + ".png";
+        return "../GameAssets/Images/Wall/LockedDoor" + num + ".png";
       }
     }
 
     public static class Entity {
 
       public static String player(byte direction) {
-        return "./GameAssets/Images/Entity/Player" + direction + ".png";
+        return "../GameAssets/Images/Entity/Player" + direction + ".png";
       }
       public static String zombie(byte direction) {
-        return "./GameAssets/Images/Entity/Zombie" + direction + ".png";
+        return "../GameAssets/Images/Entity/Zombie" + direction + ".png";
       }
       public static String smartZombie(byte direction) {
-        return "./GameAssets/Images/Entity/SmartZombie" + direction + ".png";
+        return "../GameAssets/Images/Entity/SmartZombie" + direction + ".png";
       }
     }
 
     public static class Item {
 
       public static String key(byte num) {
-        return "./GameAssets/Images/Item/Key" + num + ".png";
+        return "../GameAssets/Images/Item/Key" + num + ".png";
       }
-      public static final String eraser = "./GameAssets/Images/Item/Eraser.png";
-      public static String battery = "./GameAssets/Images/Item/Battery.png";
+      public static final String eraser = "../GameAssets/Images/Item/Eraser.png";
+      public static String battery = "../GameAssets/Images/Item/Battery.png";
     }
 
     public static class RoomType {
-      public static final String emptyRoom = "./GameAssets/Images/RoomType/Empty.png";
-      public static final String star = "./GameAssets/Images/RoomType/Star.png";
-      public static final String filled = "./GameAssets/Images/RoomType/Filled.png";
-      public static final String elevator = "./GameAssets/Images/RoomType/Elevator.png";
+      public static final String emptyRoom = "../GameAssets/Images/RoomType/Empty.png";
+      public static final String star = "../GameAssets/Images/RoomType/Star.png";
+      public static final String filled = "../GameAssets/Images/RoomType/Filled.png";
+      public static final String elevator = "../GameAssets/Images/RoomType/Elevator.png";
       public static String target(byte num) {
-        return "./GameAssets/Images/RoomType/Target" + num + ".png";
+        return "../GameAssets/Images/RoomType/Target" + num + ".png";
       }
     }
 
     public static class Other {
-      public static final String settings = "./GameAssets/Images/Other/Settings.png";
-      public static final String rightNavArrow = "./GameAssets/Images/Other/RightNavArrow.png";
-      public static final String leftNavArrow = "./GameAssets/Images/Other/LeftNavArrow.png";
-      public static final String logo = "./GameAssets/Images/Other/ETLogo.png";
-      public static final String lock = "./GameAssets/Images/Other/Lock.png";
+      public static final String settings = "../GameAssets/Images/Other/Settings.png";
+      public static final String rightNavArrow = "../GameAssets/Images/Other/RightNavArrow.png";
+      public static final String leftNavArrow = "../GameAssets/Images/Other/LeftNavArrow.png";
+      public static final String logo = "../GameAssets/Images/Other/ETLogo.png";
+      public static final String lock = "../GameAssets/Images/Other/Lock.png";
     }
 
     public static class Puzzle {
-      public static final String lightNeutral = "./GameAssets/Images/Puzzle/lightNeutral.png";
-      public static final String lightOff = "./GameAssets/Images/Puzzle/lightOff.png";
-      public static final String lightOn = "./GameAssets/Images/Puzzle/lightOn.png";
+      public static final String lightNeutral = "../GameAssets/Images/Puzzle/lightNeutral.png";
+      public static final String lightOff = "../GameAssets/Images/Puzzle/lightOff.png";
+      public static final String lightOn = "../GameAssets/Images/Puzzle/lightOn.png";
       
-      public static final String numpadBackspace = "./GameAssets/Images/Puzzle/numpadBackspace.png";
-      public static final String numpadEnter = "./GameAssets/Images/Puzzle/numpadEnter.png";
+      public static final String numpadBackspace = "../GameAssets/Images/Puzzle/numpadBackspace.png";
+      public static final String numpadEnter = "../GameAssets/Images/Puzzle/numpadEnter.png";
       
       public static String pipeBlock(PipePuzzle.ConnectionType type, boolean isPowered) {
         int selector = (isPowered)? 1 : 0;
         switch (type) {
           case COUPLING:
-            return "./GameAssets/Images/Puzzle/PipeCoupling" + selector + ".png";
+            return "../GameAssets/Images/Puzzle/PipeCoupling" + selector + ".png";
           case ELBOW:
-            return "./GameAssets/Images/Puzzle/PipeElbow" + selector + ".png";
+            return "../GameAssets/Images/Puzzle/PipeElbow" + selector + ".png";
           case TEE:
-            return "./GameAssets/Images/Puzzle/PipeTee" + selector + ".png";
+            return "../GameAssets/Images/Puzzle/PipeTee" + selector + ".png";
           case CROSS:
-            return "./GameAssets/Images/Puzzle/PipeCross" + selector + ".png";
+            return "../GameAssets/Images/Puzzle/PipeCross" + selector + ".png";
           default:
             return null;
         }
       }
-      public static final String energyStart = "./GameAssets/Images/Puzzle/energyStart.png";
-      public static final String energyEndOff = "./GameAssets/Images/Puzzle/energyEndOff.png";
-      public static final String energyEndOn = "./GameAssets/Images/Puzzle/energyEndOn.png";
+      public static final String energyStart = "../GameAssets/Images/Puzzle/energyStart.png";
+      public static final String energyEndOff = "../GameAssets/Images/Puzzle/energyEndOff.png";
+      public static final String energyEndOn = "../GameAssets/Images/Puzzle/energyEndOn.png";
     }
     
 
@@ -191,7 +193,7 @@ public class Data {
 
   public static class Utilities {
 
-    public static final String userFileDirectory = "./Users/";
+    public static final String userFileDirectory = "../Users/";
     public static final int numOfLevels = (new File(Utilities.standardLevelDirectory).list() == null)? 0 : new File(Utilities.standardLevelDirectory).list().length;
 
     public static File[] getAllRegFilesInDirectory(File directory) {
@@ -217,11 +219,11 @@ public class Data {
       return Utilities.userFileDirectory + username + ".txt";
     }
 
-    public static final String standardLevelDirectory = "./GameAssets/Levels/StandardLevels/";
-    public static final String customLevelDirectory = "./GameAssets/Levels/CustomLevels/";
-    public static final String customUnownedDirectory = customLevelDirectory + "UnownedLevels/";
-    public static final String defaultLevelFile = "./GameAssets/Levels/default.txt";
-    public static final String temporaryDemoFile = "./GameAssets/Levels/temp.txt";
+    public static final String standardLevelDirectory = "../GameAssets/Levels/StandardLevels/";
+    public static final String customLevelDirectory = "../GameAssets/Levels/CustomLevels/";
+    public static final String customUnownedDirectory = customLevelDirectory + "Guest/";
+    public static final String defaultLevelFile = "../GameAssets/Levels/default.txt";
+    public static final String temporaryDemoFile = "../GameAssets/Levels/temp.txt";
 
     public static final String forRoom = "Room";
     public static final String forWall = "Wall";
